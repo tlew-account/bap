@@ -1,1 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Development Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- jsPDF for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- docx for Word export -->
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js"></script>
+<style>
+  :root {
+    --magic-blue: #0077C0;
+    --magic-blue-dark: #005A94;
+    --magic-blue-deep: #004070;
+    --magic-blue-light: #e8f4fc;
+    --magic-blue-tint: #f0f8ff;
+    --silver: #C4CED4;
+    --silver-dark: #9AABB3;
+    --silver-light: #e8edf0;
+    --silver-xlight: #f4f6f8;
+    --magic-black: #06192A;
+    --magic-black-mid: #1a2d3d;
+    --bg: #f5f7f9;
+    --surface: #ffffff;
+    --surface2: #f8fafb;
+    --border: #dde3e8;
+    --border2: #c8d2d8;
+    --text: #06192A;
+    --text-mid: #2d4a5f;
+    --text-muted: #6b8494;
+    --text-dim: #9ab0bc;
+    --shadow-sm: 0 1px 3px rgba(0,119,192,0.08), 0 1px 2px rgba(6,25,42,0.04);
+    --shadow: 0 4px 16px rgba(0,119,192,0.10), 0 2px 6px rgba(6,25,42,0.06);
+    --shadow-lg: 0 8px 32px rgba(0,119,192,0.14), 0 4px 12px rgba(6,25,42,0.08);
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(0,119,192,0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(0,90,148,0.04) 0%, transparent 50%);
+  }
+
+  .top-bar {
+    height: 5px;
+    background: linear-gradient(90deg, var(--magic-black) 0%, var(--magic-blue) 40%, var(--magic-blue) 70%, var(--silver) 100%);
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, var(--magic-black) 0%, var(--magic-black-mid) 60%, var(--magic-blue-deep) 100%);
+    padding: 36px 44px 32px;
+    display: flex; align-items: center; gap: 36px;
+    position: relative; overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 90% 50%, rgba(0,119,192,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse at 10% 100%, rgba(196,206,212,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,119,192,0.6), transparent);
+  }
+  .header-deco {
+    position: absolute; right: 44px; top: 50%; transform: translateY(-50%);
+    width: 110px; height: 110px; opacity: 0.07; pointer-events: none;
+  }
+
+  .player-photo-wrap { position: relative; flex-shrink: 0; z-index: 1; }
+  .player-photo {
+    width: 116px; height: 116px; border-radius: 50%; object-fit: cover;
+    border: 3px solid var(--magic-blue);
+    box-shadow: 0 0 0 2px rgba(0,119,192,0.3), var(--shadow-lg);
+    display: block; cursor: pointer; background: var(--magic-black-mid);
+  }
+  .player-photo-placeholder {
+    width: 116px; height: 116px; border-radius: 50%;
+    border: 2px dashed rgba(196,206,212,0.4);
+    background: rgba(255,255,255,0.05);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; cursor: pointer;
+    color: rgba(196,206,212,0.5); font-size: 11px; text-align: center;
+    transition: border-color .2s, color .2s;
+  }
+  .player-photo-placeholder:hover { border-color: var(--magic-blue); color: var(--magic-blue); }
+  .player-photo-placeholder svg { width: 30px; height: 30px; }
+  #photo-input { display: none; }
+
+  .header-info { flex: 1; z-index: 1; }
+  .header-eyebrow {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px; font-weight: 500; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--magic-blue); margin-bottom: 6px;
+  }
+  .player-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 46px; font-weight: 700; letter-spacing: -0.5px; text-transform: uppercase;
+    color: #fff; background: transparent; border: none; outline: none;
+    width: 100%; line-height: 1.05;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .player-name::placeholder { color: rgba(255,255,255,0.2); }
+
+  .header-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .meta-field {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(196,206,212,0.2);
+    border-radius: 8px; padding: 7px 14px;
+  }
+  .meta-field label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px; font-weight: 500; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--silver-dark); white-space: nowrap;
+  }
+  .meta-field input {
+    background: transparent; border: none; outline: none;
+    color: #fff; font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px; min-width: 90px;
+  }
+  .meta-field input::placeholder { color: rgba(255,255,255,0.25); }
+
+  /* ── EXPORT BAR ── */
+  .export-bar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 12px 44px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .export-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px; font-weight: 600; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-right: 4px; white-space: nowrap;
+  }
+  .export-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1.5px solid var(--border2);
+    border-radius: 8px; padding: 7px 14px;
+    font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .2s; text-decoration: none;
+    background: var(--surface2);
+  }
+  .export-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .export-btn.pdf { color: #c0392b; border-color: #e0b0aa; }
+  .export-btn.pdf:hover { background: #fdf0ee; border-color: #c0392b; box-shadow: var(--shadow-sm); }
+  .export-btn.word { color: #1a5296; border-color: #aac0e0; }
+  .export-btn.word:hover { background: #eef3fd; border-color: #1a5296; box-shadow: var(--shadow-sm); }
+  .export-btn.gdoc { color: #1a6b3c; border-color: #a0cfb4; }
+  .export-btn.gdoc:hover { background: #edf7f2; border-color: #1a6b3c; box-shadow: var(--shadow-sm); }
+  .export-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+
+  /* ── MAIN ── */
+  .main { max-width: 980px; margin: 0 auto; padding: 36px 24px 110px; }
+
+  .section { margin-bottom: 36px; }
+  .section-header { display: flex; align-items: center; gap: 0; margin-bottom: 18px; }
+  .section-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 4px 0 0 4px; flex-shrink: 0;
+  }
+  .badge-intro, .badge-team { background: var(--magic-blue); color: #fff; }
+  .badge-skill { background: var(--magic-blue-dark); color: #fff; }
+  .badge-iq    { background: var(--silver-dark); color: #fff; }
+  .badge-analytics { background: var(--magic-black); color: #fff; }
+
+  .section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 26px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--magic-black);
+    background: var(--silver-xlight); border: 1px solid var(--silver); border-left: none;
+    padding: 3px 18px 3px 16px; border-radius: 0 4px 4px 0;
+  }
+
+  /* ── INTRO ── */
+  .intro-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px;
+    box-shadow: var(--shadow-sm); border-top: 3px solid var(--magic-blue);
+  }
+  .intro-textarea {
+    width: 100%; min-height: 130px; background: transparent; border: none; outline: none;
+    color: var(--text-mid); font-family: 'Source Sans 3', sans-serif;
+    font-size: 15px; line-height: 1.75; resize: vertical;
+  }
+  .intro-textarea::placeholder { color: var(--text-dim); }
+
+  /* ── VITAMIN CARD ── */
+  .vitamin-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 10px;
+    box-shadow: var(--shadow-sm); transition: box-shadow .2s, border-color .2s;
+  }
+  .vitamin-card:hover { box-shadow: var(--shadow); }
+  .vitamin-card.team-card:focus-within { border-color: var(--magic-blue); box-shadow: 0 0 0 3px rgba(0,119,192,0.08), var(--shadow); }
+  .vitamin-card.skill-card:focus-within { border-color: var(--magic-blue-dark); box-shadow: 0 0 0 3px rgba(0,90,148,0.08), var(--shadow); }
+  .vitamin-card.iq-card:focus-within { border-color: var(--silver-dark); box-shadow: 0 0 0 3px rgba(154,171,179,0.15), var(--shadow); }
+
+  .vitamin-head { display: flex; align-items: stretch; cursor: pointer; user-select: none; background: var(--surface2); }
+  .vitamin-color-bar { width: 4px; flex-shrink: 0; }
+  .team-bar { background: var(--magic-blue); }
+  .skill-bar { background: var(--magic-blue-dark); }
+  .iq-bar { background: var(--silver-dark); }
+
+  .vitamin-head-inner { flex: 1; display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .vitamin-num {
+    font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 1px;
+    color: var(--text-dim); flex-shrink: 0; background: var(--silver-xlight);
+    border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px;
+  }
+  .vitamin-name-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600;
+    color: var(--magic-black); text-transform: uppercase; letter-spacing: .5px;
+  }
+  .vitamin-name-input::placeholder { color: var(--text-dim); font-weight: 400; }
+
+  .vitamin-toggle {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim); padding: 4px 10px; transition: color .2s; display: flex; align-items: center;
+  }
+  .vitamin-toggle:hover { color: var(--magic-blue); }
+  .vitamin-toggle svg { width: 18px; height: 18px; transition: transform .25s; }
+  .vitamin-toggle.open svg { transform: rotate(180deg); }
+
+  .delete-item-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim); padding: 4px 8px; border-radius: 6px;
+    transition: color .2s, background .2s; display: flex; align-items: center;
+  }
+  .delete-item-btn:hover { color: #c0392b; background: rgba(192,57,43,0.08); }
+  .delete-item-btn svg { width: 15px; height: 15px; }
+
+  .vitamin-body { display: none; padding: 18px 20px 20px 24px; border-top: 1px solid var(--border); }
+  .vitamin-body.open { display: block; }
+
+  .vit-notes {
+    width: 100%; min-height: 72px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 14px; color: var(--text-mid); font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px; line-height: 1.65; resize: vertical; outline: none;
+    transition: border-color .2s; margin-bottom: 16px;
+  }
+  .vit-notes:focus { border-color: var(--magic-blue); box-shadow: 0 0 0 3px rgba(0,119,192,0.08); }
+  .vit-notes::placeholder { color: var(--text-dim); }
+
+  .field-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px; font-weight: 500; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .field-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .subitem-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .subitem-bullet { color: var(--magic-blue); font-size: 20px; line-height: 1; flex-shrink: 0; font-weight: 700; }
+  .subitem-input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 7px; padding: 7px 12px; color: var(--text-mid);
+    font-family: 'Source Sans 3', sans-serif; font-size: 14px; outline: none; transition: border-color .2s;
+  }
+  .subitem-input:focus { border-color: var(--magic-blue); }
+  .subitem-input::placeholder { color: var(--text-dim); }
+
+  .link-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .link-icon { flex-shrink: 0; color: var(--magic-blue); display: flex; }
+  .link-icon svg { width: 15px; height: 15px; }
+  .link-input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 7px; padding: 7px 12px; color: var(--magic-blue-dark);
+    font-family: 'Source Sans 3', sans-serif; font-size: 13px; outline: none; transition: border-color .2s;
+  }
+  .link-input:focus { border-color: var(--magic-blue); }
+  .link-input::placeholder { color: var(--text-dim); }
+  .link-open {
+    background: none; border: none; cursor: pointer; color: var(--text-dim); padding: 5px;
+    border-radius: 6px; display: flex; align-items: center; transition: color .2s, background .2s;
+  }
+  .link-open:hover { color: var(--magic-blue); background: var(--magic-blue-light); }
+  .link-open svg { width: 14px; height: 14px; }
+
+  .add-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: 1px dashed var(--border2); border-radius: 7px; padding: 6px 13px;
+    color: var(--text-muted); font-family: 'Source Sans 3', sans-serif; font-size: 13px; cursor: pointer;
+    transition: border-color .2s, color .2s, background .2s; margin-top: 4px;
+  }
+  .add-btn:hover { border-color: var(--magic-blue); color: var(--magic-blue); background: var(--magic-blue-light); }
+  .add-btn svg { width: 13px; height: 13px; }
+
+  .add-vitamin-wrap { margin-top: 6px; }
+  .add-vitamin-btn {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1.5px dashed var(--border2);
+    border-radius: var(--radius-lg); padding: 14px 20px;
+    color: var(--text-muted); font-family: 'Oswald', sans-serif;
+    font-size: 15px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; width: 100%;
+    transition: border-color .2s, color .2s, background .2s, box-shadow .2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .add-vitamin-btn:hover { border-color: var(--magic-blue); color: var(--magic-blue); background: var(--magic-blue-light); box-shadow: var(--shadow); }
+  .add-vitamin-btn svg { width: 18px; height: 18px; }
+  .add-vitamin-btn .limit-note { margin-left: auto; font-size: 12px; letter-spacing: 0; text-transform: none; font-family: 'Source Sans 3', sans-serif; color: var(--text-dim); }
+
+  /* ── THEMES ── */
+  .themes-wrap {
+    margin-top: 18px; background: var(--magic-blue); border-radius: var(--radius);
+    padding: 16px 18px; position: relative; overflow: hidden;
+  }
+  .themes-wrap::before {
+    content: ''; position: absolute; top: 0; right: 0; width: 150px; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05)); pointer-events: none;
+  }
+  .themes-title {
+    font-family: 'Oswald', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 10px;
+  }
+  .themes-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .theme-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px; padding: 5px 12px;
+  }
+  .theme-chip input {
+    background: transparent; border: none; outline: none;
+    color: #fff; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 500; min-width: 80px;
+  }
+  .theme-chip input::placeholder { color: rgba(255,255,255,0.4); }
+  .theme-del { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.45); padding: 0; display: flex; font-size: 14px; line-height: 1; transition: color .2s; }
+  .theme-del:hover { color: #fff; }
+  .add-theme-btn {
+    background: rgba(255,255,255,0.1); border: 1px dashed rgba(255,255,255,0.3);
+    border-radius: 20px; padding: 5px 12px; color: rgba(255,255,255,0.6);
+    font-family: 'Source Sans 3', sans-serif; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 5px; transition: background .2s, color .2s;
+  }
+  .add-theme-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+  /* ── ANALYTICS ── */
+  .analytics-grid { display: flex; flex-direction: column; gap: 8px; }
+  .analytics-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 13px 16px; box-shadow: var(--shadow-sm); transition: border-color .2s, box-shadow .2s;
+  }
+  .analytics-row:focus-within { border-color: var(--magic-blue); box-shadow: 0 0 0 3px rgba(0,119,192,0.08), var(--shadow); }
+  .drag-handle { color: var(--text-dim); cursor: grab; flex-shrink: 0; display: flex; }
+  .drag-handle svg { width: 16px; height: 16px; }
+  .analytics-metric-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text-mid); font-family: 'Source Sans 3', sans-serif; font-size: 15px;
+  }
+  .analytics-metric-input::placeholder { color: var(--text-dim); }
+  .analytics-sign { display: flex; gap: 4px; flex-shrink: 0; }
+  .sign-btn {
+    background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 6px; padding: 4px 11px;
+    font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all .2s; color: var(--text-muted);
+  }
+  .sign-btn.positive.active { background: #e6f7ef; color: #1a8a4a; border-color: #52c27e; }
+  .sign-btn.negative.active { background: #fdecea; color: #c0392b; border-color: #e87066; }
+  .sign-btn:not(.active):hover { border-color: var(--magic-blue); color: var(--magic-blue); background: var(--magic-blue-light); }
+  .analytics-value {
+    width: 66px; background: var(--silver-xlight); border: 1.5px solid var(--border2);
+    border-radius: 7px; padding: 5px 10px; color: var(--magic-black);
+    font-family: 'Oswald', sans-serif; font-size: 17px; font-weight: 600; text-align: center; outline: none;
+  }
+  .analytics-value:focus { border-color: var(--magic-blue); }
+
+  .section-divider { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--silver), transparent); margin: 36px 0; }
+
+  /* ── SAVE BAR ── */
+  .save-bar {
+    position: fixed; bottom: 24px; right: 28px;
+    display: flex; gap: 10px; z-index: 100; align-items: center;
+  }
+  .save-status {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 16px; font-size: 13px; color: var(--text-muted);
+    box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px;
+  }
+  .save-status.saved { color: #1a8a4a; border-color: #52c27e; background: #e6f7ef; }
+  .save-btn {
+    background: var(--magic-blue); color: #fff; border: none; border-radius: 10px;
+    padding: 11px 28px; font-family: 'Oswald', sans-serif;
+    font-size: 15px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; box-shadow: 0 4px 16px rgba(0,119,192,0.35);
+    transition: background .2s, transform .1s, box-shadow .2s;
+  }
+  .save-btn:hover { background: var(--magic-blue-dark); transform: translateY(-1px); box-shadow: 0 6px 22px rgba(0,119,192,0.45); }
+  .save-btn:active { transform: translateY(0); }
+
+  /* ── EXPORT MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(6,25,42,0.5); z-index: 1000;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 18px; padding: 32px 36px;
+    width: 420px; max-width: 95vw;
+    box-shadow: var(--shadow-lg);
+    animation: modalIn .2s ease;
+  }
+  @keyframes modalIn { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-title {
+    font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--magic-black); margin-bottom: 6px;
+  }
+  .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+  .modal-options { display: flex; flex-direction: column; gap: 12px; }
+  .modal-option {
+    display: flex; align-items: center; gap: 16px;
+    border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px;
+    cursor: pointer; transition: all .2s; background: var(--surface2); text-decoration: none;
+  }
+  .modal-option:hover { box-shadow: var(--shadow); }
+  .modal-option.pdf-opt:hover { border-color: #c0392b; background: #fdf0ee; }
+  .modal-option.word-opt:hover { border-color: #1a5296; background: #eef3fd; }
+  .modal-option.gdoc-opt:hover { border-color: #1a6b3c; background: #edf7f2; }
+  .modal-opt-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .pdf-opt .modal-opt-icon  { background: #fdecea; }
+  .word-opt .modal-opt-icon { background: #eef3fd; }
+  .gdoc-opt .modal-opt-icon { background: #edf7f2; }
+  .modal-opt-icon svg { width: 24px; height: 24px; }
+  .modal-opt-info { flex: 1; }
+  .modal-opt-name { font-family: 'Oswald', sans-serif; font-size: 17px; font-weight: 600; letter-spacing: .5px; }
+  .pdf-opt  .modal-opt-name { color: #c0392b; }
+  .word-opt .modal-opt-name { color: #1a5296; }
+  .gdoc-opt .modal-opt-name { color: #1a6b3c; }
+  .modal-opt-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .modal-arrow { color: var(--text-dim); }
+  .modal-close {
+    position: absolute; top: 16px; right: 20px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim); font-size: 22px; line-height: 1; padding: 4px 8px;
+    border-radius: 6px; transition: color .2s;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal { position: relative; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--silver); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--silver-dark); }
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <svg class="header-deco" viewBox="0 0 120 120" fill="white">
+    <circle cx="60" cy="60" r="58" fill="none" stroke="white" stroke-width="1"/>
+    <path d="M60 60 L60 4 A56 56 0 0 1 116 60 Z"/>
+    <path d="M60 60 L116 60 A56 56 0 0 1 60 116 Z"/>
+    <path d="M60 60 L60 116 A56 56 0 0 1 4 60 Z"/>
+    <path d="M60 60 L4 60 A56 56 0 0 1 60 4 Z"/>
+    <circle cx="60" cy="60" r="8" fill="white"/>
+  </svg>
+  <div class="player-photo-wrap">
+    <input type="file" id="photo-input" accept="image/*">
+    <div class="player-photo-placeholder" id="photo-placeholder" onclick="document.getElementById('photo-input').click()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+      </svg>
+      <span>Add Photo</span>
+    </div>
+    <img id="player-photo" class="player-photo" style="display:none" onclick="document.getElementById('photo-input').click()" alt="Player">
+  </div>
+  <div class="header-info">
+    <div class="header-eyebrow">Player Development Plan</div>
+    <input class="player-name" id="player-name" placeholder="Player Name" spellcheck="false">
+    <div class="header-meta">
+      <div class="meta-field"><label>Teams</label><input id="meta-teams" placeholder="e.g. Varsity, Travel"></div>
+      <div class="meta-field"><label>Experience</label><input id="meta-exp" placeholder="e.g. 5 years"></div>
+      <div class="meta-field"><label>Other Sports</label><input id="meta-sports" placeholder="e.g. Football, Track"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT BAR -->
+<div class="export-bar">
+  <span class="export-label">Export</span>
+  <button class="export-btn pdf" onclick="showExportModal()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8 13h1.5c.8 0 1.5.7 1.5 1.5S10.3 16 9.5 16H9v1.5H8V13zm1.5 2c.3 0 .5-.2.5-.5s-.2-.5-.5-.5H9v1h.5zm3-2H14c.6 0 1 .4 1 1v2c0 .6-.4 1-1 1h-1.5V13zm1 3h.5v-2H13v2zm2.5-3H17v1h-1.5v.5H17v1h-1.5V16H15v-3z"/></svg>
+    PDF
+  </button>
+  <button class="export-btn word" onclick="showExportModal()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM9 13l1.5 5 1.5-4 1.5 4L15 13h-1l-1 3.2-1.5-4-1.5 4L9 13z"/></svg>
+    Word
+  </button>
+  <button class="export-btn gdoc" onclick="showExportModal()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zm-4 9h8v1H9v-1zm0 2h8v1H9v-1zm0 2h6v1H9v-1z"/></svg>
+    Google Doc
+  </button>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="export-modal" onclick="if(event.target===this)closeExportModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeExportModal()">✕</button>
+    <div class="modal-title">Export Plan</div>
+    <div class="modal-sub">Choose your preferred format to download or open this PDP.</div>
+    <div class="modal-options">
+      <div class="modal-option pdf-opt" onclick="exportPDF()">
+        <div class="modal-opt-icon">
+          <svg viewBox="0 0 24 24" fill="#c0392b"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8 13h1.5c.8 0 1.5.7 1.5 1.5S10.3 16 9.5 16H9v1.5H8V13zm1.5 2c.3 0 .5-.2.5-.5s-.2-.5-.5-.5H9v1h.5zm3-2H14c.6 0 1 .4 1 1v2c0 .6-.4 1-1 1h-1.5V13zm1 3h.5v-2H13v2zm2.5-3H17v1h-1.5v.5H17v1h-1.5V16H15v-3z"/></svg>
+        </div>
+        <div class="modal-opt-info">
+          <div class="modal-opt-name">PDF Document</div>
+          <div class="modal-opt-desc">Download as a print-ready PDF file</div>
+        </div>
+        <div class="modal-arrow">→</div>
+      </div>
+      <div class="modal-option word-opt" onclick="exportWord()">
+        <div class="modal-opt-icon">
+          <svg viewBox="0 0 24 24" fill="#1a5296"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM9 13l1.5 5 1.5-4 1.5 4L15 13h-1l-1 3.2-1.5-4-1.5 4L9 13z"/></svg>
+        </div>
+        <div class="modal-opt-info">
+          <div class="modal-opt-name">Word Document</div>
+          <div class="modal-opt-desc">Download as a .docx file for Microsoft Word</div>
+        </div>
+        <div class="modal-arrow">→</div>
+      </div>
+      <div class="modal-option gdoc-opt" onclick="exportGoogleDoc()">
+        <div class="modal-opt-icon">
+          <svg viewBox="0 0 24 24" fill="#1a6b3c"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zm-4 9h8v1H9v-1zm0 2h8v1H9v-1zm0 2h6v1H9v-1z"/></svg>
+        </div>
+        <div class="modal-opt-info">
+          <div class="modal-opt-name">Google Doc</div>
+          <div class="modal-opt-desc">Open in Google Docs (requires sign-in)</div>
+        </div>
+        <div class="modal-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- INTRO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-badge badge-intro">Profile</span>
+      <span class="section-title">Introduction</span>
+    </div>
+    <div class="intro-card">
+      <textarea class="intro-textarea" id="intro-text" placeholder="Describe the player's playing style, strengths, and areas for improvement..."></textarea>
+    </div>
+  </div>
+  <hr class="section-divider">
+
+  <!-- TEAM VITAMINS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-badge badge-team">Team</span>
+      <span class="section-title">Team Vitamins</span>
+    </div>
+    <div id="team-vitamins-list"></div>
+    <div class="add-vitamin-wrap">
+      <button class="add-vitamin-btn" id="add-team-vitamin">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Team Vitamin
+        <span class="limit-note" id="team-limit-note">0 / 5</span>
+      </button>
+    </div>
+    <div class="themes-wrap">
+      <div class="themes-title">Themes</div>
+      <div class="themes-list" id="team-themes-list"></div>
+    </div>
+  </div>
+  <hr class="section-divider">
+
+  <!-- SKILL VITAMINS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-badge badge-skill">Skill</span>
+      <span class="section-title">Skill Vitamins</span>
+    </div>
+    <div id="skill-vitamins-list"></div>
+    <div class="add-vitamin-wrap">
+      <button class="add-vitamin-btn" id="add-skill-vitamin">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Skill Vitamin
+        <span class="limit-note" id="skill-limit-note">0 / 5</span>
+      </button>
+    </div>
+    <div class="themes-wrap">
+      <div class="themes-title">Themes</div>
+      <div class="themes-list" id="skill-themes-list"></div>
+    </div>
+  </div>
+  <hr class="section-divider">
+
+  <!-- IQ VITAMINS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-badge badge-iq">IQ</span>
+      <span class="section-title">IQ Vitamins</span>
+    </div>
+    <div id="iq-vitamins-list"></div>
+    <div class="add-vitamin-wrap">
+      <button class="add-vitamin-btn" id="add-iq-vitamin">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add IQ Vitamin
+        <span class="limit-note" id="iq-limit-note">0 / 5</span>
+      </button>
+    </div>
+    <div class="themes-wrap">
+      <div class="themes-title">Themes</div>
+      <div class="themes-list" id="iq-themes-list"></div>
+    </div>
+  </div>
+  <hr class="section-divider">
+
+  <!-- ANALYTICS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-badge badge-analytics">Data</span>
+      <span class="section-title">Analytics</span>
+    </div>
+    <div class="analytics-grid" id="analytics-list"></div>
+    <div style="margin-top:10px">
+      <button class="add-btn" id="add-analytics">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Metric
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-bar">
+  <div class="save-status" id="save-status">Auto-saved locally</div>
+  <button class="save-btn" onclick="saveData()">Save</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const state = {
+  playerName:'', photo:'', teams:'', experience:'', otherSports:'', intro:'',
+  teamVitamins:[], skillVitamins:[], iqVitamins:[],
+  teamThemes:[], skillThemes:[], iqThemes:[],
+  analytics:[]
+};
+
+// ═══════════════════════════════════════════
+//  PHOTO
+// ═══════════════════════════════════════════
+document.getElementById('photo-input').addEventListener('change', function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    state.photo = ev.target.result;
+    document.getElementById('player-photo').src = ev.target.result;
+    document.getElementById('player-photo').style.display = 'block';
+    document.getElementById('photo-placeholder').style.display = 'none';
+    markUnsaved();
+  };
+  reader.readAsDataURL(file);
+});
+['player-name','meta-teams','meta-exp','meta-sports','intro-text'].forEach(id =>
+  document.getElementById(id).addEventListener('input', markUnsaved));
+
+// ═══════════════════════════════════════════
+//  VITAMIN RENDERING
+// ═══════════════════════════════════════════
+function getV(type) { return state[type+'Vitamins']; }
+
+function makeVitaminCard(type, idx, data) {
+  const card = document.createElement('div');
+  card.className = `vitamin-card ${type}-card`;
+  const isOpen = data.open !== false;
+  card.innerHTML = `
+    <div class="vitamin-head" onclick="toggleVitamin(this)">
+      <div class="vitamin-color-bar ${type}-bar"></div>
+      <div class="vitamin-head-inner">
+        <span class="vitamin-num">#${idx+1}</span>
+        <input class="vitamin-name-input" placeholder="Vitamin name..." value="${esc(data.name||'')}"
+          onclick="event.stopPropagation()" oninput="vitFld(this,'name','${type}',${idx})">
+      </div>
+      <button class="vitamin-toggle ${isOpen?'open':''}"
+        onclick="event.stopPropagation();toggleVitamin(this.closest('.vitamin-head'))">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <button class="delete-item-btn" onclick="event.stopPropagation();delVit('${type}',${idx})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="vitamin-body ${isOpen?'open':''}">
+      <div class="field-label">Notes</div>
+      <textarea class="vit-notes" placeholder="Coaching notes..." oninput="vitFld(this,'notes','${type}',${idx})">${esc(data.notes||'')}</textarea>
+      <div class="field-label">Sub-items</div>
+      <div id="${type}-sub-${idx}"></div>
+      <button class="add-btn" onclick="addSub('${type}',${idx})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add sub-item
+      </button>
+      <div class="field-label" style="margin-top:16px">Links &amp; Resources</div>
+      <div id="${type}-links-${idx}"></div>
+      <button class="add-btn" onclick="addLink('${type}',${idx})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add link
+      </button>
+    </div>`;
+  return card;
+}
+
+function renderSubs(type, vIdx) {
+  const c = document.getElementById(`${type}-sub-${vIdx}`); if (!c) return;
+  c.innerHTML = '';
+  (getV(type)[vIdx].subitems||[]).forEach((si, i) => {
+    const row = document.createElement('div'); row.className = 'subitem-row';
+    row.innerHTML = `<span class="subitem-bullet">›</span>
+      <input class="subitem-input" placeholder="Sub-item..." value="${esc(si)}" oninput="subChg(this,'${type}',${vIdx},${i})">
+      <button class="delete-item-btn" onclick="delSub('${type}',${vIdx},${i})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>`;
+    c.appendChild(row);
+  });
+}
+
+function renderLinks(type, vIdx) {
+  const c = document.getElementById(`${type}-links-${vIdx}`); if (!c) return;
+  c.innerHTML = '';
+  (getV(type)[vIdx].links||[]).forEach((lk, i) => {
+    const row = document.createElement('div'); row.className = 'link-row';
+    row.innerHTML = `
+      <span class="link-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+      </svg></span>
+      <input class="link-input" placeholder="Paste URL..." value="${esc(lk)}" oninput="lnkChg(this,'${type}',${vIdx},${i})">
+      <button class="link-open" onclick="openLnk('${type}',${vIdx},${i})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+      </button>
+      <button class="delete-item-btn" onclick="delLnk('${type}',${vIdx},${i})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>`;
+    c.appendChild(row);
+  });
+}
+
+function renderSection(type) {
+  const list = document.getElementById(`${type}-vitamins-list`);
+  list.innerHTML = '';
+  getV(type).forEach((v, i) => {
+    const card = makeVitaminCard(type, i, v); list.appendChild(card);
+    renderSubs(type, i); renderLinks(type, i);
+  });
+  const n = getV(type).length;
+  const note = document.getElementById(`${type}-limit-note`); if (note) note.textContent = `${n} / 5`;
+  const btn = document.getElementById(`add-${type}-vitamin`); if (btn) btn.style.opacity = n >= 5 ? '0.4' : '1';
+}
+function renderAll() { ['team','skill','iq'].forEach(renderSection); }
+
+function toggleVitamin(head) {
+  const body = head.nextElementSibling;
+  const tog = head.querySelector('.vitamin-toggle');
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open); tog.classList.toggle('open', !open);
+}
+
+function addVit(type) {
+  if (getV(type).length >= 5) return;
+  getV(type).push({ name:'', notes:'', subitems:[], links:[], open:true });
+  renderSection(type); markUnsaved();
+}
+function delVit(type, i) { getV(type).splice(i,1); renderSection(type); markUnsaved(); }
+function vitFld(el, fld, type, i) { getV(type)[i][fld] = el.value; markUnsaved(); }
+function addSub(type, vi) { getV(type)[vi].subitems = getV(type)[vi].subitems||[]; getV(type)[vi].subitems.push(''); renderSubs(type,vi); markUnsaved(); }
+function subChg(el, type, vi, si) { getV(type)[vi].subitems[si] = el.value; markUnsaved(); }
+function delSub(type, vi, si) { getV(type)[vi].subitems.splice(si,1); renderSubs(type,vi); markUnsaved(); }
+function addLink(type, vi) { getV(type)[vi].links = getV(type)[vi].links||[]; getV(type)[vi].links.push(''); renderLinks(type,vi); markUnsaved(); }
+function lnkChg(el, type, vi, li) { getV(type)[vi].links[li] = el.value; markUnsaved(); }
+function delLnk(type, vi, li) { getV(type)[vi].links.splice(li,1); renderLinks(type,vi); markUnsaved(); }
+function openLnk(type, vi, li) { let u = getV(type)[vi].links[li]; if (!u) return; if (!u.startsWith('http')) u='https://'+u; window.open(u,'_blank'); }
+
+// ═══════════════════════════════════════════
+//  THEMES
+// ═══════════════════════════════════════════
+function renderThemes(type) {
+  const list = document.getElementById(`${type}-themes-list`); list.innerHTML = '';
+  (state[type+'Themes']||[]).forEach((t, i) => {
+    const chip = document.createElement('div'); chip.className = 'theme-chip';
+    chip.innerHTML = `<input placeholder="Theme..." value="${esc(t)}" oninput="themChg(this,'${type}',${i})">
+      <button class="theme-del" onclick="delThem('${type}',${i})">✕</button>`;
+    list.appendChild(chip);
+  });
+  const add = document.createElement('button'); add.className = 'add-theme-btn';
+  add.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Add Theme`;
+  add.onclick = () => addThem(type); list.appendChild(add);
+}
+function addThem(type) { state[type+'Themes'].push(''); renderThemes(type); markUnsaved(); }
+function themChg(el, type, i) { state[type+'Themes'][i] = el.value; markUnsaved(); }
+function delThem(type, i) { state[type+'Themes'].splice(i,1); renderThemes(type); markUnsaved(); }
+function renderAllThemes() { ['team','skill','iq'].forEach(renderThemes); }
+
+// ═══════════════════════════════════════════
+//  ANALYTICS
+// ═══════════════════════════════════════════
+function renderAnalytics() {
+  const list = document.getElementById('analytics-list'); list.innerHTML = '';
+  state.analytics.forEach((a, i) => {
+    const row = document.createElement('div'); row.className = 'analytics-row';
+    row.innerHTML = `
+      <span class="drag-handle"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></span>
+      <input class="analytics-metric-input" placeholder="Metric name & description..." value="${esc(a.metric||'')}" oninput="analChg(this,${i},'metric')">
+      <div class="analytics-sign">
+        <button class="sign-btn positive ${a.sign==='+'?'active':''}" onclick="togSign(${i},'+')">+</button>
+        <button class="sign-btn negative ${a.sign==='-'?'active':''}" onclick="togSign(${i},'-')">−</button>
+      </div>
+      <input class="analytics-value" type="number" placeholder="Pts" value="${a.value||''}" oninput="analChg(this,${i},'value')">
+      <button class="delete-item-btn" onclick="delAnal(${i})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>`;
+    list.appendChild(row);
+  });
+}
+function analChg(el, i, fld) { state.analytics[i][fld] = el.value; markUnsaved(); }
+function togSign(i, sign) { state.analytics[i].sign = state.analytics[i].sign===sign ? '' : sign; renderAnalytics(); markUnsaved(); }
+function delAnal(i) { state.analytics.splice(i,1); renderAnalytics(); markUnsaved(); }
+
+// ═══════════════════════════════════════════
+//  SAVE / LOAD
+// ═══════════════════════════════════════════
+let saveTimer;
+function markUnsaved() {
+  const el = document.getElementById('save-status');
+  el.textContent = 'Unsaved changes'; el.className = 'save-status';
+  clearTimeout(saveTimer); saveTimer = setTimeout(saveData, 2500);
+}
+function collectState() {
+  state.playerName  = document.getElementById('player-name').value;
+  state.teams       = document.getElementById('meta-teams').value;
+  state.experience  = document.getElementById('meta-exp').value;
+  state.otherSports = document.getElementById('meta-sports').value;
+  state.intro       = document.getElementById('intro-text').value;
+}
+function saveData() {
+  collectState();
+  try {
+    localStorage.setItem('pdp_magic_v2', JSON.stringify(state));
+    const el = document.getElementById('save-status');
+    el.textContent = '✓ Saved'; el.className = 'save-status saved';
+    setTimeout(() => { el.textContent = 'Auto-saved locally'; el.className = 'save-status'; }, 2000);
+  } catch(e) { console.error('Save failed', e); }
+}
+function loadData() {
+  try {
+    const raw = localStorage.getItem('pdp_magic_v2');
+    if (!raw) return initDefaults();
+    Object.assign(state, JSON.parse(raw));
+    document.getElementById('player-name').value  = state.playerName||'';
+    document.getElementById('meta-teams').value   = state.teams||'';
+    document.getElementById('meta-exp').value     = state.experience||'';
+    document.getElementById('meta-sports').value  = state.otherSports||'';
+    document.getElementById('intro-text').value   = state.intro||'';
+    if (state.photo) {
+      document.getElementById('player-photo').src = state.photo;
+      document.getElementById('player-photo').style.display = 'block';
+      document.getElementById('photo-placeholder').style.display = 'none';
+    }
+  } catch(e) { initDefaults(); }
+}
+function initDefaults() {
+  state.teamVitamins  = [
+    { name:'Driving', notes:'Focus on driving through and with contact.', subitems:[], links:['https://youtu.be/fe72HbXpiHw','https://www.instagram.com/p/DXHWB7YDeRB/'], open:true },
+    { name:'Spacing', notes:'', subitems:[], links:[], open:false },
+    { name:'Rebounding', notes:'', subitems:[], links:[], open:false },
+    { name:'50/50s', notes:'', subitems:[], links:[], open:false },
+  ];
+  state.skillVitamins = [
+    { name:'Shooting', notes:'Ball to hip, shoot high, hold finish until ball lands. Shoot over backboard to force arc on shot.', subitems:[], links:[], open:true },
+  ];
+  state.iqVitamins    = [
+    { name:'Schemes', notes:'Offensive and defensive schemes.', subitems:['Horns'], links:['https://youtu.be/x0eilYyliVk?si=xSL21kD-ijEeKtYT&t=647','https://youtu.be/Cva0AB_hPFE'], open:true },
+  ];
+  state.teamThemes  = ['Be physical and proactive'];
+  state.skillThemes = ['Score!', 'Thrive under pressure', 'Control the game'];
+  state.iqThemes    = ['Score!', 'Thrive under pressure', 'Control the game'];
+  state.analytics   = [
+    { metric:'Fouls', sign:'-', value:'1' },
+    { metric:'Points + Assists / Contribution (a point per point)', sign:'+', value:'1' },
+    { metric:'Press Break +5', sign:'+', value:'5' },
+    { metric:'Picking up dribble or passing too soon', sign:'-', value:'2' },
+  ];
+}
+
+// ═══════════════════════════════════════════
+//  EXPORT MODAL
+// ═══════════════════════════════════════════
+function showExportModal() { collectState(); document.getElementById('export-modal').classList.add('open'); }
+function closeExportModal() { document.getElementById('export-modal').classList.remove('open'); }
+
+// ═══════════════════════════════════════════
+//  PDF EXPORT
+// ═══════════════════════════════════════════
+function exportPDF() {
+  closeExportModal();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'letter' });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const margin = 48;
+  const contentW = W - margin * 2;
+  let y = margin;
+
+  // Colors
+  const BLUE = [0, 119, 192];
+  const BLACK = [6, 25, 42];
+  const SILVER = [196, 206, 212];
+  const GRAY = [109, 132, 148];
+  const WHITE = [255, 255, 255];
+  const LIGHT = [244, 246, 248];
+
+  function checkPage(needed) {
+    if (y + needed > H - margin) { doc.addPage(); y = margin; return true; }
+    return false;
+  }
+
+  function drawHeader() {
+    // Dark header band
+    doc.setFillColor(...BLACK);
+    doc.rect(0, 0, W, 90, 'F');
+    // Blue accent line at bottom of header
+    doc.setFillColor(...BLUE);
+    doc.rect(0, 88, W, 3, 'F');
+    // Title
+    doc.setTextColor(...WHITE);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    const name = state.playerName || 'Player Development Plan';
+    doc.text(name.toUpperCase(), margin, 44);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...SILVER);
+    doc.text('PLAYER DEVELOPMENT PLAN', margin, 58);
+    // Meta row
+    const metaParts = [];
+    if (state.teams) metaParts.push('Teams: ' + state.teams);
+    if (state.experience) metaParts.push('Experience: ' + state.experience);
+    if (state.otherSports) metaParts.push('Other Sports: ' + state.otherSports);
+    if (metaParts.length) {
+      doc.setFontSize(8); doc.setTextColor(...SILVER);
+      doc.text(metaParts.join('   •   '), margin, 76);
+    }
+    y = 110;
+  }
+
+  function sectionHeading(label, title) {
+    checkPage(40);
+    // Badge
+    doc.setFillColor(...BLUE);
+    doc.roundedRect(margin, y, 52, 18, 2, 2, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text(label.toUpperCase(), margin + 4, y + 12);
+    // Title text
+    doc.setFillColor(...LIGHT);
+    doc.roundedRect(margin + 56, y, contentW - 56, 18, 2, 2, 'F');
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(14);
+    doc.text(title.toUpperCase(), margin + 64, y + 13);
+    y += 26;
+  }
+
+  function vitaminBlock(type, label, title) {
+    checkPage(50);
+    sectionHeading(label, title);
+    const vitamins = getV(type);
+    if (!vitamins.length) { y += 8; return; }
+
+    vitamins.forEach(v => {
+      checkPage(60);
+      // Vitamin header bar
+      const colors = { team: BLUE, skill: [0,90,148], iq: [154,171,179] };
+      const col = colors[type] || BLUE;
+      doc.setFillColor(...col);
+      doc.rect(margin, y, 4, 22, 'F');
+      doc.setFillColor(...LIGHT);
+      doc.rect(margin + 4, y, contentW - 4, 22, 'F');
+      doc.setTextColor(...BLACK);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text((v.name || 'Untitled').toUpperCase(), margin + 14, y + 15);
+      y += 28;
+
+      if (v.notes) {
+        checkPage(30);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(...GRAY);
+        const lines = doc.splitTextToSize(v.notes, contentW - 16);
+        doc.text(lines, margin + 12, y);
+        y += lines.length * 13 + 6;
+      }
+
+      if (v.subitems && v.subitems.length) {
+        v.subitems.filter(s=>s).forEach(si => {
+          checkPage(16);
+          doc.setFillColor(...BLUE);
+          doc.circle(margin + 18, y - 3, 2, 'F');
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(10);
+          doc.setTextColor(...BLACK);
+          doc.text(si, margin + 26, y);
+          y += 14;
+        });
+        y += 4;
+      }
+
+      if (v.links && v.links.length) {
+        checkPage(20);
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(8);
+        doc.setTextColor(...BLUE);
+        v.links.filter(l=>l).forEach(lk => {
+          checkPage(14);
+          const display = lk.length > 72 ? lk.substring(0,69)+'...' : lk;
+          doc.text('🔗 ' + display, margin + 12, y);
+          y += 13;
+        });
+        y += 2;
+      }
+      y += 8;
+    });
+
+    // Themes
+    const themes = state[type+'Themes'];
+    if (themes && themes.length) {
+      checkPage(30);
+      doc.setFillColor(...BLUE);
+      doc.roundedRect(margin, y, contentW, 22, 3, 3, 'F');
+      doc.setTextColor(...WHITE);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.text('THEMES', margin + 8, y + 8);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(themes.filter(t=>t).join('  ·  '), margin + 8, y + 18);
+      y += 30;
+    }
+    y += 12;
+  }
+
+  // ── BUILD PDF ──
+  drawHeader();
+
+  // Intro
+  if (state.intro) {
+    checkPage(50);
+    sectionHeading('Profile', 'Introduction');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...GRAY);
+    const lines = doc.splitTextToSize(state.intro, contentW - 8);
+    lines.forEach(line => { checkPage(14); doc.text(line, margin + 4, y); y += 13; });
+    y += 16;
+  }
+
+  vitaminBlock('team',  'Team',  'Team Vitamins');
+  vitaminBlock('skill', 'Skill', 'Skill Vitamins');
+  vitaminBlock('iq',    'IQ',    'IQ Vitamins');
+
+  // Analytics
+  if (state.analytics.length) {
+    checkPage(50);
+    sectionHeading('Data', 'Analytics');
+    state.analytics.forEach(a => {
+      checkPage(22);
+      const isPos = a.sign === '+';
+      const isNeg = a.sign === '-';
+      // row bg
+      doc.setFillColor(...LIGHT);
+      doc.roundedRect(margin, y, contentW, 18, 2, 2, 'F');
+      // sign badge
+      if (isPos) { doc.setFillColor(26,138,74); doc.setTextColor(...WHITE); }
+      else if (isNeg) { doc.setFillColor(192,57,43); doc.setTextColor(...WHITE); }
+      else { doc.setFillColor(...SILVER); doc.setTextColor(...BLACK); }
+      doc.roundedRect(margin + 4, y + 3, 18, 12, 2, 2, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text(a.sign||'·', margin + 8, y + 13);
+      // metric
+      doc.setTextColor(...BLACK); doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+      doc.text(a.metric || '', margin + 28, y + 13);
+      // value
+      if (a.value) {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+        doc.setTextColor(...BLUE);
+        doc.text(String(a.value) + ' pts', W - margin - 40, y + 13);
+      }
+      y += 22;
+    });
+  }
+
+  // Footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    doc.setFillColor(...LIGHT);
+    doc.rect(0, H - 28, W, 28, 'F');
+    doc.setFillColor(...BLUE);
+    doc.rect(0, H - 28, W, 2, 'F');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...GRAY);
+    doc.text('Player Development Plan', margin, H - 10);
+    doc.text(`Page ${p} of ${pageCount}`, W - margin - 50, H - 10);
+  }
+
+  const fname = (state.playerName || 'PDP').replace(/\s+/g,'_');
+  doc.save(`${fname}_Development_Plan.pdf`);
+}
+
+// ═══════════════════════════════════════════
+//  WORD EXPORT
+// ═══════════════════════════════════════════
+async function exportWord() {
+  closeExportModal();
+  try {
+    const {
+      Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+      AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType,
+      VerticalAlign, LevelFormat, ExternalHyperlink
+    } = docx;
+
+    const MAGIC_BLUE = '0077C0';
+    const MAGIC_BLACK = '06192A';
+    const SILVER = 'C4CED4';
+    const LIGHT_BG = 'F4F6F8';
+    const border = { style: BorderStyle.SINGLE, size: 1, color: 'E0E6EA' };
+    const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+    const borders = { top: border, bottom: border, left: border, right: border };
+    const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+
+    function heading(text, level, color) {
+      return new Paragraph({
+        children: [new TextRun({ text: text.toUpperCase(), bold: true, color: color||MAGIC_BLACK, size: level===1?32:24, font:'Arial' })],
+        spacing: { before: level===1?360:240, after: 120 },
+        border: level===1 ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: MAGIC_BLUE, space: 4 } } : undefined
+      });
+    }
+
+    function bodyText(text) {
+      return new Paragraph({
+        children: [new TextRun({ text, color: '3d5a6b', size: 22, font:'Arial' })],
+        spacing: { before: 60, after: 60 }
+      });
+    }
+
+    function sectionLabel(label, title) {
+      return [
+        new Paragraph({
+          children: [
+            new TextRun({ text: ' ' + label.toUpperCase() + ' ', bold: true, color: 'FFFFFF', size: 18, font:'Arial', highlight: undefined }),
+            new TextRun({ text: '  ' + title.toUpperCase(), bold: true, color: MAGIC_BLACK, size: 24, font:'Arial' }),
+          ],
+          spacing: { before: 360, after: 160 },
+          shading: { type: ShadingType.CLEAR, fill: 'FFFFFF' }
+        })
+      ];
+    }
+
+    function vitaminSection(type, label, title) {
+      const paras = [...sectionLabel(label, title)];
+      const vitamins = getV(type);
+      const barColor = type==='team' ? MAGIC_BLUE : type==='skill' ? '005A94' : '9AABB3';
+
+      vitamins.forEach(v => {
+        // Vitamin title row
+        paras.push(new Paragraph({
+          children: [new TextRun({ text: (v.name||'Untitled').toUpperCase(), bold: true, color: 'FFFFFF', size: 24, font:'Arial' })],
+          spacing: { before: 200, after: 80 },
+          shading: { type: ShadingType.CLEAR, fill: barColor },
+          indent: { left: 160 }
+        }));
+
+        if (v.notes) {
+          paras.push(new Paragraph({
+            children: [new TextRun({ text: v.notes, italics: true, color: '4a6070', size: 20, font:'Arial' })],
+            spacing: { before: 60, after: 60 }, indent: { left: 160 }
+          }));
+        }
+
+        (v.subitems||[]).filter(s=>s).forEach(si => {
+          paras.push(new Paragraph({
+            children: [new TextRun({ text: si, size: 20, font:'Arial', color: MAGIC_BLACK })],
+            bullet: { level: 0 },
+            indent: { left: 320 }, spacing: { before: 40, after: 40 }
+          }));
+        });
+
+        (v.links||[]).filter(l=>l).forEach(lk => {
+          paras.push(new Paragraph({
+            children: [
+              new TextRun({ text: '🔗 ', size: 18, font:'Arial' }),
+              new ExternalHyperlink({ link: lk.startsWith('http') ? lk : 'https://'+lk,
+                children: [new TextRun({ text: lk, style: 'Hyperlink', size: 18, font:'Arial', color: MAGIC_BLUE })] })
+            ],
+            spacing: { before: 40, after: 40 }, indent: { left: 160 }
+          }));
+        });
+      });
+
+      const themes = state[type+'Themes'];
+      if (themes && themes.filter(t=>t).length) {
+        paras.push(new Paragraph({
+          children: [
+            new TextRun({ text: 'THEMES   ', bold: true, color: 'FFFFFF', size: 17, font:'Arial' }),
+            new TextRun({ text: themes.filter(t=>t).join('  ·  '), color: 'FFFFFF', size: 18, font:'Arial' }),
+          ],
+          spacing: { before: 180, after: 60 },
+          shading: { type: ShadingType.CLEAR, fill: MAGIC_BLUE },
+          indent: { left: 80, right: 80 }
+        }));
+      }
+      return paras;
+    }
+
+    const children = [
+      // Player name
+      new Paragraph({
+        children: [new TextRun({ text: (state.playerName||'Player Development Plan').toUpperCase(), bold: true, color: MAGIC_BLACK, size: 52, font:'Arial' })],
+        spacing: { before: 0, after: 120 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: MAGIC_BLUE, space: 6 } }
+      }),
+    ];
+
+    // Meta
+    const metaParts = [];
+    if (state.teams) metaParts.push(`Teams: ${state.teams}`);
+    if (state.experience) metaParts.push(`Experience: ${state.experience}`);
+    if (state.otherSports) metaParts.push(`Other Sports: ${state.otherSports}`);
+    if (metaParts.length) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: metaParts.join('   •   '), color: '6b8494', size: 18, font:'Arial' })],
+        spacing: { before: 80, after: 200 }
+      }));
+    }
+
+    // Introduction
+    if (state.intro) {
+      children.push(...sectionLabel('Profile', 'Introduction'));
+      children.push(new Paragraph({
+        children: [new TextRun({ text: state.intro, size: 22, color: '2d4a5f', font:'Arial' })],
+        spacing: { before: 80, after: 80 }
+      }));
+    }
+
+    // Vitamins
+    children.push(...vitaminSection('team',  'Team',  'Team Vitamins'));
+    children.push(...vitaminSection('skill', 'Skill', 'Skill Vitamins'));
+    children.push(...vitaminSection('iq',    'IQ',    'IQ Vitamins'));
+
+    // Analytics
+    if (state.analytics.length) {
+      children.push(...sectionLabel('Data', 'Analytics'));
+      state.analytics.forEach(a => {
+        const signColor = a.sign==='+' ? '1a8a4a' : a.sign==='-' ? 'c0392b' : '6b8494';
+        children.push(new Paragraph({
+          children: [
+            new TextRun({ text: ` ${a.sign||'·'} `, bold: true, color: 'FFFFFF', size: 20, font:'Arial', shading: { type: ShadingType.CLEAR, fill: signColor } }),
+            new TextRun({ text: `  ${a.metric||''}`, size: 20, color: MAGIC_BLACK, font:'Arial' }),
+            ...(a.value ? [new TextRun({ text: `   ${a.value} pts`, bold: true, color: MAGIC_BLUE, size: 20, font:'Arial' })] : []),
+          ],
+          spacing: { before: 80, after: 80 },
+          shading: { type: ShadingType.CLEAR, fill: LIGHT_BG },
+          indent: { left: 80, right: 80 }
+        }));
+      });
+    }
+
+    const doc2 = new Document({
+      sections: [{
+        properties: {
+          page: { size: { width: 12240, height: 15840 }, margin: { top: 1080, right: 1080, bottom: 1080, left: 1080 } }
+        },
+        children
+      }]
+    });
+
+    const buf = await Packer.toBlob(doc2);
+    const url = URL.createObjectURL(buf);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${(state.playerName||'PDP').replace(/\s+/g,'_')}_Development_Plan.docx`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    console.error('Word export failed:', e);
+    alert('Word export failed. Please try PDF instead.\n\nError: ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  GOOGLE DOC EXPORT
+// ═══════════════════════════════════════════
+function exportGoogleDoc() {
+  closeExportModal();
+  collectState();
+
+  // Build a clean HTML document to paste into Google Docs
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { color: #06192A; font-size: 32px; border-bottom: 4px solid #0077C0; padding-bottom: 8px; }
+    .meta { color: #6b8494; font-size: 14px; margin-bottom: 24px; }
+    .section-label { background: #0077C0; color: white; padding: 3px 10px; font-size: 11px; font-weight: bold; letter-spacing: 2px; display: inline-block; border-radius: 3px; }
+    h2 { color: #06192A; font-size: 22px; margin-top: 32px; }
+    .vitamin-title { background: #0077C0; color: white; padding: 6px 14px; font-weight: bold; font-size: 16px; margin: 16px 0 8px; }
+    .notes { color: #4a6070; font-style: italic; margin-left: 14px; }
+    .sub { margin-left: 28px; color: #06192A; }
+    .link { margin-left: 14px; font-size: 13px; }
+    .themes { background: #0077C0; color: white; padding: 10px 16px; border-radius: 6px; margin-top: 16px; }
+    .themes-label { font-size: 10px; letter-spacing: 2px; opacity: .7; }
+    .metric-row { background: #f4f6f8; padding: 8px 12px; margin-bottom: 6px; }
+    .pos { color: #1a8a4a; font-weight: bold; }
+    .neg { color: #c0392b; font-weight: bold; }
+    hr { border: none; border-top: 1px solid #C4CED4; margin: 28px 0; }
+  </style></head><body>`;
+
+  html += `<h1>${esc2(state.playerName || 'Player Development Plan')}</h1>`;
+
+  const meta = [];
+  if (state.teams) meta.push(`<strong>Teams:</strong> ${esc2(state.teams)}`);
+  if (state.experience) meta.push(`<strong>Experience:</strong> ${esc2(state.experience)}`);
+  if (state.otherSports) meta.push(`<strong>Other Sports:</strong> ${esc2(state.otherSports)}`);
+  if (meta.length) html += `<div class="meta">${meta.join('&nbsp;&nbsp;·&nbsp;&nbsp;')}</div>`;
+
+  if (state.intro) {
+    html += `<hr><span class="section-label">PROFILE</span><h2>Introduction</h2><p>${esc2(state.intro)}</p>`;
+  }
+
+  function vitHtml(type, label, title) {
+    let s = `<hr><span class="section-label">${label.toUpperCase()}</span><h2>${esc2(title)}</h2>`;
+    getV(type).forEach(v => {
+      s += `<div class="vitamin-title">${esc2(v.name||'Untitled')}</div>`;
+      if (v.notes) s += `<p class="notes">${esc2(v.notes)}</p>`;
+      (v.subitems||[]).filter(x=>x).forEach(si => { s += `<p class="sub">› ${esc2(si)}</p>`; });
+      (v.links||[]).filter(x=>x).forEach(lk => {
+        const url = lk.startsWith('http') ? lk : 'https://'+lk;
+        s += `<p class="link">🔗 <a href="${url}">${esc2(lk)}</a></p>`;
+      });
+    });
+    const themes = state[type+'Themes'].filter(t=>t);
+    if (themes.length) {
+      s += `<div class="themes"><div class="themes-label">THEMES</div><div>${themes.map(esc2).join(' · ')}</div></div>`;
+    }
+    return s;
+  }
+
+  html += vitHtml('team',  'Team',  'Team Vitamins');
+  html += vitHtml('skill', 'Skill', 'Skill Vitamins');
+  html += vitHtml('iq',    'IQ',    'IQ Vitamins');
+
+  if (state.analytics.length) {
+    html += `<hr><span class="section-label">DATA</span><h2>Analytics</h2>`;
+    state.analytics.forEach(a => {
+      const cls = a.sign==='+' ? 'pos' : a.sign==='-' ? 'neg' : '';
+      html += `<div class="metric-row"><span class="${cls}">${a.sign||'·'}</span> ${esc2(a.metric||'')}${a.value ? ` &nbsp;<strong>${esc2(a.value)} pts</strong>` : ''}</div>`;
+    });
+  }
+
+  html += `</body></html>`;
+
+  // Download as .html, then instruct user to open in Google Docs
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fname = `${(state.playerName||'PDP').replace(/\s+/g,'_')}_Development_Plan.html`;
+  a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Brief instruction toast
+  showToast('HTML file downloaded! Open Google Drive → New → File upload → then open with Google Docs.');
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+    background:#06192A;color:#fff;padding:14px 24px;border-radius:10px;
+    font-size:13px;z-index:9999;max-width:500px;text-align:center;
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);line-height:1.5;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 6000);
+}
+
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function esc2(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ═══════════════════════════════════════════
+//  WIRE BUTTONS & INIT
+// ═══════════════════════════════════════════
+document.getElementById('add-team-vitamin').addEventListener('click',  () => addVit('team'));
+document.getElementById('add-skill-vitamin').addEventListener('click', () => addVit('skill'));
+document.getElementById('add-iq-vitamin').addEventListener('click',    () => addVit('iq'));
+document.getElementById('add-analytics').addEventListener('click', () => {
+  state.analytics.push({ metric:'', sign:'+', value:'' });
+  renderAnalytics(); markUnsaved();
+});
+
+loadData();
+renderAll();
+renderAllThemes();
+renderAnalytics();
+</script>
+</body>
+</html>
