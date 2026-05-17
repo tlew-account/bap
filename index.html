@@ -1,1 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Better Athlete Plan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --blue: #0077C0;
+      --blue-dark: #005a91;
+      --blue-light: #e8f4fc;
+      --silver: #C4CED4;
+      --silver-light: #f0f3f5;
+      --black: #061922;
+      --white: #ffffff;
+      --bg: #f4f7fa;
+      --card: #ffffff;
+      --mid: #e8eef3;
+      --border: rgba(0,119,192,0.18);
+      --text: #061922;
+      --text-muted: rgba(6,25,34,0.55);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ---- NOISE OVERLAY ---- */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.35;
+    }
+
+    /* ---- HERO ---- */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 60px 80px 80px;
+      position: relative;
+      z-index: 2;
+      background: var(--bg);
+    }
+
+    .hero-right {
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated basketball court lines */
+    .court-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #dceef9 0%, #c8dff0 100%);
+      overflow: hidden;
+    }
+    .court-bg svg {
+      position: absolute;
+      width: 140%; height: 140%;
+      top: -20%; left: -20%;
+      opacity: 0.25;
+      animation: courtPulse 8s ease-in-out infinite;
+    }
+    @keyframes courtPulse {
+      0%, 100% { opacity: 0.18; transform: scale(1); }
+      50% { opacity: 0.32; transform: scale(1.03); }
+    }
+
+    .hero-ball {
+      position: absolute;
+      bottom: -60px; right: -60px;
+      width: 380px; height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #0099ee, #0055a0, #002244);
+      box-shadow: inset -20px -20px 60px rgba(0,0,0,0.25), 0 0 80px rgba(0,119,192,0.2);
+      animation: ballFloat 6s ease-in-out infinite;
+      z-index: 1;
+    }
+    .hero-ball::before, .hero-ball::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.25);
+    }
+    .hero-ball::before {
+      inset: 18px;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      transform: rotate(-45deg);
+    }
+    .hero-ball::after {
+      inset: 10px;
+      border: 2px solid rgba(255,255,255,0.15);
+    }
+    @keyframes ballFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(15deg); }
+    }
+
+    .nav-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 20px 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 500;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.05em;
+      color: var(--black);
+      text-decoration: none;
+    }
+    .logo span { color: var(--blue); }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--blue); }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s forwards;
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 7vw, 7rem);
+      line-height: 0.92;
+      letter-spacing: 0.01em;
+      margin-bottom: 28px;
+      color: var(--black);
+      opacity: 0;
+      animation: fadeUp 0.7s 0.35s forwards;
+    }
+    .hero-title .accent { color: var(--blue); display: block; }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+      max-width: 400px;
+      margin-bottom: 48px;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.5s forwards;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--blue);
+      color: var(--white);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 16px 36px;
+      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 100%, 16px 100%);
+      transition: background 0.2s, transform 0.2s;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.65s forwards;
+    }
+    .hero-cta:hover { background: var(--blue-dark); transform: translateY(-2px); }
+    .hero-cta svg { transition: transform 0.2s; }
+    .hero-cta:hover svg { transform: translateX(4px); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---- TOOLS / LINKS ---- */
+    .section {
+      padding: 120px 80px;
+      position: relative;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.8rem, 5vw, 4.5rem);
+      line-height: 1;
+      margin-bottom: 60px;
+      color: var(--black);
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px;
+    }
+
+    .tool-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 40px 32px;
+      text-decoration: none;
+      color: var(--text);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--blue);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+    .tool-card:hover::before { transform: scaleX(1); }
+    .tool-card:hover { border-color: var(--blue); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,119,192,0.1); }
+
+    .tool-icon {
+      width: 48px; height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--blue-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .tool-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.04em;
+      color: var(--black);
+    }
+
+    .tool-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .tool-arrow {
+      color: var(--blue);
+      font-size: 1.3rem;
+      transition: transform 0.2s;
+    }
+    .tool-card:hover .tool-arrow { transform: translateX(6px); }
+
+    /* ---- STATS BAR ---- */
+    .stats-bar {
+      background: var(--blue);
+      padding: 48px 80px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 0 32px;
+      border-right: 1px solid rgba(255,255,255,0.2);
+    }
+    .stat-item:last-child { border-right: none; }
+
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 4rem;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      margin-top: 6px;
+    }
+
+    /* ---- CONTACT ---- */
+    .contact-section {
+      padding: 120px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 100px;
+      align-items: start;
+    }
+
+    .contact-left { position: sticky; top: 100px; }
+
+    .contact-detail {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .contact-item span:first-child {
+      color: var(--blue);
+      font-size: 1.1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      background: var(--white);
+      border: 1px solid var(--silver);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      padding: 14px 18px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+      resize: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--blue);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: rgba(6,25,34,0.3);
+    }
+
+    .form-group select option { background: var(--white); color: var(--text); }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 18px;
+      cursor: pointer;
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 14px 100%);
+      transition: background 0.2s, transform 0.2s;
+      margin-top: 8px;
+    }
+    .submit-btn:hover { background: var(--blue-dark); transform: translateY(-2px); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 48px 32px;
+      border: 1px solid var(--blue);
+      background: var(--blue-light);
+    }
+    .form-success .check { font-size: 3rem; margin-bottom: 16px; }
+    .form-success h3 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; margin-bottom: 12px; color: var(--black); }
+    .form-success p { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* ---- FOOTER ---- */
+    footer {
+      background: var(--black);
+      padding: 48px 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 3px solid var(--blue);
+    }
+
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+      color: var(--white);
+    }
+    .footer-logo span { color: var(--blue); }
+
+    .footer-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .footer-links a {
+      color: rgba(196,206,212,0.6);
+      text-decoration: none;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--blue); }
+
+    .footer-copy {
+      font-size: 0.78rem;
+      color: rgba(196,206,212,0.35);
+    }
+
+    /* ---- INSTAGRAM SECTION ---- */
+    .instagram-section {
+      padding: 120px 80px;
+      background: var(--black);
+      position: relative;
+      overflow: hidden;
+    }
+    .instagram-section::before {
+      content: '';
+      position: absolute;
+      top: -120px; right: -120px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,119,192,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .instagram-section .section-label { color: #c8a4f8; }
+    .instagram-section .section-title { color: var(--white); }
+    .instagram-section p { color: rgba(255,255,255,0.6); font-size: 1rem; line-height: 1.8; max-width: 560px; margin-bottom: 36px; }
+
+    .ig-feed-placeholder {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      margin-bottom: 40px;
+    }
+    .ig-tile {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #0077C0 0%, #003f6e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .ig-tile:hover { opacity: 1; }
+
+    .ig-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--blue);
+      color: var(--white);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .ig-cta:hover { background: var(--blue); color: var(--white); }
+
+    /* ---- BLOG SECTION ---- */
+    .blog-section {
+      padding: 120px 80px;
+      background: var(--bg);
+    }
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .blog-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .blog-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,119,192,0.1); }
+    .blog-card-img {
+      height: 180px;
+      background: linear-gradient(135deg, var(--blue-light), var(--silver));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+    .blog-card-body { padding: 28px 24px 24px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .blog-tag {
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--blue);
+      font-weight: 600;
+    }
+    .blog-card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      color: var(--black);
+      line-height: 1.15;
+    }
+    .blog-card-excerpt {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      flex: 1;
+    }
+    .blog-read-more {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--blue);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    /* ---- PLAYER DEVELOPMENT PLANS ---- */
+    .dev-section {
+      padding: 120px 80px;
+      background: var(--black);
+      position: relative;
+      overflow: hidden;
+    }
+    .dev-section::after {
+      content: '';
+      position: absolute;
+      bottom: -100px; left: -100px;
+      width: 350px; height: 350px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,119,192,0.12), transparent 70%);
+      pointer-events: none;
+    }
+    .dev-section .section-label { color: var(--silver); }
+    .dev-section .section-title { color: var(--white); }
+
+    .dev-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .dev-left p {
+      color: rgba(255,255,255,0.6);
+      font-size: 1rem;
+      line-height: 1.85;
+      margin-bottom: 32px;
+    }
+    .dev-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--blue);
+      color: var(--white);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 100%, 12px 100%);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .dev-cta:hover { background: var(--blue-dark); transform: translateY(-2px); }
+
+    .dev-pillars {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .dev-pillar {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(0,119,192,0.2);
+      border-left: 3px solid var(--blue);
+      padding: 20px 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .dev-pillar-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    .dev-pillar-text h4 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      color: var(--white);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .dev-pillar-text p {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* ---- PRINCIPLES ---- */
+    .principles-section {
+      padding: 120px 80px;
+      background: var(--bg);
+    }
+    .principles-intro {
+      max-width: 640px;
+      margin-bottom: 64px;
+    }
+    .principles-intro p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-top: 16px;
+    }
+    .principles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .principle-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 40px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .principle-card::before {
+      content: attr(data-num);
+      position: absolute;
+      top: -10px; right: 16px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 5rem;
+      color: var(--blue);
+      opacity: 0.07;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .principle-icon {
+      width: 52px; height: 52px;
+      background: var(--blue-light);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    .principle-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      color: var(--black);
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+    }
+    .principle-body {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ---- DIVIDER LINE ---- */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border), transparent);
+      margin: 0 80px;
+    }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 1024px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-right { display: none; }
+      .tools-grid { grid-template-columns: 1fr; }
+      .contact-section { grid-template-columns: 1fr; gap: 60px; }
+      .contact-left { position: static; }
+      .stats-bar { grid-template-columns: 1fr; gap: 32px; }
+      .stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 32px; }
+      .stat-item:last-child { border-bottom: none; }
+      .nav-bar { padding: 20px 32px; }
+      .section, .contact-section { padding: 80px 32px; }
+      .stats-bar { padding: 48px 32px; }
+      .instagram-section, .blog-section { padding: 80px 32px; }
+      .dev-section, .principles-section { padding: 80px 32px; }
+      .dev-grid { grid-template-columns: 1fr; gap: 40px; }
+      .principles-grid { grid-template-columns: 1fr; }
+      .ig-feed-placeholder { grid-template-columns: repeat(2, 1fr); }
+      .blog-grid { grid-template-columns: repeat(2, 1fr); }
+      .principles-grid { grid-template-columns: repeat(2, 1fr); }
+      footer { flex-direction: column; gap: 24px; text-align: center; padding: 40px 32px; }
+      .divider { margin: 0 32px; }
+    }
+
+    @media (max-width: 640px) {
+      .tools-grid { grid-template-columns: 1fr; }
+      .blog-grid { grid-template-columns: 1fr; }
+      .ig-feed-placeholder { grid-template-columns: repeat(2, 1fr); }
+      .hero-left { padding: 100px 32px 60px; }
+      .nav-links { display: none; }
+      .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav-bar">
+    <a href="#" class="logo">Better<span>.</span>Athlete</a>
+    <ul class="nav-links">
+      <li><a href="#tools">Tools</a></li>
+      <li><a href="#player-development">Dev Plans</a></li>
+      <li><a href="#principles">Principles</a></li>
+      <li><a href="#instagram">Instagram</a></li>
+      <li><a href="#blog">Blog</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-left">
+      <p class="eyebrow">Train Smarter. Play Better.</p>
+      <h1 class="hero-title">
+        Elevate Your
+        <span class="accent">Game</span>
+      </h1>
+      <p class="hero-sub">Better Athlete Plan gives basketball players the tools, insights, and training structure to reach their full potential — on and off the court.</p>
+      <a href="#tools" class="hero-cta">
+        Explore Tools
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+    <div class="hero-right">
+      <div class="court-bg">
+        <svg viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#0077C0" stroke-width="1.5">
+          <!-- Court lines -->
+          <rect x="50" y="50" width="500" height="700" stroke-width="2"/>
+          <line x1="50" y1="400" x2="550" y2="400"/>
+          <circle cx="300" cy="400" r="70"/>
+          <circle cx="300" cy="400" r="8" fill="#0077C0"/>
+          <!-- Key top -->
+          <rect x="150" y="50" width="300" height="175"/>
+          <line x1="150" y1="175" x2="450" y2="175"/>
+          <path d="M150 225 Q300 275 450 225"/>
+          <!-- Key bottom -->
+          <rect x="150" y="575" width="300" height="175"/>
+          <line x1="150" y1="625" x2="450" y2="625"/>
+          <path d="M150 575 Q300 525 450 575"/>
+          <!-- 3 point arcs -->
+          <path d="M100 250 Q300 -50 500 250"/>
+          <path d="M100 550 Q300 850 500 550"/>
+        </svg>
+      </div>
+      <div class="hero-ball"></div>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num">500+</div>
+      <div class="stat-label">Athletes Trained</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">12K+</div>
+      <div class="stat-label">Practice Sessions Logged</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">98%</div>
+      <div class="stat-label">Athlete Satisfaction</div>
+    </div>
+  </div>
+
+  <!-- TOOLS -->
+  <section class="section" id="tools">
+    <div class="section-label">Our Platform</div>
+    <h2 class="section-title">Tools Built for Ballers</h2>
+    <div class="tools-grid">
+
+      <a href="#" class="tool-card" target="_blank">
+        <div class="tool-icon">🏀</div>
+        <div class="tool-name">Practice Planner</div>
+        <div class="tool-desc">Build structured, position-specific basketball practice sessions with drill libraries and weekly scheduling.</div>
+        <div class="tool-arrow">→</div>
+      </a>
+
+      <a href="#" class="tool-card" target="_blank">
+        <div class="tool-icon">📊</div>
+        <div class="tool-name">Analytics Tracker</div>
+        <div class="tool-desc">Track and visualize your on-court stats — points, assists, shooting percentages, and performance trends over time.</div>
+        <div class="tool-arrow">→</div>
+      </a>
+
+      <a href="#" class="tool-card" target="_blank">
+        <div class="tool-icon">🔍</div>
+        <div class="tool-name">Scouting Reports</div>
+        <div class="tool-desc">Access detailed player and opponent scouting breakdowns — tendencies, strengths, weaknesses, and game-by-game film notes.</div>
+        <div class="tool-arrow">→</div>
+      </a>
+
+      <a href="#player-development" class="tool-card">
+        <div class="tool-icon">📈</div>
+        <div class="tool-name">Player Development Plans</div>
+        <div class="tool-desc">Personalized, goal-driven development roadmaps built around each athlete's strengths, weaknesses, and position demands.</div>
+        <div class="tool-arrow">→</div>
+      </a>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PLAYER DEVELOPMENT PLANS -->
+  <section class="dev-section" id="player-development">
+    <div class="section-label">Personalized Growth</div>
+    <h2 class="section-title">Player Development Plans</h2>
+    <div class="dev-grid">
+      <div class="dev-left">
+        <p>Every athlete is different. Our Player Development Plans are custom-built roadmaps that assess where you are today and map out exactly where you need to go — with specific skill targets, training benchmarks, and timelines designed around your position, age, and goals.</p>
+        <p>Whether you're a youth player building your foundation or a high school athlete chasing a college scholarship, your plan adapts with you as you grow.</p>
+        <a href="#contact" class="dev-cta">Get Your Plan →</a>
+      </div>
+      <div class="dev-pillars">
+        <div class="dev-pillar">
+          <div class="dev-pillar-icon">🎯</div>
+          <div class="dev-pillar-text">
+            <h4>Skill Assessment</h4>
+            <p>We identify your current level across shooting, ball-handling, defense, and IQ — then prioritize what moves the needle most.</p>
+          </div>
+        </div>
+        <div class="dev-pillar">
+          <div class="dev-pillar-icon">📅</div>
+          <div class="dev-pillar-text">
+            <h4>Structured Timeline</h4>
+            <p>Monthly milestones and weekly check-ins keep you accountable and on track toward your short- and long-term goals.</p>
+          </div>
+        </div>
+        <div class="dev-pillar">
+          <div class="dev-pillar-icon">🔄</div>
+          <div class="dev-pillar-text">
+            <h4>Adaptive Coaching</h4>
+            <p>Plans evolve as you improve. Stagnation isn't an option — we adjust training loads and focus areas based on real progress data.</p>
+          </div>
+        </div>
+        <div class="dev-pillar">
+          <div class="dev-pillar-icon">🏆</div>
+          <div class="dev-pillar-text">
+            <h4>Competition Prep</h4>
+            <p>Peak for tryouts, AAU seasons, and showcases with targeted pre-event preparation built into your plan.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider" style="margin:0; background: rgba(255,255,255,0.06);"></div>
+
+  <!-- PRINCIPLES -->
+  <section class="principles-section" id="principles">
+    <div class="principles-intro">
+      <div class="section-label">What We Believe</div>
+      <h2 class="section-title">Our Principles</h2>
+      <p>Everything we build, teach, and share is grounded in a set of core principles. These aren't slogans — they're the foundation of how Better Athlete Plan approaches player development at every level.</p>
+    </div>
+    <div class="principles-grid">
+      <div class="principle-card" data-num="01">
+        <div class="principle-icon">🧱</div>
+        <div class="principle-title">Fundamentals First</div>
+        <p class="principle-body">Elite performance is built on a foundation of mastered basics. We never skip steps. Footwork, form, and decision-making are trained before flash.</p>
+      </div>
+      <div class="principle-card" data-num="02">
+        <div class="principle-icon">📐</div>
+        <div class="principle-title">Data-Driven Development</div>
+        <p class="principle-body">Feelings lie; numbers don't. We track everything — from shot percentages to sprint times — so athletes and coaches make informed, objective decisions.</p>
+      </div>
+      <div class="principle-card" data-num="03">
+        <div class="principle-icon">🤝</div>
+        <div class="principle-title">Character Over Clout</div>
+        <p class="principle-body">We develop whole people, not just athletes. Coachability, accountability, and respect for the game matter as much as any on-court skill.</p>
+      </div>
+      <div class="principle-card" data-num="04">
+        <div class="principle-icon">⚡</div>
+        <div class="principle-title">Consistency Beats Intensity</div>
+        <p class="principle-body">One great week won't build a great player. We emphasize sustainable daily habits and long-term commitment over short bursts of motivation.</p>
+      </div>
+      <div class="principle-card" data-num="05">
+        <div class="principle-icon">🌍</div>
+        <div class="principle-title">Access for All Athletes</div>
+        <p class="principle-body">Elite development shouldn't be reserved for the privileged few. We build tools and resources designed to reach athletes at every socioeconomic level.</p>
+      </div>
+      <div class="principle-card" data-num="06">
+        <div class="principle-icon">🔬</div>
+        <div class="principle-title">Always Evolving</div>
+        <p class="principle-body">The game changes. So do we. Our methods are continuously refined based on sports science, coaching innovation, and feedback from athletes on the court.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- INSTAGRAM -->
+  <section class="instagram-section" id="instagram">
+    <div class="section-label">Follow Along</div>
+    <h2 class="section-title">We're on Instagram</h2>
+    <p>Daily drills, highlight breakdowns, athlete spotlights, and motivation straight to your feed. Follow Better Athlete Plan and level up your game one post at a time.</p>
+    <div class="ig-feed-placeholder">
+      <div class="ig-tile">🏀</div>
+      <div class="ig-tile">💪</div>
+      <div class="ig-tile">📋</div>
+      <div class="ig-tile">🎯</div>
+    </div>
+    <a href="https://www.instagram.com" class="ig-cta" target="_blank">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      Follow @BetterAthletePlan
+    </a>
+  </section>
+
+  <div class="divider" style="margin:0; background: rgba(255,255,255,0.06);"></div>
+
+  <!-- BLOG -->
+  <section class="blog-section" id="blog">
+    <div class="section-label">Knowledge Base</div>
+    <h2 class="section-title">From the Blog</h2>
+    <div class="blog-grid">
+      <a href="#" class="blog-card" target="_blank">
+        <div class="blog-card-img">🧠</div>
+        <div class="blog-card-body">
+          <span class="blog-tag">Mindset</span>
+          <div class="blog-card-title">Building a Championship Mentality Off-Season</div>
+          <p class="blog-card-excerpt">How elite players use the off-season to develop mental toughness, discipline, and the habits that separate good from great.</p>
+          <span class="blog-read-more">Read More →</span>
+        </div>
+      </a>
+      <a href="#" class="blog-card" target="_blank">
+        <div class="blog-card-img">🍽️</div>
+        <div class="blog-card-body">
+          <span class="blog-tag">Nutrition</span>
+          <div class="blog-card-title">What to Eat Before, During & After Practice</div>
+          <p class="blog-card-excerpt">A practical guide to fueling your body for peak performance — from pre-game meals to post-practice recovery nutrition.</p>
+          <span class="blog-read-more">Read More →</span>
+        </div>
+      </a>
+      <a href="#" class="blog-card" target="_blank">
+        <div class="blog-card-img">🎬</div>
+        <div class="blog-card-body">
+          <span class="blog-tag">Film Study</span>
+          <div class="blog-card-title">How to Watch Game Film Like a Pro Scout</div>
+          <p class="blog-card-excerpt">Break down your own footage and opponents' tendencies with these film study frameworks used by professional coaching staffs.</p>
+          <span class="blog-read-more">Read More →</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CONTACT -->
+  <section class="contact-section" id="contact">
+    <div class="contact-left">
+      <div class="section-label">Get in Touch</div>
+      <h2 class="section-title">Let's Talk Ball</h2>
+      <p style="color: var(--text-muted); line-height: 1.8; font-size:0.95rem;">
+        Whether you're a player looking for a personalized plan, a coach exploring team tools, or a brand interested in partnership — we want to hear from you.
+      </p>
+      <div class="contact-detail">
+        <div class="contact-item">
+          <span>📧</span>
+          <span>timothy.lewis@yahoo.com</span>
+        </div>
+        <div class="contact-item">
+          <span>📍</span>
+          <span>Serving Athletes Everywhere</span>
+        </div>
+        <div class="contact-item">
+          <span>🕐</span>
+          <span>Response within 24–48 hours</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="contact-right">
+      <div id="contactForm">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" placeholder="Your name" />
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="your@email.com" />
+        </div>
+        <div class="form-group">
+          <label for="inquiry">Inquiry Type</label>
+          <select id="inquiry">
+            <option value="" disabled selected>Select an inquiry type</option>
+            <option value="Personal Training Plan">Personal Training Plan</option>
+            <option value="Basketball Analytics">Basketball Analytics</option>
+            <option value="Team / Coaching Tools">Team / Coaching Tools</option>
+            <option value="Partnership / Sponsorship">Partnership / Sponsorship</option>
+            <option value="General Question">General Question</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" rows="6" placeholder="Tell us what's on your mind..."></textarea>
+        </div>
+        <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">Send Message</button>
+      </div>
+
+      <div class="form-success" id="formSuccess">
+        <div class="check">✅</div>
+        <h3>Message Sent!</h3>
+        <p>Thanks for reaching out. We'll get back to you at your email address within 24–48 hours.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Better<span>.</span>Athlete Plan</div>
+    <ul class="footer-links">
+      <li><a href="#tools">Tools</a></li>
+      <li><a href="#player-development">Dev Plans</a></li>
+      <li><a href="#principles">Principles</a></li>
+      <li><a href="#instagram">Instagram</a></li>
+      <li><a href="#blog">Blog</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="footer-copy">© 2026 Better Athlete Plan. All rights reserved.</div>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.tool-card, .stat-item, .section-label, .section-title').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+
+    // Contact form → mailto
+    function handleSubmit() {
+      const name    = document.getElementById('name').value.trim();
+      const email   = document.getElementById('email').value.trim();
+      const inquiry = document.getElementById('inquiry').value;
+      const message = document.getElementById('message').value.trim();
+
+      if (!name || !email || !inquiry || !message) {
+        alert('Please fill in all fields before submitting.');
+        return;
+      }
+
+      const subject = encodeURIComponent(`[Better Athlete Plan] ${inquiry} — from ${name}`);
+      const body = encodeURIComponent(
+        `Name: ${name}\nEmail: ${email}\nInquiry: ${inquiry}\n\nMessage:\n${message}`
+      );
+
+      window.location.href = `mailto:timothy.lewis@yahoo.com?subject=${subject}&body=${body}`;
+
+      // Show success after short delay
+      setTimeout(() => {
+        document.getElementById('contactForm').style.display = 'none';
+        document.getElementById('formSuccess').style.display = 'block';
+      }, 800);
+    }
+  </script>
+</body>
+</html>
