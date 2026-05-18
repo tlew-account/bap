@@ -281,6 +281,42 @@
   .link-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
   .link-icon { flex-shrink: 0; color: var(--magic-blue); display: flex; }
   .link-icon svg { width: 15px; height: 15px; }
+
+  /* ── SUB-ITEM EXPANDED BLOCK ── */
+  .subitem-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .subitem-block-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: var(--silver-xlight);
+    border-bottom: 1px solid var(--border);
+  }
+  .subitem-block-body {
+    padding: 12px 14px 14px;
+  }
+  .sub-notes {
+    width: 100%; min-height: 60px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 8px 12px;
+    color: var(--text-mid); font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px; line-height: 1.6; resize: vertical;
+    outline: none; transition: border-color .2s;
+    margin-bottom: 10px;
+  }
+  .sub-notes:focus { border-color: var(--magic-blue); }
+  .sub-notes::placeholder { color: var(--text-dim); }
+  .sub-field-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .sub-field-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .link-input {
     flex: 1; background: var(--surface); border: 1px solid var(--border);
     border-radius: 7px; padding: 7px 12px; color: var(--magic-blue-dark);
@@ -720,33 +756,84 @@ function makeVitaminCard(type, idx, data) {
     <div class="vitamin-body ${isOpen?'open':''}">
       <div class="field-label">Notes</div>
       <textarea class="vit-notes" placeholder="Coaching notes..." oninput="vitFld(this,'notes','${type}',${idx})">${esc(data.notes||'')}</textarea>
-      <div class="field-label">Sub-items</div>
-      <div id="${type}-sub-${idx}"></div>
-      <button class="add-btn" onclick="addSub('${type}',${idx})">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Add sub-item
-      </button>
-      <div class="field-label" style="margin-top:16px">Links &amp; Resources</div>
+
+      <div class="field-label">Links &amp; Resources</div>
       <div id="${type}-links-${idx}"></div>
       <button class="add-btn" onclick="addLink('${type}',${idx})">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Add link
       </button>
+
+      <div class="field-label" style="margin-top:18px">Sub-items</div>
+      <div id="${type}-sub-${idx}"></div>
+      <button class="add-btn" onclick="addSub('${type}',${idx})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add sub-item
+      </button>
     </div>`;
   return card;
+}
+
+function ensureSub(type, vi, si) {
+  // Migrate legacy string sub-items to objects
+  const subs = getV(type)[vi].subitems;
+  if (typeof subs[si] === 'string') subs[si] = { text: subs[si], notes: '', links: [] };
+  if (!subs[si].links) subs[si].links = [];
+  return subs[si];
+}
+
+function renderSubLinks(type, vi, si) {
+  const c = document.getElementById(`${type}-sub-${vi}-${si}-links`); if (!c) return;
+  c.innerHTML = '';
+  const links = ensureSub(type, vi, si).links;
+  links.forEach((lk, li) => {
+    const row = document.createElement('div'); row.className = 'link-row';
+    row.innerHTML = `
+      <span class="link-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+      </svg></span>
+      <input class="link-input" placeholder="Paste URL..." value="${esc(lk)}"
+        oninput="subLnkChg(this,'${type}',${vi},${si},${li})">
+      <button class="link-open" onclick="openSubLnk('${type}',${vi},${si},${li})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+      </button>
+      <button class="delete-item-btn" onclick="delSubLnk('${type}',${vi},${si},${li})">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>`;
+    c.appendChild(row);
+  });
 }
 
 function renderSubs(type, vIdx) {
   const c = document.getElementById(`${type}-sub-${vIdx}`); if (!c) return;
   c.innerHTML = '';
   (getV(type)[vIdx].subitems||[]).forEach((si, i) => {
-    const row = document.createElement('div'); row.className = 'subitem-row';
-    row.innerHTML = `<span class="subitem-bullet">›</span>
-      <input class="subitem-input" placeholder="Sub-item..." value="${esc(si)}" oninput="subChg(this,'${type}',${vIdx},${i})">
-      <button class="delete-item-btn" onclick="delSub('${type}',${vIdx},${i})">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>`;
-    c.appendChild(row);
+    const sub = ensureSub(type, vIdx, i);
+    const block = document.createElement('div'); block.className = 'subitem-block';
+    block.innerHTML = `
+      <div class="subitem-block-header">
+        <span class="subitem-bullet">›</span>
+        <input class="subitem-input" placeholder="Sub-item title..." value="${esc(sub.text||'')}"
+          oninput="subChg(this,'${type}',${vIdx},${i},'text')" style="flex:1">
+        <button class="delete-item-btn" onclick="delSub('${type}',${vIdx},${i})">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="subitem-block-body">
+        <div class="sub-field-label">Notes</div>
+        <textarea class="sub-notes" placeholder="Notes for this sub-item..."
+          oninput="subChg(this,'${type}',${vIdx},${i},'notes')">${esc(sub.notes||'')}</textarea>
+        <div class="sub-field-label">Links &amp; Resources</div>
+        <div id="${type}-sub-${vIdx}-${i}-links"></div>
+        <button class="add-btn" onclick="addSubLnk('${type}',${vIdx},${i})" style="margin-top:4px">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add link
+        </button>
+      </div>`;
+    c.appendChild(block);
+    renderSubLinks(type, vIdx, i);
   });
 }
 
@@ -799,9 +886,19 @@ function addVit(type) {
 }
 function delVit(type, i) { getV(type).splice(i,1); renderSection(type); markUnsaved(); }
 function vitFld(el, fld, type, i) { getV(type)[i][fld] = el.value; markUnsaved(); }
-function addSub(type, vi) { getV(type)[vi].subitems = getV(type)[vi].subitems||[]; getV(type)[vi].subitems.push(''); renderSubs(type,vi); markUnsaved(); }
-function subChg(el, type, vi, si) { getV(type)[vi].subitems[si] = el.value; markUnsaved(); }
+function addSub(type, vi) {
+  getV(type)[vi].subitems = getV(type)[vi].subitems||[];
+  getV(type)[vi].subitems.push({ text:'', notes:'', links:[] });
+  renderSubs(type,vi); markUnsaved();
+}
+function subChg(el, type, vi, si, field) {
+  ensureSub(type, vi, si)[field] = el.value; markUnsaved();
+}
 function delSub(type, vi, si) { getV(type)[vi].subitems.splice(si,1); renderSubs(type,vi); markUnsaved(); }
+function addSubLnk(type, vi, si) { ensureSub(type,vi,si).links.push(''); renderSubLinks(type,vi,si); markUnsaved(); }
+function subLnkChg(el, type, vi, si, li) { ensureSub(type,vi,si).links[li] = el.value; markUnsaved(); }
+function delSubLnk(type, vi, si, li) { ensureSub(type,vi,si).links.splice(li,1); renderSubLinks(type,vi,si); markUnsaved(); }
+function openSubLnk(type, vi, si, li) { let u = ensureSub(type,vi,si).links[li]; if (!u) return; if (!u.startsWith('http')) u='https://'+u; window.open(u,'_blank'); }
 function addLink(type, vi) { getV(type)[vi].links = getV(type)[vi].links||[]; getV(type)[vi].links.push(''); renderLinks(type,vi); markUnsaved(); }
 function lnkChg(el, type, vi, li) { getV(type)[vi].links[li] = el.value; markUnsaved(); }
 function delLnk(type, vi, li) { getV(type)[vi].links.splice(li,1); renderLinks(type,vi); markUnsaved(); }
@@ -871,7 +968,7 @@ function collectState() {
 function saveData() {
   collectState();
   try {
-    localStorage.setItem('pdp_magic_v2', JSON.stringify(state));
+    localStorage.setItem('pdp_magic_v3', JSON.stringify(state));
     const el = document.getElementById('save-status');
     el.textContent = '✓ Saved'; el.className = 'save-status saved';
     setTimeout(() => { el.textContent = 'Auto-saved locally'; el.className = 'save-status'; }, 2000);
@@ -879,7 +976,7 @@ function saveData() {
 }
 function loadData() {
   try {
-    const raw = localStorage.getItem('pdp_magic_v2');
+    const raw = localStorage.getItem('pdp_magic_v3');
     if (!raw) return initDefaults();
     Object.assign(state, JSON.parse(raw));
     document.getElementById('player-name').value  = state.playerName||'';
@@ -905,7 +1002,9 @@ function initDefaults() {
     { name:'Shooting', notes:'Ball to hip, shoot high, hold finish until ball lands. Shoot over backboard to force arc on shot.', subitems:[], links:[], open:true },
   ];
   state.iqVitamins    = [
-    { name:'Schemes', notes:'Offensive and defensive schemes.', subitems:['Horns'], links:['https://youtu.be/x0eilYyliVk?si=xSL21kD-ijEeKtYT&t=647','https://youtu.be/Cva0AB_hPFE'], open:true },
+    { name:'Schemes', notes:'Offensive and defensive schemes.',
+      subitems:[{ text:'Horns', notes:'', links:['https://youtu.be/x0eilYyliVk?si=xSL21kD-ijEeKtYT&t=647','https://youtu.be/Cva0AB_hPFE'] }],
+      links:[], open:true },
   ];
   state.teamThemes  = ['Be physical and proactive'];
   state.skillThemes = ['Score!', 'Thrive under pressure', 'Control the game'];
@@ -1028,20 +1127,6 @@ function exportPDF() {
         y += lines.length * 13 + 6;
       }
 
-      if (v.subitems && v.subitems.length) {
-        v.subitems.filter(s=>s).forEach(si => {
-          checkPage(16);
-          doc.setFillColor(...BLUE);
-          doc.circle(margin + 18, y - 3, 2, 'F');
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(10);
-          doc.setTextColor(...BLACK);
-          doc.text(si, margin + 26, y);
-          y += 14;
-        });
-        y += 4;
-      }
-
       if (v.links && v.links.length) {
         checkPage(20);
         doc.setFont('helvetica', 'italic');
@@ -1055,6 +1140,47 @@ function exportPDF() {
         });
         y += 2;
       }
+
+      if (v.subitems && v.subitems.length) {
+        v.subitems.forEach(si => {
+          const subText  = typeof si === 'string' ? si : (si.text  || '');
+          const subNotes = typeof si === 'object'  ? (si.notes || '') : '';
+          const subLinks = typeof si === 'object'  ? (si.links || []) : [];
+          if (!subText && !subNotes && !subLinks.length) return;
+
+          checkPage(16);
+          doc.setFillColor(...BLUE);
+          doc.circle(margin + 18, y - 3, 2, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10);
+          doc.setTextColor(...BLACK);
+          doc.text(subText || '—', margin + 26, y);
+          y += 14;
+
+          if (subNotes) {
+            checkPage(14);
+            const subLines = doc.splitTextToSize(subNotes, contentW - 36);
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(9);
+            doc.setTextColor(...GRAY);
+            doc.text(subLines, margin + 32, y);
+            y += subLines.length * 12 + 4;
+          }
+
+          subLinks.filter(l=>l).forEach(lk => {
+            checkPage(13);
+            const display = lk.length > 68 ? lk.substring(0,65)+'...' : lk;
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(8);
+            doc.setTextColor(...BLUE);
+            doc.text('🔗 ' + display, margin + 32, y);
+            y += 12;
+          });
+          y += 2;
+        });
+        y += 4;
+      }
+
       y += 8;
     });
 
@@ -1213,14 +1339,6 @@ async function exportWord() {
           }));
         }
 
-        (v.subitems||[]).filter(s=>s).forEach(si => {
-          paras.push(new Paragraph({
-            children: [new TextRun({ text: si, size: 20, font:'Arial', color: MAGIC_BLACK })],
-            bullet: { level: 0 },
-            indent: { left: 320 }, spacing: { before: 40, after: 40 }
-          }));
-        });
-
         (v.links||[]).filter(l=>l).forEach(lk => {
           paras.push(new Paragraph({
             children: [
@@ -1230,6 +1348,36 @@ async function exportWord() {
             ],
             spacing: { before: 40, after: 40 }, indent: { left: 160 }
           }));
+        });
+
+        (v.subitems||[]).forEach(si => {
+          const subText  = typeof si === 'string' ? si : (si.text  || '');
+          const subNotes = typeof si === 'object'  ? (si.notes || '') : '';
+          const subLinks = typeof si === 'object'  ? (si.links || []) : [];
+
+          paras.push(new Paragraph({
+            children: [new TextRun({ text: subText || '—', bold: true, size: 20, font:'Arial', color: MAGIC_BLACK })],
+            bullet: { level: 0 },
+            indent: { left: 320 }, spacing: { before: 60, after: 20 }
+          }));
+
+          if (subNotes) {
+            paras.push(new Paragraph({
+              children: [new TextRun({ text: subNotes, italics: true, color: '4a6070', size: 18, font:'Arial' })],
+              spacing: { before: 20, after: 20 }, indent: { left: 480 }
+            }));
+          }
+
+          subLinks.filter(l=>l).forEach(lk => {
+            paras.push(new Paragraph({
+              children: [
+                new TextRun({ text: '🔗 ', size: 16, font:'Arial' }),
+                new ExternalHyperlink({ link: lk.startsWith('http') ? lk : 'https://'+lk,
+                  children: [new TextRun({ text: lk, style: 'Hyperlink', size: 16, font:'Arial', color: MAGIC_BLUE })] })
+              ],
+              spacing: { before: 20, after: 20 }, indent: { left: 480 }
+            }));
+          });
         });
       });
 
@@ -1339,8 +1487,11 @@ function exportGoogleDoc() {
     h2 { color: #06192A; font-size: 22px; margin-top: 32px; }
     .vitamin-title { background: #0077C0; color: white; padding: 6px 14px; font-weight: bold; font-size: 16px; margin: 16px 0 8px; }
     .notes { color: #4a6070; font-style: italic; margin-left: 14px; }
-    .sub { margin-left: 28px; color: #06192A; }
     .link { margin-left: 14px; font-size: 13px; }
+    .sub-block { border-left: 3px solid #0077C0; margin: 10px 0 10px 14px; padding: 6px 10px 8px; background: #f8fafb; }
+    .sub-title { font-weight: bold; color: #06192A; margin-bottom: 4px; }
+    .sub-notes { color: #4a6070; font-style: italic; font-size: 13px; margin: 4px 0; }
+    .sub-link { font-size: 12px; margin: 3px 0; }
     .themes { background: #0077C0; color: white; padding: 10px 16px; border-radius: 6px; margin-top: 16px; }
     .themes-label { font-size: 10px; letter-spacing: 2px; opacity: .7; }
     .metric-row { background: #f4f6f8; padding: 8px 12px; margin-bottom: 6px; }
@@ -1366,10 +1517,21 @@ function exportGoogleDoc() {
     getV(type).forEach(v => {
       s += `<div class="vitamin-title">${esc2(v.name||'Untitled')}</div>`;
       if (v.notes) s += `<p class="notes">${esc2(v.notes)}</p>`;
-      (v.subitems||[]).filter(x=>x).forEach(si => { s += `<p class="sub">› ${esc2(si)}</p>`; });
       (v.links||[]).filter(x=>x).forEach(lk => {
         const url = lk.startsWith('http') ? lk : 'https://'+lk;
         s += `<p class="link">🔗 <a href="${url}">${esc2(lk)}</a></p>`;
+      });
+      (v.subitems||[]).forEach(si => {
+        const subText  = typeof si === 'string' ? si : (si.text  || '');
+        const subNotes = typeof si === 'object'  ? (si.notes || '') : '';
+        const subLinks = typeof si === 'object'  ? (si.links || []) : [];
+        s += `<div class="sub-block"><div class="sub-title">› ${esc2(subText)}</div>`;
+        if (subNotes) s += `<div class="sub-notes">${esc2(subNotes)}</div>`;
+        subLinks.filter(l=>l).forEach(lk => {
+          const url = lk.startsWith('http') ? lk : 'https://'+lk;
+          s += `<div class="sub-link">🔗 <a href="${url}">${esc2(lk)}</a></div>`;
+        });
+        s += `</div>`;
       });
     });
     const themes = state[type+'Themes'].filter(t=>t);
