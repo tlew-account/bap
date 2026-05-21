@@ -1335,12 +1335,29 @@
       <div class="expr-editor" id="fm-expr-editor">
         <div class="expr-display" id="fm-expr-display" onclick="focusExprInput()">
           <span id="fm-expr-tokens"></span>
-          <input type="text" id="fm-expr-input" class="expr-input" placeholder="Type a number or operator…" oninput="onExprInput()" onkeydown="onExprKeydown(event)">
+          <input type="text" id="fm-expr-input" class="expr-input" placeholder="…" style="width:4px;min-width:4px;opacity:0;" onkeydown="onExprKeydown(event)">
         </div>
-        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-          <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;flex-basis:100%;margin-bottom:2px;">Operator</span>
-          ${['+','−','×','÷','(',')']. map(op=>`<button class="op-btn" onclick="insertOperator('${op}')">${op}</button>`).join('')}
-          <button class="op-btn op-clear" onclick="clearExpr()"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+        <!-- Number entry row -->
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;">Add Number</span>
+          <input type="number" id="fm-num-input" step="any" placeholder="e.g. 1.5"
+            style="width:110px;padding:6px 10px;border:1.5px solid var(--gray2);border-radius:7px;font-family:'Mulish',sans-serif;font-size:14px;color:var(--text);background:#fff;outline:none;"
+            onfocus="this.style.borderColor='var(--navy)'" onblur="this.style.borderColor='var(--gray2)'"
+            oninput="updateExprPreview()"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();commitNumber();}">
+          <button class="op-btn" onclick="commitNumber()" style="padding:5px 14px;font-size:13px;font-family:'Mulish',sans-serif;">Add →</button>
+        </div>
+        <div style="margin-top:10px;">
+          <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">Operators</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;" id="fm-op-btns">
+            <button class="op-btn" onclick="insertOperator('+')">+</button>
+            <button class="op-btn" onclick="insertOperator('−')">−</button>
+            <button class="op-btn" onclick="insertOperator('×')">×</button>
+            <button class="op-btn" onclick="insertOperator('÷')">÷</button>
+            <button class="op-btn" onclick="insertOperator('(')">(</button>
+            <button class="op-btn" onclick="insertOperator(')')">)</button>
+            <button class="op-btn op-clear" onclick="clearExpr()"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+          </div>
         </div>
         <div style="margin-top:10px;">
           <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">Insert Stat</span>
@@ -2587,7 +2604,10 @@ function openFormulaModal(fid) {
   // Stat tokens for insertion
   renderStatInsertButtons();
   renderExprTokens();
-  document.getElementById('fm-expr-input').value = '';
+  const exprInp = document.getElementById('fm-expr-input');
+  if (exprInp) exprInp.value = '';
+  const numInp = document.getElementById('fm-num-input');
+  if (numInp) numInp.value = '';
 
   openModal('modal-formula');
 }
@@ -2645,34 +2665,38 @@ function clearExpr() {
   renderExprTokens();
 }
 
-function focusExprInput() { document.getElementById('fm-expr-input').focus(); }
+function focusExprInput() {
+  // Focus the number input for convenience
+  const num = document.getElementById('fm-num-input');
+  if (num) num.focus();
+}
+
+// Commit whatever is in the number input as a num token
+function commitNumber() {
+  const inp = document.getElementById('fm-num-input');
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (val === '' || isNaN(parseFloat(val))) {
+    inp.style.borderColor = '#c62828';
+    setTimeout(() => { inp.style.borderColor = 'var(--gray2)'; }, 800);
+    return;
+  }
+  const num = parseFloat(val);
+  // Format cleanly: remove trailing zeros but keep decimals if needed
+  const label = String(num);
+  fmTokens.push({ type: 'num', label, value: label });
+  inp.value = '';
+  inp.focus();
+  renderExprTokens();
+}
 
 function onExprInput() {
-  // Preview only, actual number tokens are added on space/enter
   updateExprPreview();
 }
 
 function onExprKeydown(e) {
-  const inp = document.getElementById('fm-expr-input');
-  const val = inp.value.trim();
-  if ((e.key === ' ' || e.key === 'Enter') && val !== '') {
-    e.preventDefault();
-    const num = parseFloat(val);
-    if (!isNaN(num)) {
-      fmTokens.push({type:'num', label:val, value:val});
-      inp.value = '';
-      renderExprTokens();
-    } else {
-      // Try as operator
-      const opKey = {'+':'+','−':'−','*':'×','x':'×','/':'÷','(':'(',')':{label:')',value:')'}};
-      const found = Object.entries(OP_MAP).find(([sym,v]) => v===val || sym===val);
-      if (found) {
-        insertOperator(found[0]);
-        inp.value = '';
-      }
-    }
-  }
-  if (e.key === 'Backspace' && val === '' && fmTokens.length) {
+  // Backspace on empty hidden input removes last token
+  if (e.key === 'Backspace' && fmTokens.length) {
     fmTokens.pop();
     renderExprTokens();
   }
@@ -2686,24 +2710,34 @@ function selectFmtBtn(btn) {
 
 function updateExprPreview() {
   const preview = document.getElementById('fm-expr-preview');
-  // Flush any typed number
-  const inp = document.getElementById('fm-expr-input');
-  const typed = inp ? inp.value.trim() : '';
+  if (!preview) return;
+  // Include any number currently typed in the number input (for live preview)
+  const numInp = document.getElementById('fm-num-input');
+  const typed = numInp ? numInp.value.trim() : '';
   const tempTokens = [...fmTokens, ...(typed && !isNaN(parseFloat(typed)) ? [{type:'num',label:typed,value:typed}] : [])];
+
+  // Nothing entered yet — hide preview silently
   if (!tempTokens.length) { preview.style.display = 'none'; return; }
+
   const testVals = {};
   categories.forEach(c => c.stats.forEach(s => { testVals[s.id] = 1; }));
-  const result = evaluateFormula({tokens:tempTokens}, testVals);
+  const result = evaluateFormula({tokens: tempTokens}, testVals);
+
   if (result !== null) {
     preview.style.display = '';
-    preview.textContent = '✓ Valid expression · Sample result (all stats = 1): ' + formatFormulaResult(result, fmFormat);
+    preview.textContent = '✓ Valid — sample result (all stats = 1): ' + formatFormulaResult(result, fmFormat);
     preview.style.background = '#e8f5e9';
     preview.style.color = '#2e7d32';
-  } else if (tempTokens.length) {
-    preview.style.display = '';
-    preview.textContent = '⚠ Expression incomplete or invalid';
-    preview.style.background = '#fff3e0';
-    preview.style.color = '#e65100';
+  } else {
+    // Only show invalid warning if there are already committed tokens (not just while typing)
+    if (fmTokens.length) {
+      preview.style.display = '';
+      preview.textContent = '⚠ Expression incomplete or invalid — keep adding tokens';
+      preview.style.background = '#fff3e0';
+      preview.style.color = '#e65100';
+    } else {
+      preview.style.display = 'none';
+    }
   }
 }
 
@@ -2711,12 +2745,12 @@ function saveFormula() {
   const name = document.getElementById('fm-name').value.trim();
   if (!name) return showToast('Formula name is required');
 
-  // Flush any pending number token
-  const inp = document.getElementById('fm-expr-input');
-  const typed = inp.value.trim();
-  if (typed && !isNaN(parseFloat(typed))) {
-    fmTokens.push({type:'num', label:typed, value:typed});
-    inp.value = '';
+  // Flush any pending number in the number input
+  const numInp = document.getElementById('fm-num-input');
+  const typed = numInp ? numInp.value.trim() : '';
+  if (typed !== '' && !isNaN(parseFloat(typed))) {
+    fmTokens.push({ type: 'num', label: typed, value: typed });
+    if (numInp) numInp.value = '';
   }
   if (!fmTokens.length) return showToast('Please build an expression');
 
