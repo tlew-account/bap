@@ -1395,7 +1395,7 @@
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:800;color:var(--gold);line-height:1;">0</div>
         </div>
         <div class="ig-feed" id="ig-feed">
-          <div style="font-size:12px;color:var(--text3);padding:12px;text-align:center;">Tap a stat to begin tracking</div>
+          <div data-placeholder style="font-size:12px;color:var(--text3);padding:12px;text-align:center;">Tap a stat to begin tracking</div>
         </div>
       </div>
 
@@ -3234,18 +3234,22 @@ function renderIngame() {
 
   // Populate team dropdown
   const sel = document.getElementById('ig-team-select');
+  const prevTeam = sel.value; // preserve selection if re-rendering
   sel.innerHTML = '<option value="">Select team…</option>' +
-    teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    teams.map(t => `<option value="${t.id}" ${t.id === prevTeam ? 'selected' : ''}>${t.name}</option>`).join('');
 
   // Default date
   const dateEl = document.getElementById('ig-date');
   if (!dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
 
-  // Clear roster chips until a team is chosen
-  document.getElementById('ig-roster-chips').innerHTML =
-    '<span style="font-size:13px;color:var(--text3);">Select a team above to see its roster.</span>';
-
-  igSelectedPlayers = new Set();
+  // If a team was previously selected, re-populate roster; otherwise show prompt
+  if (prevTeam) {
+    igPopulateRoster();
+  } else {
+    document.getElementById('ig-roster-chips').innerHTML =
+      '<span style="font-size:13px;color:var(--text3);">Select a team above to see its roster.</span>';
+    igSelectedPlayers = new Set();
+  }
 }
 
 function igPopulateRoster() {
@@ -3422,9 +3426,9 @@ function igRenderStatGrid() {
           return `<button
             class="ig-tap-btn"
             id="ig-btn-${s.id}"
-            style="background:${cat.color}12;border-color:${cat.color}44;color:${cat.color};box-shadow:0 3px 10px ${cat.color}18;"
-            ontouchstart="igTapStat('${s.id}','${cat.id}')"
-            onclick="igTapStat('${s.id}','${cat.id}')">
+            data-sid="${s.id}"
+            data-catid="${cat.id}"
+            style="background:${cat.color}12;border-color:${cat.color}44;color:${cat.color};box-shadow:0 3px 10px ${cat.color}18;">
             <span class="ig-tap-count" style="color:${cat.color};">${count > 0 ? count : ''}</span>
             <span class="ig-tap-name">${s.name}</span>
             <span class="ig-tap-pts">${ptLabel}</span>
@@ -3432,16 +3436,28 @@ function igRenderStatGrid() {
         }).join('')}
       </div>
     </div>`).join('');
+
+  // Attach a single delegated listener on the grid to handle both touch and click cleanly
+  igAttachTapListeners(container);
+}
+
+function igAttachTapListeners(container) {
+  // Use touchend for iOS (no 300ms delay, no double-fire with onclick)
+  // Fall back to click on non-touch devices
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+  container.addEventListener(isTouchDevice ? 'touchend' : 'click', function(e) {
+    const btn = e.target.closest('.ig-tap-btn');
+    if (!btn) return;
+    e.preventDefault(); // prevent ghost click on touch
+    const sid   = btn.dataset.sid;
+    const catid = btn.dataset.catid;
+    if (sid && catid) igTapStat(sid, catid, btn);
+  }, { passive: false });
 }
 
 // ── Tap a stat ──
-let _lastTapTime = 0;  // debounce double-fire on touch+click
-function igTapStat(sid, catId) {
-  // Prevent double-fire from touch + click on same tap
-  const now = Date.now();
-  if (now - _lastTapTime < 350) return;
-  _lastTapTime = now;
-
+function igTapStat(sid, catId, btn) {
   const pid = igActivePlayerId;
   if (!pid) return;
   if (!igStatCounts[pid]) igStatCounts[pid] = {};
@@ -3458,12 +3474,11 @@ function igTapStat(sid, catId) {
   // Log event
   igEventLog.push({ pid, sid, statName: stat.name, pts: stat.value, catColor: cat.color, time: igTimestamp() });
 
-  // Animate button
-  const btn = document.getElementById('ig-btn-' + sid);
+  // Animate button & update count badge inline (no full re-render needed)
+  if (!btn) btn = document.getElementById('ig-btn-' + sid);
   if (btn) {
     btn.classList.add('tapped');
     setTimeout(() => btn.classList.remove('tapped'), 220);
-    // Update count badge inline without full re-render
     const countEl = btn.querySelector('.ig-tap-count');
     if (countEl) countEl.textContent = igStatCounts[pid][sid] > 0 ? igStatCounts[pid][sid] : '';
   }
@@ -3498,7 +3513,7 @@ function igUpdateLiveScore() {
 function igRenderFeed() {
   const feed = document.getElementById('ig-feed');
   if (!igEventLog.length) {
-    feed.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;text-align:center;">Tap a stat to begin tracking</div>';
+    feed.innerHTML = '<div data-placeholder style="font-size:12px;color:var(--text3);padding:12px;text-align:center;">Tap a stat to begin tracking</div>';
     return;
   }
   feed.innerHTML = igEventLog.slice().reverse().slice(0, 30).map(ev => {
@@ -3517,6 +3532,11 @@ function igAddFeedItem(ev) {
   const feed = document.getElementById('ig-feed');
   const p = players.find(x => x.id === ev.pid);
   const ptsStr = ev.pts > 0 ? `+${ev.pts}` : `${ev.pts}`;
+
+  // Remove the placeholder div if present
+  const placeholder = feed.querySelector('[data-placeholder]');
+  if (placeholder) placeholder.remove();
+
   const item = document.createElement('div');
   item.className = 'ig-feed-item';
   item.innerHTML = `
@@ -3524,10 +3544,8 @@ function igAddFeedItem(ev) {
     <span class="ig-feed-stat">${p ? p.name.split(' ')[0] : ''} · ${ev.statName}</span>
     <span class="ig-feed-pts" style="color:${ev.catColor};">${ptsStr}</span>
     <span class="ig-feed-time">${ev.time}</span>`;
-  // Remove placeholder text if present
-  if (feed.querySelector('div[style]')) feed.innerHTML = '';
   feed.insertBefore(item, feed.firstChild);
-  // Trim to 30
+  // Trim to 30 items
   while (feed.children.length > 30) feed.removeChild(feed.lastChild);
 }
 
