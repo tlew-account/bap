@@ -4020,20 +4020,27 @@ function igRenderStatGrid() {
         }).join('')}
       </div>
     </div>`).join('');
-
-  // Attach a single delegated listener on the grid to handle both touch and click cleanly
-  igAttachTapListeners(container);
+  // NOTE: NO listener attached here — the single delegated listener lives on
+  // #ig-tracker (attached once in igStartGame) and never needs re-attaching.
 }
 
-function igAttachTapListeners(container) {
-  // Use touchend for iOS (no 300ms delay, no double-fire with onclick)
-  // Fall back to click on non-touch devices
-  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+// Attach the stat-tap listener ONCE to the stable #ig-tracker parent.
+// Called only from igStartGame so it is never duplicated.
+let _igTapListenerAttached = false;
+function igAttachTapListenerOnce() {
+  if (_igTapListenerAttached) return;
+  _igTapListenerAttached = true;
 
-  container.addEventListener(isTouchDevice ? 'touchend' : 'click', function(e) {
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  const tracker = document.getElementById('ig-tracker');
+  if (!tracker) return;
+
+  tracker.addEventListener(isTouchDevice ? 'touchend' : 'click', function(e) {
+    // Only handle taps on stat buttons — ignore everything else
     const btn = e.target.closest('.ig-tap-btn');
     if (!btn) return;
-    e.preventDefault(); // prevent ghost click on touch
+    e.preventDefault();
+    e.stopPropagation();
     const sid   = btn.dataset.sid;
     const catid = btn.dataset.catid;
     if (sid && catid) igTapStat(sid, catid, btn);
