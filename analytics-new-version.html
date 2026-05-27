@@ -3894,6 +3894,9 @@ function igStartGame() {
   document.getElementById('ig-setup').style.display = 'none';
   document.getElementById('ig-tracker').style.display = '';
 
+  // Attach the tap listener once to the stable tracker parent (never re-attached on re-renders)
+  igAttachTapListenerOnce();
+
   // Render all sub-sections
   igRenderGameLabel();
   igRenderTimer();
@@ -4154,7 +4157,16 @@ function igUndo() {
   if (igStatCounts[last.pid] && igStatCounts[last.pid][last.sid] > 0) {
     igStatCounts[last.pid][last.sid]--;
   }
-  igRenderStatGrid();
+
+  // Update the count badge on the button directly — no full grid re-render needed,
+  // which avoids any risk of stacking event listeners.
+  const btn = document.getElementById('ig-btn-' + last.sid);
+  if (btn) {
+    const newCount = igStatCounts[last.pid]?.[last.sid] || 0;
+    const countEl = btn.querySelector('.ig-tap-count');
+    if (countEl) countEl.textContent = newCount > 0 ? newCount : '';
+  }
+
   igUpdateLiveScore();
   igRenderPlayerTabs();
   igRenderActivePlayer();
@@ -4210,6 +4222,8 @@ function igReturnToSetup() {
   clearInterval(igTimerInterval);
   igTimerRunning = false;
   igTimerSeconds = 0;
+  // Reset the listener flag so igAttachTapListenerOnce works on the next game
+  _igTapListenerAttached = false;
   document.getElementById('ig-tracker').style.display = 'none';
   document.getElementById('ig-setup').style.display = '';
   renderIngame();
