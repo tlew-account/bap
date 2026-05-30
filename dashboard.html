@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Better Athlete Plan</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="auth.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange:    #e07800;
+      --orange-lt: #fff4e6;
+      --orange-bd: #ffd199;
+      --bg:        #f5f6f8;
+      --surface:   #ffffff;
+      --border:    #e2e6ea;
+      --border2:   #d0d5dd;
+      --text:      #111827;
+      --text2:     #374151;
+      --muted:     #6b7280;
+      --dim:       #9ca3af;
+      --success:   #16a34a;
+      --success-lt:#f0fdf4;
+      --success-bd:#86efac;
+      --error:     #dc2626;
+      --error-lt:  #fef2f2;
+      --error-bd:  #fca5a5;
+      --info:      #2563eb;
+      --info-lt:   #eff6ff;
+    }
+
+    html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .logo-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: var(--text); }
+    .logo-text span { color: var(--orange); }
+    .topnav-right { display: flex; align-items: center; gap: 12px; }
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 12px 5px 8px; font-size: 13px;
+    }
+    .user-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--orange); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; flex-shrink: 0;
+    }
+    .role-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      padding: 2px 7px; border-radius: 4px;
+    }
+    .role-badge.admin { background: var(--orange-lt); color: var(--orange); border: 1px solid var(--orange-bd); }
+    .role-badge.user  { background: var(--info-lt); color: var(--info); border: 1px solid #bfdbfe; }
+    .btn-signout {
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--muted); padding: 6px 14px; border-radius: 7px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+    }
+    .btn-signout:hover { border-color: var(--error); color: var(--error); background: var(--error-lt); }
+
+    /* ── WRAPPER ── */
+    .wrapper { max-width: 1060px; margin: 0 auto; padding: 40px 28px 80px; }
+
+    /* ── HERO ── */
+    .hero { margin-bottom: 36px; }
+    .hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--orange); margin-bottom: 8px; }
+    .hero-title { font-family: 'Syne', sans-serif; font-size: clamp(24px, 4vw, 36px); font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .hero-title span { color: var(--orange); }
+    .hero-sub { color: var(--muted); font-size: 15px; }
+
+    /* ── ERROR / ADMIN BANNERS ── */
+    .banner {
+      display: none; border-radius: 10px; padding: 13px 18px;
+      margin-bottom: 22px; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .banner.visible { display: flex; }
+    .banner.error   { background: var(--error-lt); border: 1px solid var(--error-bd); color: var(--error); }
+    .banner.admin   {
+      background: linear-gradient(90deg, #fff8f0, #fff4e6);
+      border: 1px solid var(--orange-bd);
+    }
+    .banner-text { flex: 1; }
+    .banner-text strong { color: var(--orange); font-weight: 700; }
+    .banner-text p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .btn-admin {
+      background: var(--orange); color: #fff; border: none;
+      border-radius: 8px; padding: 8px 16px;
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background .15s; white-space: nowrap;
+    }
+    .btn-admin:hover { background: #c96d00; }
+
+    /* ── STAT CHIPS ── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 36px; }
+    .stat-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .stat-chip-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; font-weight: 600; }
+    .stat-chip-value { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── APP GRID ── */
+    .app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; margin-bottom: 48px; }
+
+    .app-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 24px 22px 20px;
+      text-decoration: none; color: var(--text);
+      display: flex; flex-direction: column; gap: 12px;
+      transition: border-color .18s, transform .18s, box-shadow .18s;
+      position: relative; overflow: hidden;
+    }
+    .app-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--card-color, var(--orange));
+      opacity: 0; transition: opacity .18s;
+      border-radius: 14px 14px 0 0;
+    }
+    .app-card:hover { border-color: var(--card-color, var(--orange)); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.09); }
+    .app-card:hover::after { opacity: 1; }
+    .app-card.locked { opacity: .45; cursor: not-allowed; pointer-events: none; filter: grayscale(.5); }
+
+    .app-card-top { display: flex; align-items: flex-start; justify-content: space-between; }
+    .app-icon {
+      width: 44px; height: 44px; border-radius: 10px; font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--card-color-lt, var(--orange-lt));
+      border: 1px solid var(--card-color-bd, var(--orange-bd));
+    }
+    .access-badge { font-size: 10px; font-weight: 700; letter-spacing: .05em; background: var(--success-lt); color: var(--success); border: 1px solid var(--success-bd); border-radius: 5px; padding: 2px 8px; }
+    .lock-badge   { font-size: 10px; font-weight: 700; background: var(--bg); color: var(--dim); border: 1px solid var(--border2); border-radius: 5px; padding: 2px 8px; }
+
+    .app-name { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: var(--text); }
+    .app-desc { font-size: 13px; color: var(--muted); line-height: 1.6; flex: 1; }
+    .app-footer { display: flex; align-items: center; justify-content: space-between; }
+    .app-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 5px;
+      background: var(--card-color-lt, var(--orange-lt));
+      color: var(--card-color, var(--orange));
+      border: 1px solid var(--card-color-bd, var(--orange-bd));
+    }
+    .app-arrow { color: var(--dim); font-size: 16px; transition: transform .18s, color .18s; }
+    .app-card:hover .app-arrow { transform: translateX(4px); color: var(--card-color, var(--orange)); }
+
+    /* ── NO ACCESS ── */
+    .no-access {
+      grid-column: 1 / -1; text-align: center; padding: 60px 20px;
+      background: var(--surface); border: 1.5px dashed var(--border2); border-radius: 14px; color: var(--muted);
+    }
+    .no-access .big { font-size: 40px; margin-bottom: 14px; }
+    .no-access h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+
+    /* ── SKELETON ── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg) 25%, var(--border) 50%, var(--bg) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    @media (max-width: 600px) {
+      .wrapper { padding: 24px 16px 60px; }
+      .app-grid { grid-template-columns: 1fr; }
+      .topnav { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top nav -->
+<nav class="topnav">
+  <a href="https://tlew-account.github.io/bap/" class="topnav-logo">
+    <div class="logo-icon">🏀</div>
+    <div class="logo-text">Better.<span>Athlete</span></div>
+  </a>
+  <div class="topnav-right">
+    <div class="user-chip">
+      <div class="user-avatar" id="nav-avatar">?</div>
+      <span id="nav-name" style="color:var(--text2);font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Loading…</span>
+      <span class="role-badge user" id="nav-role">user</span>
+    </div>
+    <button class="btn-signout" id="signout-btn">Sign Out</button>
+  </div>
+</nav>
+
+<div class="wrapper">
+
+  <!-- Banners -->
+  <div class="banner error" id="error-banner">
+    <span>⚠️</span>
+    <span>You don't have permission to access that page.</span>
+  </div>
+  <div class="banner admin" id="admin-banner">
+    <span style="font-size:22px;">🔐</span>
+    <div class="banner-text">
+      <strong>Admin Access Active</strong>
+      <p>You have full platform access and can manage all users from the admin panel.</p>
+    </div>
+    <a href="admin.html" class="btn-admin">Open Admin Panel →</a>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">Better Athlete Plan</div>
+    <h1 class="hero-title">Welcome back, <span id="user-greeting">Coach</span></h1>
+    <p class="hero-sub" id="hero-sub">Select a tool below to get started.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="stats-row" style="display:none;">
+    <div class="stat-chip">
+      <div class="stat-chip-label">Apps Available</div>
+      <div class="stat-chip-value" id="stat-apps" style="color:var(--orange);">—</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">Your Role</div>
+      <div class="stat-chip-value" id="stat-role" style="font-size:16px;padding-top:4px;">—</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">Account</div>
+      <div class="stat-chip-value" id="stat-email" style="font-size:12px;font-family:'DM Sans';font-weight:500;padding-top:6px;color:var(--muted);">—</div>
+    </div>
+  </div>
+
+  <!-- Apps -->
+  <div class="section-label">Your Apps</div>
+  <div class="app-grid" id="app-grid">
+    <div class="app-card" style="min-height:160px;">
+      <div class="skeleton" style="width:44px;height:44px;border-radius:10px;"></div>
+      <div class="skeleton" style="width:60%;height:16px;"></div>
+      <div class="skeleton" style="width:90%;height:13px;"></div>
+    </div>
+    <div class="app-card" style="min-height:160px;">
+      <div class="skeleton" style="width:44px;height:44px;border-radius:10px;"></div>
+      <div class="skeleton" style="width:55%;height:16px;"></div>
+      <div class="skeleton" style="width:85%;height:13px;"></div>
+    </div>
+    <div class="app-card" style="min-height:160px;">
+      <div class="skeleton" style="width:44px;height:44px;border-radius:10px;"></div>
+      <div class="skeleton" style="width:65%;height:16px;"></div>
+      <div class="skeleton" style="width:80%;height:13px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ALL_APPS = [
+  { key:'hoopiq',     name:'HoopIQ',    icon:'🏀', tag:'Practice Planner',  desc:'Build structured practice sessions with drill libraries, scheduling, and session timers.', url:'practice-plan.html', color:'#e07800', colorLt:'#fff4e6', colorBd:'#ffd199' },
+  { key:'courtiq',    name:'CourtIQ',   icon:'📊', tag:'Analytics',          desc:'Track on-court stats, shooting percentages, and player performance trends over time.',    url:'analytics.html',     color:'#2563eb', colorLt:'#eff6ff', colorBd:'#bfdbfe' },
+  { key:'scoutpro',   name:'ScoutPRO',  icon:'🔍', tag:'Scouting',           desc:'Player and opponent scouting breakdowns — tendencies, strengths, weaknesses, film notes.',url:'scouting.html',      color:'#7c3aed', colorLt:'#f5f3ff', colorBd:'#ddd6fe' },
+  { key:'pdp',        name:'Dev Plan',  icon:'📈', tag:'Player Development', desc:'Personalised development roadmaps with skill targets, milestones, and progress tracking.', url:'pdp.html',           color:'#16a34a', colorLt:'#f0fdf4', colorBd:'#86efac' },
+  { key:'principles', name:'Principles',icon:'🗺️', tag:'Team System',        desc:"Map your team's playing identity — offensive and defensive principles and strategy.",      url:'principles.html',    color:'#dc2626', colorLt:'#fef2f2', colorBd:'#fca5a5' },
+];
+
+document.getElementById('signout-btn').addEventListener('click', () => BAPAuth.signOut());
+
+BAPAuth.requireAuth().then(profile => {
+  if (!profile) return;
+
+  if (new URLSearchParams(location.search).get('error') === 'unauthorized') {
+    document.getElementById('error-banner').classList.add('visible');
+  }
+
+  const isAdmin = profile.role === 'admin';
+  const firstName = (profile.full_name || profile.email || 'Coach').split(' ')[0];
+  const initials = firstName.slice(0,1).toUpperCase();
+
+  // Nav
+  document.getElementById('nav-avatar').textContent = initials;
+  document.getElementById('nav-name').textContent = profile.full_name || profile.email;
+  const roleBadge = document.getElementById('nav-role');
+  roleBadge.textContent = profile.role;
+  roleBadge.className = 'role-badge ' + profile.role;
+
+  // Hero
+  document.getElementById('user-greeting').textContent = firstName;
+  document.getElementById('hero-sub').textContent = isAdmin
+    ? 'Admin view — you have access to all tools and can manage users.'
+    : 'Your personalised workspace. Select a tool below to get started.';
+
+  if (isAdmin) document.getElementById('admin-banner').classList.add('visible');
+
+  const accessList = isAdmin
+    ? ALL_APPS.map(a => a.key)
+    : (profile.app_access?.length ? profile.app_access : ALL_APPS.map(a => a.key));
+
+  document.getElementById('stat-apps').textContent  = accessList.length;
+  document.getElementById('stat-role').textContent  = isAdmin ? '🔐 Admin' : '👤 User';
+  document.getElementById('stat-email').textContent = profile.email || '—';
+  document.getElementById('stats-row').style.display = '';
+
+  const grid = document.getElementById('app-grid');
+  grid.innerHTML = '';
+
+  if (!accessList.length) {
+    grid.innerHTML = `<div class="no-access"><div class="big">🔒</div><h3>No Apps Assigned</h3><p>Contact your admin to request access.</p></div>`;
+    return;
+  }
+
+  ALL_APPS.forEach(app => {
+    const hasAccess = accessList.includes(app.key);
+    const card = document.createElement(hasAccess ? 'a' : 'div');
+    if (hasAccess) card.href = app.url;
+    card.className = 'app-card' + (hasAccess ? '' : ' locked');
+    card.style.setProperty('--card-color',    app.color);
+    card.style.setProperty('--card-color-lt', app.colorLt);
+    card.style.setProperty('--card-color-bd', app.colorBd);
+    card.innerHTML = `
+      <div class="app-card-top">
+        <div class="app-icon">${app.icon}</div>
+        ${hasAccess ? '<span class="access-badge">✓ Access</span>' : '<span class="lock-badge">🔒 No Access</span>'}
+      </div>
+      <div class="app-name">${app.name}</div>
+      <div class="app-desc">${app.desc}</div>
+      <div class="app-footer">
+        <span class="app-tag">${app.tag}</span>
+        ${hasAccess ? '<span class="app-arrow">→</span>' : ''}
+      </div>`;
+    grid.appendChild(card);
+  });
+});
+</script>
+</body>
+</html>
