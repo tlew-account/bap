@@ -1,2 +1,2 @@
-# bat
+# bap
 Athlete training demos
