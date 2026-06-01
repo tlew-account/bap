@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics Tracker – Better Athlete Plan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #0077C0; --blue-dark: #005a91; --blue-light: #e8f4fc;
+      --silver: #C4CED4; --silver-light: #f0f3f5;
+      --black: #061922; --white: #ffffff;
+      --bg: #f4f7fa; --card: #ffffff; --mid: #e8eef3;
+      --border: rgba(0,119,192,0.18);
+      --text: #061922; --text-muted: rgba(6,25,34,0.55);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.35;
+    }
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 18px 80px; display: flex; align-items: center; justify-content: space-between;
+      z-index: 500; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.05em; color: var(--black); text-decoration: none; }
+    .logo span { color: var(--blue); }
+    .nav-back { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
+    .nav-back:hover { color: var(--blue); }
+    .nav-back svg { width: 16px; height: 16px; }
+
+    .page-hero { padding: 140px 80px 80px; background: var(--black); position: relative; overflow: hidden; }
+    .page-hero::before {
+      content: ''; position: absolute; top: -80px; right: -80px; width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,119,192,0.2), transparent 70%); pointer-events: none;
+    }
+    .hero-icon { font-size: 3.5rem; margin-bottom: 20px; display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: rgba(0,119,192,0.15); border: 1px solid rgba(0,119,192,0.3); border-radius: 16px; }
+    .hero-eyebrow { font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--blue); margin-bottom: 16px; }
+    .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 6vw, 5.5rem); line-height: 0.95; color: var(--white); margin-bottom: 24px; }
+    .hero-title span { color: var(--blue); }
+    .hero-desc { font-size: 1.1rem; line-height: 1.8; color: rgba(255,255,255,0.65); max-width: 620px; margin-bottom: 40px; }
+    .hero-cta { display: inline-flex; align-items: center; gap: 10px; background: var(--blue); color: var(--white); text-decoration: none; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 15px 34px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 14px 100%); transition: background 0.2s, transform 0.2s; }
+    .hero-cta:hover { background: var(--blue-dark); transform: translateY(-2px); }
+    .hero-cta svg { width: 16px; height: 16px; transition: transform 0.2s; }
+    .hero-cta:hover svg { transform: translateX(4px); }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; padding: 6px 14px; font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+    .hero-badge span { color: var(--blue); font-weight: 600; }
+
+    .section { padding: 100px 80px; }
+    .section-label { font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--blue); margin-bottom: 14px; }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.2rem, 4vw, 3.5rem); line-height: 1; color: var(--black); margin-bottom: 48px; }
+    .section-dark { background: var(--black); }
+
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px 28px; border-top: 3px solid var(--blue); transition: transform 0.2s, box-shadow 0.2s; }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 10px 36px rgba(0,119,192,0.1); }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 16px; }
+    .feature-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.04em; color: var(--black); margin-bottom: 10px; }
+    .feature-desc { font-size: 0.87rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* STAT CATEGORIES DISPLAY */
+    .cats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .cat-card { border-radius: 12px; padding: 24px 20px; border-left: 4px solid; }
+    .cat-card-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.05em; margin-bottom: 10px; }
+    .cat-stat { font-size: 0.8rem; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+    .cat-stat:last-child { border-bottom: none; }
+    .cat-stat-pts { font-weight: 700; font-size: 0.75rem; }
+
+    .screenshot-section { padding: 100px 80px; background: var(--mid); }
+    .screenshot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+    .screenshot-info p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .screenshot-info ul { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .screenshot-info ul li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+    .check { color: var(--blue); font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .mockup-frame { background: var(--black); border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,119,192,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+    .mockup-bar { background: #1a2d42; padding: 12px 18px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-screen { padding: 24px; }
+    .mockup-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--white); letter-spacing: 1px; margin-bottom: 16px; }
+    .mockup-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 16px; }
+    .mockup-stat { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px; text-align: center; }
+    .mockup-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--blue); }
+    .mockup-stat-lbl { font-size: 0.65rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+    .mockup-entry { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 11px 14px; margin-bottom: 7px; display: flex; align-items: center; gap: 12px; }
+    .mockup-entry-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .mockup-entry-name { font-size: 0.83rem; font-weight: 600; color: var(--white); }
+    .mockup-entry-sub { font-size: 0.68rem; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .mockup-entry-score { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--blue); margin-left: auto; }
+    /* Bar chart */
+    .mockup-bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; margin-top: 16px; padding: 0 4px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .mockup-bar-col { flex: 1; border-radius: 4px 4px 0 0; opacity: 0.85; }
+
+    .cta-strip { background: var(--blue); padding: 72px 80px; text-align: center; }
+    .cta-strip h2 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2rem, 4vw, 3.2rem); color: var(--white); margin-bottom: 16px; }
+    .cta-strip p { font-size: 1rem; color: rgba(255,255,255,0.75); margin-bottom: 36px; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+    .cta-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--white); color: var(--blue); text-decoration: none; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 40px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 14px 100%); transition: opacity 0.2s, transform 0.2s; }
+    .cta-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+    footer { background: var(--black); padding: 36px 80px; display: flex; align-items: center; justify-content: space-between; border-top: 3px solid var(--blue); }
+    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--white); }
+    .footer-logo span { color: var(--blue); }
+    .footer-back { text-decoration: none; color: rgba(196,206,212,0.6); font-size: 0.82rem; transition: color 0.2s; }
+    .footer-back:hover { color: var(--blue); }
+    .footer-copy { font-size: 0.75rem; color: rgba(196,206,212,0.3); }
+
+    @media (max-width: 1024px) {
+      .nav-bar, footer { padding-left: 32px; padding-right: 32px; }
+      .page-hero, .section, .screenshot-section, .cta-strip { padding-left: 32px; padding-right: 32px; }
+      .features-grid, .cats-grid { grid-template-columns: repeat(2, 1fr); }
+      .screenshot-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+    }
+    @media (max-width: 640px) {
+      .page-hero { padding-top: 110px; }
+      .features-grid, .cats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav-bar">
+    <a href="better-athlete-plan.html" class="logo">Better<span>.</span>Athlete</a>
+    <a href="better-athlete-plan.html" class="nav-back">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back to Home
+    </a>
+  </nav>
+
+  <section class="page-hero">
+    <div class="hero-eyebrow">Better Athlete Plan · Tool</div>
+    <div class="hero-icon">📊</div>
+    <h1 class="hero-title">Analytics<br><span>Tracker</span></h1>
+    <p class="hero-desc">CourtIQ turns raw basketball stats into meaningful performance data. Log sessions, track every stat category, build custom formulas, and run live in-game tracking — all in one powerful dashboard.</p>
+    <a href="#" class="hero-cta" target="_blank">
+      Sign Up &amp; Get Started
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <div class="hero-badges">
+      <div class="hero-badge">📈 <span>Live</span> in-game tracking</div>
+      <div class="hero-badge">🧮 <span>Custom</span> stat formulas</div>
+      <div class="hero-badge">📥 <span>CSV &amp; PDF</span> exports</div>
+      <div class="hero-badge">🔗 <span>HoopIQ</span> integrated</div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <div class="section-label">What's Inside</div>
+    <div class="section-title">Complete Statistical Control</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">In-Game Tracker</div>
+        <p class="feature-desc">Tap-to-count live game tracking built for tablets. Assign players, run a game timer, and log every stat in real time with one tap.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧮</div>
+        <div class="feature-title">Custom Formulas</div>
+        <p class="feature-desc">Build calculated metrics like field goal percentage, effective FG%, or free throw rate using a visual formula builder — no coding required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">Team Sessions</div>
+        <p class="feature-desc">Log stats for an entire team roster in one session. Each player gets their own accordion entry form for efficient multi-player data entry.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗂️</div>
+        <div class="feature-title">Custom Categories</div>
+        <p class="feature-desc">Define your own stat categories and stats with custom point values. Track anything — from deflections and charges to assist-to-turnover ratio.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📤</div>
+        <div class="feature-title">Export Anywhere</div>
+        <p class="feature-desc">Download full stat logs as CSV spreadsheets or generate PDF reports for individual players and teams — shareable with coaches and families.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <div class="feature-title">HoopIQ Sync</div>
+        <p class="feature-desc">Auto-sync player rosters and practice shooting data directly from the HoopIQ Practice Planner — one ecosystem, zero duplicate entry.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAT CATEGORIES -->
+  <section class="section" style="background:var(--mid);padding-top:80px;padding-bottom:80px;">
+    <div class="section-label">Built-In Stat Framework</div>
+    <div class="section-title">Four Core Categories, Fully Customizable</div>
+    <div class="cats-grid">
+      <div class="cat-card" style="background:#fef0f0;border-color:#c62828;">
+        <div class="cat-card-name" style="color:#c62828;">⚔️ Offense</div>
+        <div class="cat-stat"><span>2PT Made</span><span class="cat-stat-pts" style="color:#c62828;">+2 pts</span></div>
+        <div class="cat-stat"><span>3PT Made</span><span class="cat-stat-pts" style="color:#c62828;">+3 pts</span></div>
+        <div class="cat-stat"><span>Assists</span><span class="cat-stat-pts" style="color:#c62828;">+1.5 pts</span></div>
+        <div class="cat-stat"><span>Charge Drawn</span><span class="cat-stat-pts" style="color:#c62828;">+2 pts</span></div>
+        <div class="cat-stat"><span>Turnovers</span><span class="cat-stat-pts" style="color:#c62828;">−1 pt</span></div>
+      </div>
+      <div class="cat-card" style="background:#e8f5e9;border-color:#2e7d32;">
+        <div class="cat-card-name" style="color:#2e7d32;">🛡️ Defense</div>
+        <div class="cat-stat"><span>Steals</span><span class="cat-stat-pts" style="color:#2e7d32;">+2 pts</span></div>
+        <div class="cat-stat"><span>Blocks</span><span class="cat-stat-pts" style="color:#2e7d32;">+2 pts</span></div>
+        <div class="cat-stat"><span>Deflections</span><span class="cat-stat-pts" style="color:#2e7d32;">+1 pt</span></div>
+        <div class="cat-stat"><span>Def. Rebounds</span><span class="cat-stat-pts" style="color:#2e7d32;">+1 pt</span></div>
+        <div class="cat-stat"><span>Charge Taken</span><span class="cat-stat-pts" style="color:#2e7d32;">+2 pts</span></div>
+      </div>
+      <div class="cat-card" style="background:#e3f2fd;border-color:#1565c0;">
+        <div class="cat-card-name" style="color:#1565c0;">⚡ Transition</div>
+        <div class="cat-stat"><span>Bolts</span><span class="cat-stat-pts" style="color:#1565c0;">+2 pts</span></div>
+        <div class="cat-stat"><span>Arc to Arcs</span><span class="cat-stat-pts" style="color:#1565c0;">+1 pt</span></div>
+        <div class="cat-stat"><span>2-Sides</span><span class="cat-stat-pts" style="color:#1565c0;">+1.5 pts</span></div>
+        <div class="cat-stat"><span>Transition Layups</span><span class="cat-stat-pts" style="color:#1565c0;">+2 pts</span></div>
+        <div class="cat-stat"><span>Transition Assists</span><span class="cat-stat-pts" style="color:#1565c0;">+2 pts</span></div>
+      </div>
+      <div class="cat-card" style="background:#fff8e1;border-color:#e65100;">
+        <div class="cat-card-name" style="color:#e65100;">🌟 Overall</div>
+        <div class="cat-stat"><span>Plus/Minus</span><span class="cat-stat-pts" style="color:#e65100;">+1 pt</span></div>
+        <div class="cat-stat"><span>High Fives</span><span class="cat-stat-pts" style="color:#e65100;">+0.25 pts</span></div>
+        <div class="cat-stat"><span>Communications</span><span class="cat-stat-pts" style="color:#e65100;">+0.5 pts</span></div>
+        <div class="cat-stat"><span>Fouls</span><span class="cat-stat-pts" style="color:#e65100;">−1 pt</span></div>
+        <div class="cat-stat"><span>Technical Foul</span><span class="cat-stat-pts" style="color:#e65100;">−2 pts</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOT -->
+  <section class="screenshot-section">
+    <div class="screenshot-grid">
+      <div class="screenshot-info">
+        <div class="section-label">See It in Action</div>
+        <div class="section-title">Your Analytics Dashboard</div>
+        <p>The CourtIQ dashboard aggregates all your player and team data into a clean, at-a-glance view — total entries, average scores, top performers, and recent sessions.</p>
+        <p>Drill into any player or team profile to see their full stat breakdown, calculated formula results, and an exportable entry log.</p>
+        <ul>
+          <li><span class="check">✓</span> Aggregate score calculated automatically per entry</li>
+          <li><span class="check">✓</span> Custom formula builder (FG%, eFG%, FT Rate)</li>
+          <li><span class="check">✓</span> In-game tap tracker with live event feed</li>
+          <li><span class="check">✓</span> Player and team profile pages with full history</li>
+          <li><span class="check">✓</span> CSV &amp; PDF export for any player or team</li>
+        </ul>
+      </div>
+      <div class="mockup-frame">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-title">📊 CourtIQ — Analytics Dashboard</div>
+          <div class="mockup-stat-row">
+            <div class="mockup-stat"><div class="mockup-stat-val">48</div><div class="mockup-stat-lbl">Entries</div></div>
+            <div class="mockup-stat"><div class="mockup-stat-val">18.4</div><div class="mockup-stat-lbl">Avg Score</div></div>
+            <div class="mockup-stat"><div class="mockup-stat-val">6</div><div class="mockup-stat-lbl">Players</div></div>
+          </div>
+          <div style="margin-top:18px;margin-bottom:8px;font-size:0.65rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;">Top Performers</div>
+          <div class="mockup-entry"><div class="mockup-entry-avatar" style="background:#0077C0;">MJ</div><div><div class="mockup-entry-name">Marcus Johnson</div><div class="mockup-entry-sub">SG · 12 entries</div></div><div class="mockup-entry-score">22.1</div></div>
+          <div class="mockup-entry"><div class="mockup-entry-avatar" style="background:#2e7d32;">DW</div><div><div class="mockup-entry-name">Devon Williams</div><div class="mockup-entry-sub">PG · 10 entries</div></div><div class="mockup-entry-score">19.8</div></div>
+          <div class="mockup-entry"><div class="mockup-entry-avatar" style="background:#c62828;">TB</div><div><div class="mockup-entry-name">Tyrell Brooks</div><div class="mockup-entry-sub">SF · 9 entries</div></div><div class="mockup-entry-score">17.3</div></div>
+          <div style="margin-top:14px;margin-bottom:6px;font-size:0.65rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;">Score Trend</div>
+          <div class="mockup-bars">
+            <div class="mockup-bar-col" style="height:55%;background:#0077C0;"></div>
+            <div class="mockup-bar-col" style="height:70%;background:#0077C0;"></div>
+            <div class="mockup-bar-col" style="height:48%;background:#0077C0;"></div>
+            <div class="mockup-bar-col" style="height:80%;background:#0077C0;"></div>
+            <div class="mockup-bar-col" style="height:65%;background:#0077C0;"></div>
+            <div class="mockup-bar-col" style="height:90%;background:#1a8a4a;"></div>
+            <div class="mockup-bar-col" style="height:75%;background:#0077C0;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-strip">
+    <h2>Turn Your Stats Into an Advantage</h2>
+    <p>Sign up for CourtIQ and start tracking the numbers that actually move the needle for your athletes and teams.</p>
+    <a href="#" class="cta-btn" target="_blank">
+      Sign Up Free
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Better<span>.</span>Athlete Plan</div>
+    <a href="better-athlete-plan.html" class="footer-back">← Back to all tools</a>
+    <div class="footer-copy">© 2026 Better Athlete Plan</div>
+  </footer>
+</body>
+</html>
