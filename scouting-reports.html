@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scouting Reports – Better Athlete Plan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #0077C0; --blue-dark: #005a91; --blue-light: #e8f4fc;
+      --silver: #C4CED4; --black: #061922; --white: #ffffff;
+      --bg: #f4f7fa; --card: #ffffff; --mid: #e8eef3;
+      --border: rgba(0,119,192,0.18);
+      --text: #061922; --text-muted: rgba(6,25,34,0.55);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.35;
+    }
+
+    /* NAV */
+    .nav-bar { position: fixed; top: 0; left: 0; right: 0; padding: 18px 80px; display: flex; align-items: center; justify-content: space-between; z-index: 500; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.05em; color: var(--black); text-decoration: none; }
+    .logo span { color: var(--blue); }
+    .nav-back { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
+    .nav-back:hover { color: var(--blue); }
+    .nav-back svg { width: 16px; height: 16px; }
+
+    /* HERO */
+    .page-hero { padding: 140px 80px 80px; background: var(--black); position: relative; overflow: hidden; }
+    .page-hero::before { content: ''; position: absolute; top: -80px; right: -80px; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(0,119,192,0.2), transparent 70%); pointer-events: none; }
+    .hero-icon { font-size: 3.5rem; margin-bottom: 20px; display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: rgba(0,119,192,0.15); border: 1px solid rgba(0,119,192,0.3); border-radius: 16px; }
+    .hero-eyebrow { font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--blue); margin-bottom: 16px; }
+    .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 6vw, 5.5rem); line-height: 0.95; color: var(--white); margin-bottom: 24px; }
+    .hero-title span { color: var(--blue); }
+    .hero-desc { font-size: 1.1rem; line-height: 1.8; color: rgba(255,255,255,0.65); max-width: 620px; margin-bottom: 40px; }
+    .hero-cta { display: inline-flex; align-items: center; gap: 10px; background: var(--blue); color: var(--white); text-decoration: none; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 15px 34px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 14px 100%); transition: background 0.2s, transform 0.2s; }
+    .hero-cta:hover { background: var(--blue-dark); transform: translateY(-2px); }
+    .hero-cta svg { width: 16px; height: 16px; transition: transform 0.2s; }
+    .hero-cta:hover svg { transform: translateX(4px); }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; padding: 6px 14px; font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+    .hero-badge span { color: var(--blue); font-weight: 600; }
+
+    /* SECTIONS */
+    .section { padding: 100px 80px; }
+    .section-label { font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--blue); margin-bottom: 14px; }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.2rem, 4vw, 3.5rem); line-height: 1; color: var(--black); margin-bottom: 48px; }
+
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px 28px; border-top: 3px solid var(--blue); transition: transform 0.2s, box-shadow 0.2s; }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 10px 36px rgba(0,119,192,0.1); }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 16px; }
+    .feature-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.04em; color: var(--black); margin-bottom: 10px; }
+    .feature-desc { font-size: 0.87rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* TABS SECTION */
+    .tabs-section { padding: 100px 80px; background: var(--mid); }
+    .tabs-row { display: flex; gap: 0; margin-bottom: 40px; border-bottom: 2px solid var(--border); }
+    .tab-btn { background: none; border: none; padding: 14px 28px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: color 0.2s, border-color 0.2s; }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+    .tab-fields { display: flex; flex-direction: column; gap: 14px; }
+    .tab-field { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; border-left: 3px solid var(--blue); }
+    .tab-field-label { font-size: 0.7rem; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .tab-field-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* MOCKUP */
+    .mockup-frame { background: var(--black); border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,119,192,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+    .mockup-bar { background: #1a2d42; padding: 12px 18px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-screen { padding: 24px; }
+    .mockup-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--white); letter-spacing: 1px; margin-bottom: 16px; }
+    .mockup-card { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 16px; margin-bottom: 10px; border-left: 3px solid var(--blue); }
+    .mockup-card-name { font-size: 0.9rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .mockup-card-sub { font-size: 0.72rem; color: rgba(255,255,255,0.45); }
+    .mockup-card-badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .mockup-badge { font-size: 0.62rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .kyp-card { background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+    .kyp-card-header { padding: 12px 14px; display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .kyp-avatar { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; color: #fff; }
+    .kyp-name { font-size: 0.85rem; font-weight: 700; color: var(--white); }
+    .kyp-sub { font-size: 0.7rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
+    .kyp-bullets { padding: 10px 14px; }
+    .kyp-bullet { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 4px; display: flex; gap: 6px; }
+    .kyp-bullet::before { content: '•'; color: var(--blue); font-weight: 700; flex-shrink: 0; }
+
+    /* SCREENSHOT SECTION */
+    .screenshot-section { padding: 100px 80px; }
+    .screenshot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+    .screenshot-info p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .screenshot-info ul { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .screenshot-info ul li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+    .check { color: var(--blue); font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+
+    /* CTA */
+    .cta-strip { background: var(--blue); padding: 72px 80px; text-align: center; }
+    .cta-strip h2 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2rem, 4vw, 3.2rem); color: var(--white); margin-bottom: 16px; }
+    .cta-strip p { font-size: 1rem; color: rgba(255,255,255,0.75); margin-bottom: 36px; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+    .cta-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--white); color: var(--blue); text-decoration: none; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 40px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 14px 100%); transition: opacity 0.2s, transform 0.2s; }
+    .cta-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    footer { background: var(--black); padding: 36px 80px; display: flex; align-items: center; justify-content: space-between; border-top: 3px solid var(--blue); }
+    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--white); }
+    .footer-logo span { color: var(--blue); }
+    .footer-back { text-decoration: none; color: rgba(196,206,212,0.6); font-size: 0.82rem; transition: color 0.2s; }
+    .footer-back:hover { color: var(--blue); }
+    .footer-copy { font-size: 0.75rem; color: rgba(196,206,212,0.3); }
+
+    @media (max-width: 1024px) {
+      .nav-bar, footer { padding-left: 32px; padding-right: 32px; }
+      .page-hero, .section, .tabs-section, .screenshot-section, .cta-strip { padding-left: 32px; padding-right: 32px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .tab-panel.active, .screenshot-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+    }
+    @media (max-width: 640px) {
+      .page-hero { padding-top: 110px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .tabs-row { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav-bar">
+    <a href="better-athlete-plan.html" class="logo">Better<span>.</span>Athlete</a>
+    <a href="better-athlete-plan.html" class="nav-back">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back to Home
+    </a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="page-hero">
+    <div class="hero-eyebrow">Better Athlete Plan · Tool</div>
+    <div class="hero-icon">🔍</div>
+    <h1 class="hero-title">Scouting<br><span>Reports</span></h1>
+    <p class="hero-desc">ScoutPRO gives coaches a structured system to document everything about opponents and players — from offensive tendencies and defensive schemes to personality traits and key-player cards ready to share with your team before tip-off.</p>
+    <a href="#" class="hero-cta" target="_blank">
+      Sign Up &amp; Get Started
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <div class="hero-badges">
+      <div class="hero-badge">🃏 <span>KYP</span> player cards</div>
+      <div class="hero-badge">📋 <span>Full</span> team reports</div>
+      <div class="hero-badge">🎙️ <span>Coach</span> profiles</div>
+      <div class="hero-badge">📖 <span>Playbook</span> mapping</div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <div class="section-label">What's Inside</div>
+    <div class="section-title">Your Complete Scouting System</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🃏</div>
+        <div class="feature-title">KYP Player Cards</div>
+        <p class="feature-desc">Know Your Player cards give you a shareable snapshot of any opponent — bullet-point tendencies, attribute badges, and position with jersey number, viewable in a list or visual card layout.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏟️</div>
+        <div class="feature-title">Full Team Reports</div>
+        <p class="feature-desc">Document offensive and defensive schemes, PNR coverages, transition tendencies, zone defense, press situations, BOB/SOB sets, and team culture in one structured profile per opponent.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎙️</div>
+        <div class="feature-title">Coach Profiles</div>
+        <p class="feature-desc">Record coaching tendencies — preferred lineups, after-timeout plays, decoy actions, and situational patterns — so you know exactly what to expect from opposing sidelines.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📖</div>
+        <div class="feature-title">Playbook Mapping</div>
+        <p class="feature-desc">Document opponent play names, hand signals, spacing classifications, and entry and action types so your team can recognize and react to sets before they develop.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Game Reports</div>
+        <p class="feature-desc">Build complete pre-game reports including hot plays, defensive notes, depth charts, major contributor tendencies, and keys to victory — all exportable.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏀</div>
+        <div class="feature-title">Player Scouting</div>
+        <p class="feature-desc">Deep-dive player profiles covering hand dominance, shooting form, PNR tendencies, defensive strengths, physicality, and personality traits for every opponent you'll face.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABS: WHAT YOU CAN SCOUT -->
+  <section class="tabs-section">
+    <div class="section-label">Depth of Coverage</div>
+    <div class="section-title">Scout Every Dimension of the Game</div>
+    <div class="tabs-row">
+      <button class="tab-btn active" onclick="showTab('offense')">Offense</button>
+      <button class="tab-btn" onclick="showTab('defense')">Defense</button>
+      <button class="tab-btn" onclick="showTab('player')">Player</button>
+      <button class="tab-btn" onclick="showTab('culture')">Culture</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-offense">
+      <div class="tab-fields">
+        <div class="tab-field"><div class="tab-field-label">Running Lines</div><div class="tab-field-desc">Corners, overloads, trailers, and early transition options in numbered sequence.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Half-Court Sets</div><div class="tab-field-desc">5-out, Horns, Chin, and custom spacing sets with entry and action notes.</div></div>
+        <div class="tab-field"><div class="tab-field-label">PNR Offense</div><div class="tab-field-desc">How they attack against various on-ball and off-ball coverages at different times and court locations.</div></div>
+        <div class="tab-field"><div class="tab-field-label">BOB / SOB</div><div class="tab-field-desc">What changes when you deny the entry, and what options appear in specific situations.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Low Post</div><div class="tab-field-desc">Strong-side and weak-side post actions, feeds, and counters.</div></div>
+      </div>
+      <div class="mockup-frame">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-title">🏟️ Team Profile — Offense</div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">Half-Court Spacing</div>
+            <div class="mockup-card-sub">Primary look: Horns with a 5-out secondary</div>
+            <div class="mockup-card-badges">
+              <span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;">Horns</span>
+              <span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;">5-Out</span>
+              <span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;">Chin</span>
+            </div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">PNR Tendencies</div>
+            <div class="mockup-card-sub">Prefer right-side ball screens, big short-rolls on kick</div>
+            <div class="mockup-card-badges">
+              <span class="mockup-badge" style="background:rgba(200,80,0,0.25);color:#f5a623;">Right Side</span>
+              <span class="mockup-badge" style="background:rgba(200,80,0,0.25);color:#f5a623;">Short Roll</span>
+            </div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">Transition</div>
+            <div class="mockup-card-sub">Push pace after every make, #3 runs rim every time</div>
+            <div class="mockup-card-badges">
+              <span class="mockup-badge" style="background:rgba(46,125,50,0.25);color:#81c784;">Fast Break</span>
+              <span class="mockup-badge" style="background:rgba(46,125,50,0.25);color:#81c784;">Rim Runner</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-defense">
+      <div class="tab-fields">
+        <div class="tab-field"><div class="tab-field-label">PNR Defense</div><div class="tab-field-desc">Standard coverage, tags, dig/stunt tendencies, and timing and placement details.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Low Post Defense</div><div class="tab-field-desc">Double-team, dig, force direction, mismatch handling, and weak-side behaviors.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Help Defense</div><div class="tab-field-desc">Help lines, switching rules, and rotation patterns off the ball.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Zone Defense</div><div class="tab-field-desc">When they go zone, what type, and the specific triggers that cause the change.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Special Situations</div><div class="tab-field-desc">Press schemes, double-team triggers, and BOB/SOB defensive alignments.</div></div>
+      </div>
+      <div class="mockup-frame">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-title">🛡️ Team Profile — Defense</div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">PNR Coverage</div>
+            <div class="mockup-card-sub">Standard: ICE on right, Hedge on left — switch on 4-5 PNR</div>
+            <div class="mockup-card-badges">
+              <span class="mockup-badge" style="background:rgba(198,40,40,0.25);color:#ef9a9a;">ICE</span>
+              <span class="mockup-badge" style="background:rgba(198,40,40,0.25);color:#ef9a9a;">Hedge</span>
+              <span class="mockup-badge" style="background:rgba(198,40,40,0.25);color:#ef9a9a;">Switch 4-5</span>
+            </div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">Zone Triggers</div>
+            <div class="mockup-card-sub">Goes 2-3 after opponent runs off 3+ straight — usually 2nd half</div>
+            <div class="mockup-card-badges">
+              <span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;">2-3 Zone</span>
+              <span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;">2nd Half</span>
+            </div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">Press</div>
+            <div class="mockup-card-sub">Full-court man press after made free throws — vulnerable on the right sideline</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-player">
+      <div class="tab-fields">
+        <div class="tab-field"><div class="tab-field-label">Hand Dominance</div><div class="tab-field-desc">Strong hand, dribbling tendencies, shoulder turn patterns, and skip/hammer pass ability.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Shooting Profile</div><div class="tab-field-desc">Form, hot/cold tendencies, shot type, and preferred locations on the floor.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Defensive Ability</div><div class="tab-field-desc">On-ball aggressiveness, switchability, recovery time, shot-blocking, and rebounding threat.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Personality</div><div class="tab-field-desc">On/off ball aggressiveness, frustration triggers, late-game behavior, and leadership traits.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Physicality</div><div class="tab-field-desc">Height, wingspan, athleticism, and strength and conditioning assessment.</div></div>
+      </div>
+      <div class="mockup-frame">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-title">🃏 KYP Cards</div>
+          <div class="kyp-card">
+            <div class="kyp-card-header">
+              <div class="kyp-avatar" style="background:#0077C0;">MJ</div>
+              <div>
+                <div class="kyp-name">Marcus Johnson</div>
+                <div class="kyp-sub">#23 · SG · 6'4"</div>
+              </div>
+              <div style="margin-left:auto;display:flex;gap:5px;flex-wrap:wrap;">
+                <span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;font-size:0.58rem;">🎯 Scorer</span>
+                <span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;font-size:0.58rem;">🔥 Clutch</span>
+              </div>
+            </div>
+            <div class="kyp-bullets">
+              <div class="kyp-bullet">Dominant right hand — force left every time</div>
+              <div class="kyp-bullet">Elite catch-and-shoot from left corner</div>
+              <div class="kyp-bullet">Struggles finishing through contact</div>
+              <div class="kyp-bullet">Emotional — two quick fouls changes demeanor</div>
+            </div>
+          </div>
+          <div class="kyp-card">
+            <div class="kyp-card-header">
+              <div class="kyp-avatar" style="background:#2e7d32;">DW</div>
+              <div>
+                <div class="kyp-name">Devon Williams</div>
+                <div class="kyp-sub">#11 · PG · 6'1"</div>
+              </div>
+              <div style="margin-left:auto;">
+                <span class="mockup-badge" style="background:rgba(46,125,50,0.25);color:#81c784;font-size:0.58rem;">🤝 Playmaker</span>
+              </div>
+            </div>
+            <div class="kyp-bullets">
+              <div class="kyp-bullet">Will drive right — weak left-hand finisher</div>
+              <div class="kyp-bullet">High-level PNR decision maker — deny ball</div>
+              <div class="kyp-bullet">Poor shooter off the dribble — go under screens</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-culture">
+      <div class="tab-fields">
+        <div class="tab-field"><div class="tab-field-label">Aggressiveness</div><div class="tab-field-desc">How physical and proactive the team plays — both offensively and defensively.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Up/Down Response</div><div class="tab-field-desc">How the team responds when winning big, losing big, or in close games.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Fanbase Effect</div><div class="tab-field-desc">Does a loud crowd energize or distract them? Home vs. away tendencies.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Timeout Behavior</div><div class="tab-field-desc">How the team comes out of timeouts and locker room — energy, set plays, adjustments.</div></div>
+        <div class="tab-field"><div class="tab-field-label">Trigger Players</div><div class="tab-field-desc">Which players energize the team when active — and what wakes them up when down.</div></div>
+      </div>
+      <div class="mockup-frame">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-title">🧠 Team Culture Profile</div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">Aggressiveness</div>
+            <div class="mockup-card-sub">Very physical on defense — draw fouls early to change their approach</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">When Down</div>
+            <div class="mockup-card-sub">Resort to hero ball — #23 takes over, others become spectators</div>
+            <div class="mockup-card-badges">
+              <span class="mockup-badge" style="background:rgba(200,80,0,0.25);color:#f5a623;">Watch #23</span>
+            </div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-name">After Timeouts</div>
+            <div class="mockup-card-sub">Almost always run Horns ATO — PG sets the screen, #23 curls</div>
+            <div class="mockup-card-badges">
+              <span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;">Horns ATO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOT -->
+  <section class="screenshot-section">
+    <div class="screenshot-grid">
+      <div class="screenshot-info">
+        <div class="section-label">Built for Coaches</div>
+        <div class="section-title">Scouting That Actually Gets Used</div>
+        <p>ScoutPRO replaces scattered notes, whiteboards, and disconnected spreadsheets with a single organized system your entire staff can build from — and your players can consume before every game.</p>
+        <p>Whether you're prepping for tomorrow's opponent or building a long-term database of every team in your league, ScoutPRO keeps everything structured and searchable.</p>
+        <ul>
+          <li><span class="check">✓</span> Six record types: Coaches, Teams, Players, Playbooks, Reports, KYPs</li>
+          <li><span class="check">✓</span> KYP cards in list or visual card view</li>
+          <li><span class="check">✓</span> 16 attribute badges for instant player characterization</li>
+          <li><span class="check">✓</span> Full offensive and defensive scheme documentation</li>
+          <li><span class="check">✓</span> All data saved locally — works offline</li>
+        </ul>
+      </div>
+      <div class="mockup-frame">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-title">🔍 ScoutPRO — Dashboard</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+            <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--blue);">6</div>
+              <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;">Coaches</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--blue);">12</div>
+              <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;">Teams</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--blue);">38</div>
+              <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;">Players</div>
+            </div>
+          </div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Recent Reports</div>
+          <div class="mockup-card"><div class="mockup-card-name">Eastside Hoopers — Game Report</div><div class="mockup-card-sub">Hot plays · Depth chart · Matchup keys</div><div class="mockup-card-badges"><span class="mockup-badge" style="background:rgba(0,119,192,0.3);color:#7fc8f0;">Report</span></div></div>
+          <div class="mockup-card"><div class="mockup-card-name">Downtown Ballers — Team Profile</div><div class="mockup-card-sub">Offense · Defense · Culture documented</div><div class="mockup-card-badges"><span class="mockup-badge" style="background:rgba(46,125,50,0.25);color:#81c784;">Complete</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-strip">
+    <h2>Know Your Opponent Before Tip-Off</h2>
+    <p>Sign up for ScoutPRO and give your coaching staff the structured scouting system they need to prepare for every game.</p>
+    <a href="#" class="cta-btn" target="_blank">
+      Sign Up Free
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Better<span>.</span>Athlete Plan</div>
+    <a href="better-athlete-plan.html" class="footer-back">← Back to all tools</a>
+    <div class="footer-copy">© 2026 Better Athlete Plan</div>
+  </footer>
+
+  <script>
+    function showTab(id) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
