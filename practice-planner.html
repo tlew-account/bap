@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Practice Planner – Better Athlete Plan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #0077C0; --blue-dark: #005a91; --blue-light: #e8f4fc;
+      --silver: #C4CED4; --silver-light: #f0f3f5;
+      --black: #061922; --white: #ffffff;
+      --bg: #f4f7fa; --card: #ffffff; --mid: #e8eef3;
+      --border: rgba(0,119,192,0.18);
+      --text: #061922; --text-muted: rgba(6,25,34,0.55);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.35;
+    }
+
+    /* NAV */
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 18px 80px; display: flex; align-items: center; justify-content: space-between;
+      z-index: 500; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.05em; color: var(--black); text-decoration: none; }
+    .logo span { color: var(--blue); }
+    .nav-back { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
+    .nav-back:hover { color: var(--blue); }
+    .nav-back svg { width: 16px; height: 16px; }
+
+    /* HERO */
+    .page-hero {
+      padding: 140px 80px 80px;
+      background: var(--black);
+      position: relative; overflow: hidden;
+    }
+    .page-hero::before {
+      content: ''; position: absolute; top: -80px; right: -80px;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,119,192,0.2), transparent 70%);
+      pointer-events: none;
+    }
+    .hero-icon {
+      font-size: 3.5rem; margin-bottom: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 80px; height: 80px; background: rgba(0,119,192,0.15);
+      border: 1px solid rgba(0,119,192,0.3); border-radius: 16px;
+    }
+    .hero-eyebrow { font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--blue); margin-bottom: 16px; }
+    .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 6vw, 5.5rem); line-height: 0.95; color: var(--white); margin-bottom: 24px; }
+    .hero-title span { color: var(--blue); }
+    .hero-desc { font-size: 1.1rem; line-height: 1.8; color: rgba(255,255,255,0.65); max-width: 620px; margin-bottom: 40px; }
+    .hero-cta {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--blue); color: var(--white); text-decoration: none;
+      font-weight: 600; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 15px 34px;
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 14px 100%);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .hero-cta:hover { background: var(--blue-dark); transform: translateY(-2px); }
+    .hero-cta svg { width: 16px; height: 16px; transition: transform 0.2s; }
+    .hero-cta:hover svg { transform: translateX(4px); }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px; padding: 6px 14px; font-size: 0.8rem; color: rgba(255,255,255,0.7);
+    }
+    .hero-badge span { color: var(--blue); font-weight: 600; }
+
+    /* SECTIONS */
+    .section { padding: 100px 80px; }
+    .section-label { font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--blue); margin-bottom: 14px; }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.2rem, 4vw, 3.5rem); line-height: 1; color: var(--black); margin-bottom: 48px; }
+    .section-dark { background: var(--black); }
+    .section-dark .section-title { color: var(--white); }
+    .section-dark .section-label { color: var(--silver); }
+
+    /* FEATURES GRID */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 32px 28px; border-top: 3px solid var(--blue);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 10px 36px rgba(0,119,192,0.1); }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 16px; }
+    .feature-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.04em; color: var(--black); margin-bottom: 10px; }
+    .feature-desc { font-size: 0.87rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* SCREENSHOT MOCKUP */
+    .screenshot-section { padding: 100px 80px; background: var(--mid); }
+    .screenshot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+    .screenshot-info .section-title { margin-bottom: 20px; }
+    .screenshot-info p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .screenshot-info ul { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .screenshot-info ul li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+    .check { color: var(--blue); font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .mockup-frame {
+      background: var(--black); border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(0,119,192,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .mockup-bar {
+      background: #1a2d42; padding: 12px 18px; display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-screen { padding: 24px; }
+    .mockup-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--white); letter-spacing: 1px; margin-bottom: 16px; }
+    .mockup-row {
+      background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px; border-left: 3px solid var(--blue);
+    }
+    .mockup-row-icon { font-size: 1.1rem; }
+    .mockup-row-text { flex: 1; }
+    .mockup-row-name { font-size: 0.85rem; font-weight: 600; color: var(--white); }
+    .mockup-row-sub { font-size: 0.72rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
+    .mockup-row-badge { font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: rgba(0,119,192,0.3); color: #7fc8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+    .mockup-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 16px; }
+    .mockup-stat { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px; text-align: center; }
+    .mockup-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--blue); }
+    .mockup-stat-lbl { font-size: 0.65rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+
+    /* CTA STRIP */
+    .cta-strip { background: var(--blue); padding: 72px 80px; text-align: center; }
+    .cta-strip h2 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2rem, 4vw, 3.2rem); color: var(--white); margin-bottom: 16px; }
+    .cta-strip p { font-size: 1rem; color: rgba(255,255,255,0.75); margin-bottom: 36px; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--white); color: var(--blue); text-decoration: none;
+      font-weight: 700; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 16px 40px;
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 14px 100%);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .cta-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    /* FOOTER */
+    footer { background: var(--black); padding: 36px 80px; display: flex; align-items: center; justify-content: space-between; border-top: 3px solid var(--blue); }
+    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--white); }
+    .footer-logo span { color: var(--blue); }
+    .footer-back { text-decoration: none; color: rgba(196,206,212,0.6); font-size: 0.82rem; transition: color 0.2s; }
+    .footer-back:hover { color: var(--blue); }
+    .footer-copy { font-size: 0.75rem; color: rgba(196,206,212,0.3); }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .nav-bar { padding: 18px 32px; }
+      .page-hero, .section, .screenshot-section, .cta-strip { padding-left: 32px; padding-right: 32px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .screenshot-grid { grid-template-columns: 1fr; }
+      footer { padding: 32px; flex-direction: column; gap: 16px; text-align: center; }
+    }
+    @media (max-width: 640px) {
+      .page-hero { padding-top: 110px; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav-bar">
+    <a href="better-athlete-plan.html" class="logo">Better<span>.</span>Athlete</a>
+    <a href="better-athlete-plan.html" class="nav-back">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back to Home
+    </a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="page-hero">
+    <div class="hero-eyebrow">Better Athlete Plan · Tool</div>
+    <div class="hero-icon">🏀</div>
+    <h1 class="hero-title">Practice<br><span>Planner</span></h1>
+    <p class="hero-desc">Build smarter sessions in minutes. HoopIQ is a full-featured basketball practice planning platform that lets coaches design, schedule, and track every drill, player, and session — all in one place.</p>
+    <a href="#" class="hero-cta" target="_blank">
+      Sign Up &amp; Get Started
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <div class="hero-badges">
+      <div class="hero-badge">🆓 <span>Free</span> to start</div>
+      <div class="hero-badge">📱 <span>Works</span> on any device</div>
+      <div class="hero-badge">☁️ <span>Cloud</span> saved</div>
+      <div class="hero-badge">🏀 <span>Basketball</span> specific</div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <div class="section-label">What's Inside</div>
+    <div class="section-title">Everything a Coach Needs</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div class="feature-title">Drill Library</div>
+        <p class="feature-desc">Browse a built-in library of basketball drills organized by category, level, and participants. Add your own custom drills and tag them for easy filtering.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <div class="feature-title">Practice Plans</div>
+        <p class="feature-desc">Build structured session plans with timed drills, assign them to specific players or teams, and export them as a PDF to share with your staff.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">Player Profiles</div>
+        <p class="feature-desc">Create detailed profiles for every athlete on your roster — position, dominant hand, strengths, areas to improve, and personal goals all in one place.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⏱️</div>
+        <div class="feature-title">Built-In Timer</div>
+        <p class="feature-desc">Run drills with a configurable work/rest timer right inside the app. Track makes, attempts, and set counts in real time — no separate stopwatch needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Progress Tracking</div>
+        <p class="feature-desc">Log shooting sessions per player, track makes by category, and view performance trends over time with visual charts and exportable session logs.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗂️</div>
+        <div class="feature-title">Skill Map</div>
+        <p class="feature-desc">Visualize every player's development across key skill categories — from form shooting and mid-range to 3-point shooting and free throws.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOT -->
+  <section class="screenshot-section">
+    <div class="screenshot-grid">
+      <div class="screenshot-info">
+        <div class="section-label">See It in Action</div>
+        <div class="section-title">Your Full Coaching Dashboard</div>
+        <p>The Practice Planner dashboard gives you an at-a-glance view of your roster, recent sessions, and top performers — so you always know exactly where your athletes stand.</p>
+        <p>From the dashboard you can jump straight into creating a new practice plan, logging a shooting session, or reviewing a player's progress report.</p>
+        <ul>
+          <li><span class="check">✓</span> Real-time shooting percentage tracking</li>
+          <li><span class="check">✓</span> Drill-by-drill session builder with PDF export</li>
+          <li><span class="check">✓</span> Team and individual player management</li>
+          <li><span class="check">✓</span> Cloud-synced across all your devices</li>
+          <li><span class="check">✓</span> Excel and PDF data exports</li>
+        </ul>
+      </div>
+      <div class="mockup-frame">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-title">🏀 HoopIQ — Practice Planner</div>
+          <div class="mockup-stat-row">
+            <div class="mockup-stat"><div class="mockup-stat-val">24</div><div class="mockup-stat-lbl">Sessions</div></div>
+            <div class="mockup-stat"><div class="mockup-stat-val">8</div><div class="mockup-stat-lbl">Players</div></div>
+            <div class="mockup-stat"><div class="mockup-stat-val">67%</div><div class="mockup-stat-lbl">Avg Make %</div></div>
+          </div>
+          <div style="margin-top:18px;margin-bottom:8px;font-size:0.65rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;">Recent Sessions</div>
+          <div class="mockup-row"><div class="mockup-row-icon">🎯</div><div class="mockup-row-text"><div class="mockup-row-name">Morning Shooting — Marcus J.</div><div class="mockup-row-sub">Form Shooting · 48/72 makes</div></div><div class="mockup-row-badge">67%</div></div>
+          <div class="mockup-row"><div class="mockup-row-icon">📋</div><div class="mockup-row-text"><div class="mockup-row-name">Team Drill Session — Varsity</div><div class="mockup-row-sub">5 drills · 45 min total</div></div><div class="mockup-row-badge">Plan</div></div>
+          <div class="mockup-row"><div class="mockup-row-icon">⏱️</div><div class="mockup-row-text"><div class="mockup-row-name">Free Throw Ladder — Devon W.</div><div class="mockup-row-sub">Free Throw · 28/30 makes</div></div><div class="mockup-row-badge">93%</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section section-dark">
+    <div class="section-label" style="color:var(--silver);">How It Works</div>
+    <div class="section-title" style="color:var(--white);margin-bottom:48px;">Up and Running in Minutes</div>
+    <div class="features-grid">
+      <div class="feature-card" style="background:rgba(255,255,255,0.04);border-color:rgba(0,119,192,0.25);border-top-color:var(--blue);">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:rgba(0,119,192,0.3);line-height:1;margin-bottom:12px;">01</div>
+        <div class="feature-title" style="color:var(--white);">Create Your Roster</div>
+        <p class="feature-desc" style="color:rgba(255,255,255,0.5);">Add players with their position, dominant hand, strengths, and improvement areas. Organize them into teams.</p>
+      </div>
+      <div class="feature-card" style="background:rgba(255,255,255,0.04);border-color:rgba(0,119,192,0.25);border-top-color:var(--blue);">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:rgba(0,119,192,0.3);line-height:1;margin-bottom:12px;">02</div>
+        <div class="feature-title" style="color:var(--white);">Build Your First Plan</div>
+        <p class="feature-desc" style="color:rgba(255,255,255,0.5);">Pick drills from the library, set times for each, assign the plan to a player or team, and export a PDF for your staff.</p>
+      </div>
+      <div class="feature-card" style="background:rgba(255,255,255,0.04);border-color:rgba(0,119,192,0.25);border-top-color:var(--blue);">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:rgba(0,119,192,0.3);line-height:1;margin-bottom:12px;">03</div>
+        <div class="feature-title" style="color:var(--white);">Run &amp; Track Sessions</div>
+        <p class="feature-desc" style="color:rgba(255,255,255,0.5);">Use the built-in timer during practice, log makes and misses in real time, and watch your players' progress charts grow.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-strip">
+    <h2>Start Planning Better Practices Today</h2>
+    <p>Join coaches already using HoopIQ to build smarter, more structured basketball sessions for their athletes.</p>
+    <a href="#" class="cta-btn" target="_blank">
+      Sign Up Free
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Better<span>.</span>Athlete Plan</div>
+    <a href="better-athlete-plan.html" class="footer-back">← Back to all tools</a>
+    <div class="footer-copy">© 2026 Better Athlete Plan</div>
+  </footer>
+
+</body>
+</html>
