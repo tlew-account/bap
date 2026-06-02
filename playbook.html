@@ -1,0 +1,1162 @@
+python3 << 'PYEOF'
+html = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlayBook Pro — Basketball Play Designer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0a0a0f;--ink2:#16161f;--ink3:#222230;--surface:#1a1a26;--surface2:#22222e;--surface3:#2a2a38;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --accent:#ff5733;--accent2:#ff8c5a;--accent-dim:rgba(255,87,51,0.15);
+  --gold:#f5c842;--gold-dim:rgba(245,200,66,0.12);
+  --blue:#3d9bff;--blue-dim:rgba(61,155,255,0.12);
+  --green:#2ecc71;--green-dim:rgba(46,204,113,0.12);
+  --text:#e8e8f0;--text2:#a0a0b8;--text3:#606078;
+  --radius:8px;--radius-lg:14px;--shadow:0 4px 24px rgba(0,0,0,0.4);--shadow-lg:0 8px 40px rgba(0,0,0,0.5);
+}
+html,body{height:100%;background:var(--ink);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;overflow:hidden}
+#app{display:flex;height:100vh;overflow:hidden}
+#sidebar{width:236px;flex-shrink:0;background:var(--ink2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{height:52px;background:var(--ink2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 16px;flex-shrink:0}
+#content{flex:1;overflow:hidden;display:flex;min-height:0}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-logo-mark{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:900;color:var(--accent);letter-spacing:-0.5px}
+.sb-logo-sub{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sb-section{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;padding:14px 16px 6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 16px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;border-left:2px solid transparent;transition:all .15s}
+.sb-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.sb-item.active{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent)}
+.sb-item svg{width:16px;height:16px;flex-shrink:0}
+.sb-footer{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0}
+.sb-sync-btn{width:100%;background:var(--accent-dim);border:1px solid rgba(255,87,51,0.3);color:var(--accent);border-radius:var(--radius);padding:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+.sb-sync-btn:hover{background:rgba(255,87,51,0.25)}
+.topbar-title{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap}
+.topbar-sep{width:1px;height:20px;background:var(--border2);flex-shrink:0}
+.tb-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text2);transition:all .15s;white-space:nowrap}
+.tb-btn:hover{background:rgba(255,255,255,0.06);color:var(--text)}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tb-btn.primary:hover{background:#e04020}
+.tb-btn svg{width:13px;height:13px}
+.topbar-spacer{flex:1}
+.save-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;transition:background .3s}
+.save-dot.dirty{background:var(--gold);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.page{display:none;height:100%;width:100%}
+.page.active{display:flex}
+#page-dash{flex-direction:column;padding:28px;gap:20px;overflow-y:auto}
+.dash-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.dash-heading{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:900;color:var(--text);line-height:1.1}
+.dash-sub{color:var(--text2);font-size:13px;margin-top:4px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
+.stat-card .sv{font-family:'Unbounded',sans-serif;font-size:28px;font-weight:900;color:var(--text);line-height:1}
+.stat-card .sl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.card-head h3{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.card-body{padding:14px 18px}
+.play-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.play-row:last-child{border-bottom:none}
+.play-row:hover{background:rgba(255,255,255,0.03);margin:0 -18px;padding-left:18px;padding-right:18px}
+.play-type-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.badge-hc{background:var(--gold-dim);color:var(--gold)}
+.badge-tr{background:var(--green-dim);color:var(--green)}
+.badge-sob{background:var(--blue-dim);color:var(--blue)}
+.badge-bob{background:var(--accent-dim);color:var(--accent)}
+.play-name{font-weight:600;font-size:13px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.play-meta{font-size:11px;color:var(--text3)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+.empty-state svg{width:36px;height:36px;margin:0 auto 10px;opacity:0.3;display:block}
+#page-plays{flex-direction:column;overflow:hidden}
+.plays-toolbar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--ink3);border:1px solid var(--border2);border-radius:var(--radius);padding:7px 12px;flex:1;min-width:160px}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;width:100%}
+.search-box input::placeholder{color:var(--text3)}
+.filter-sel{background:var(--ink3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;cursor:pointer}
+.filter-sel option{background:var(--ink2)}
+.plays-grid{flex:1;overflow-y:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;align-content:start}
+.play-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}
+.play-card:hover{border-color:rgba(255,87,51,0.4);transform:translateY(-2px);box-shadow:var(--shadow)}
+.play-card-preview{height:120px;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.play-card-body{padding:12px 14px}
+.play-card-name{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.play-card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.play-card-actions{display:flex;gap:4px;padding:0 12px 12px}
+.icon-btn{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);padding:5px 9px;cursor:pointer;font-size:12px;display:inline-flex;align-items:center;gap:4px;transition:all .13s;font-family:'DM Sans',sans-serif;font-weight:500}
+.icon-btn:hover{background:rgba(255,255,255,0.06);color:var(--text);border-color:var(--border2)}
+.icon-btn.danger:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+#page-playbooks{flex-direction:column;overflow:hidden}
+.pb-list{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.pb-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:border-color .15s}
+.pb-card:hover{border-color:var(--border2)}
+.pb-card-head{display:flex;align-items:center;gap:12px;padding:16px}
+.pb-icon{width:40px;height:40px;border-radius:10px;background:var(--ink3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.pb-name{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--text)}
+.pb-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.pb-actions{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+#page-pb-detail{flex-direction:column;overflow:hidden}
+.pb-detail-head{background:var(--surface2);border-bottom:1px solid var(--border);padding:14px 16px;flex-shrink:0}
+.pb-detail-name{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;color:var(--text);margin-bottom:3px}
+.pb-detail-body{flex:1;display:flex;overflow:hidden}
+.pb-plays-panel{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:7px}
+.pb-play-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;transition:border-color .13s}
+.pb-play-row:hover{border-color:var(--border2)}
+.pb-preview-panel{width:300px;flex-shrink:0;border-left:1px solid var(--border);background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:12px}
+#page-designer{flex-direction:row;overflow:hidden}
+#ds-left{width:210px;flex-shrink:0;background:var(--surface2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+#ds-canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#1a1008}
+#ds-right{width:210px;flex-shrink:0;background:var(--surface2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.tool-section{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.tool-section-title{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.tool-btn{background:var(--ink3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 4px;text-align:center;cursor:pointer;color:var(--text2);font-size:10px;font-weight:600;letter-spacing:.3px;transition:all .13s;display:flex;flex-direction:column;align-items:center;gap:3px;user-select:none}
+.tool-btn svg{width:15px;height:15px}
+.tool-btn:hover{background:rgba(255,255,255,0.06);color:var(--text);border-color:var(--border2)}
+.tool-btn.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(255,87,51,0.4)}
+.tool-btn-full{grid-column:1/-1}
+.pal-title{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.palette-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+.pal-player{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;cursor:pointer;border:2px solid transparent;transition:border-color .13s,transform .1s;user-select:none;flex-shrink:0}
+.pal-player:hover{border-color:rgba(255,255,255,0.5);transform:scale(1.1)}
+.pal-off{background:#ff5733;color:white}
+.pal-def{background:#3d9bff;color:white}
+.pal-ball{background:#f5c842;color:#1a1a26;font-size:14px}
+.canvas-toolbar{height:42px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;padding:0 10px;flex-shrink:0}
+.canvas-toolbar .topbar-spacer{flex:1}
+#play-canvas{display:block;cursor:crosshair;touch-action:none}
+.props-section{padding:10px 12px;border-bottom:1px solid var(--border)}
+.props-title{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.prop-label{display:block;font-size:10px;color:var(--text3);margin-bottom:3px;font-weight:600}
+.prop-input,.prop-select,.prop-textarea{width:100%;background:var(--ink3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);padding:7px 9px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .13s;margin-bottom:8px}
+.prop-input:focus,.prop-select:focus,.prop-textarea:focus{border-color:var(--accent)}
+.prop-select option{background:var(--ink2)}
+.prop-textarea{resize:vertical;min-height:56px}
+.tag-chip{display:inline-flex;align-items:center;gap:3px;background:var(--ink3);border:1px solid var(--border2);border-radius:4px;padding:2px 7px;font-size:10px;color:var(--text2);margin:2px}
+.tag-chip button{background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0;line-height:1;display:flex;align-items:center}
+.color-swatch{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .12s;flex-shrink:0}
+.color-swatch:hover,.color-swatch.sel{border-color:white;transform:scale(1.15)}
+.int-badge{display:inline-flex;align-items:center;gap:5px;background:var(--blue-dim);border:1px solid rgba(61,155,255,0.25);border-radius:4px;padding:5px 9px;font-size:11px;font-weight:600;color:var(--blue);cursor:pointer;transition:background .13s;margin-bottom:4px;width:100%}
+.int-badge:hover{background:rgba(61,155,255,0.2)}
+.rule-pill{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.rule-hs{background:rgba(245,200,66,.15);color:#f5c842}
+.rule-ncaa{background:rgba(46,204,113,.15);color:#2ecc71}
+.rule-wnba{background:rgba(234,76,138,.15);color:#ea4c8a}
+.rule-nba{background:rgba(61,155,255,.15);color:#3d9bff}
+#page-teams,#page-players{flex-direction:column;overflow:hidden}
+.entity-grid{flex:1;overflow-y:auto;padding:14px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;align-content:start}
+.entity-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:border-color .15s}
+.entity-card:hover{border-color:var(--border2)}
+.entity-name{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.entity-sub{font-size:12px;color:var(--text3)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,10,15,0.8);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:26px 28px;width:100%;max-width:460px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-title{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:900;color:var(--text);margin-bottom:18px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.modal-cancel{background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:var(--radius);padding:8px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;transition:all .13s}
+.modal-cancel:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+.modal-save{background:var(--accent);border:none;color:white;border-radius:var(--radius);padding:8px 20px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;transition:background .13s}
+.modal-save:hover{background:#e04020}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;font-weight:600}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--ink3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .13s;resize:vertical}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.fg select option{background:var(--ink2)}
+.fg-full{grid-column:1/-1}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:9px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;z-index:2000;transition:transform .25s ease;white-space:nowrap;box-shadow:var(--shadow)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--ink3);border-radius:3px}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">PLAY<span style="color:var(--text2)">BOOK</span><span style="color:var(--accent)">.</span></div>
+    <div class="sb-logo-sub">Basketball Designer</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">Studio</div>
+    <div class="sb-item active" data-page="dash" onclick="go('dash')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </div>
+    <div class="sb-item" data-page="plays" onclick="go('plays')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      Plays
+    </div>
+    <div class="sb-item" data-page="playbooks" onclick="go('playbooks')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Playbooks
+    </div>
+    <div class="sb-section">Roster</div>
+    <div class="sb-item" data-page="teams" onclick="go('teams')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Teams
+    </div>
+    <div class="sb-item" data-page="players" onclick="go('players')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      Players
+    </div>
+    <div class="sb-section">Integrations</div>
+    <div class="sb-item" onclick="openLink('https://tlew-account.github.io/bap/analytics.html')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"/></svg>
+      CourtIQ
+    </div>
+    <div class="sb-item" onclick="openLink('https://tlew-account.github.io/bap/practice-plan.html')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      HoopIQ
+    </div>
+    <div class="sb-item" onclick="openLink('https://tlew-account.github.io/bap/scouting-reports.html')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      ScoutPRO
+    </div>
+    <div class="sb-item" onclick="openLink('https://tlew-account.github.io/bap/player-development-plans.html')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      Dev Plans
+    </div>
+    <div class="sb-item" onclick="openLink('https://tlew-account.github.io/bap/principles-of-play.html')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+      Principles
+    </div>
+  </div>
+  <div class="sb-footer">
+    <button class="sb-sync-btn" onclick="syncSupabase()">
+      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      Sync to Platform
+    </button>
+  </div>
+</div>
+<div id="main">
+  <div id="topbar">
+    <div class="topbar-title" id="tb-title">Dashboard</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-spacer"></div>
+    <div class="save-indicator"><div class="save-dot" id="save-dot"></div><span id="save-label">Saved</span></div>
+  </div>
+  <div id="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dash">
+      <div class="dash-header">
+        <div><div class="dash-heading">Playbook Studio</div><div class="dash-sub">Design, organize &amp; share your basketball systems</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="tb-btn" onclick="openNewPlayModal()">+ New Play</button>
+          <button class="tb-btn primary" onclick="openNewPlaybookModal()">+ New Playbook</button>
+        </div>
+      </div>
+      <div class="stats-row" id="dash-stats"></div>
+      <div class="grid2">
+        <div class="section-card">
+          <div class="card-head"><h3>Recent Plays</h3><button class="icon-btn" onclick="go('plays')">All →</button></div>
+          <div class="card-body" id="dash-recent"></div>
+        </div>
+        <div class="section-card">
+          <div class="card-head"><h3>Playbooks</h3><button class="icon-btn" onclick="go('playbooks')">All →</button></div>
+          <div class="card-body" id="dash-pbs"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAYS -->
+    <div class="page" id="page-plays">
+      <div class="plays-toolbar">
+        <div class="search-box">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--text3);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="play-search" placeholder="Search plays…" oninput="renderPlaysGrid()">
+        </div>
+        <select class="filter-sel" id="type-filter" onchange="renderPlaysGrid()">
+          <option value="">All Types</option>
+          <option value="hc">Half Court</option>
+          <option value="tr">Transition</option>
+          <option value="sob">SOB</option>
+          <option value="bob">BOB</option>
+        </select>
+        <select class="filter-sel" id="court-filter" onchange="renderPlaysGrid()">
+          <option value="">All Courts</option>
+          <option value="half">Half Court</option>
+          <option value="full">Full Court</option>
+        </select>
+        <div class="topbar-spacer"></div>
+        <button class="tb-btn primary" onclick="openNewPlayModal()">+ New Play</button>
+      </div>
+      <div class="plays-grid" id="plays-grid"></div>
+    </div>
+
+    <!-- PLAYBOOKS -->
+    <div class="page" id="page-playbooks">
+      <div class="plays-toolbar">
+        <div class="search-box" style="max-width:260px">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--text3);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="pb-search" placeholder="Search playbooks…" oninput="renderPlaybooks()">
+        </div>
+        <div class="topbar-spacer"></div>
+        <button class="tb-btn primary" onclick="openNewPlaybookModal()">+ New Playbook</button>
+      </div>
+      <div class="pb-list" id="pb-list"></div>
+    </div>
+
+    <!-- PLAYBOOK DETAIL -->
+    <div class="page" id="page-pb-detail">
+      <div class="pb-detail-head">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="icon-btn" onclick="go('playbooks')">← Back</button>
+          <div><div class="pb-detail-name" id="pb-detail-name"></div><div style="font-size:12px;color:var(--text3)" id="pb-detail-sub"></div></div>
+          <div style="margin-left:auto;display:flex;gap:7px;flex-wrap:wrap">
+            <button class="tb-btn" onclick="exportPBPDF()">📄 Export PDF</button>
+            <button class="tb-btn" onclick="sharePlaybook()">🔗 Share</button>
+            <button class="tb-btn primary" onclick="openAddPlayToPB()">+ Add Play</button>
+          </div>
+        </div>
+      </div>
+      <div class="pb-detail-body">
+        <div class="pb-plays-panel" id="pb-plays-panel"></div>
+        <div class="pb-preview-panel" id="pb-preview-panel">
+          <canvas id="preview-canvas" width="260" height="180" style="border-radius:8px;overflow:hidden"></canvas>
+          <div id="preview-info" style="text-align:center;color:var(--text3);font-size:12px">Select a play to preview</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESIGNER -->
+    <div class="page" id="page-designer">
+      <div id="ds-left">
+        <div class="tool-section">
+          <div class="tool-section-title">Tools</div>
+          <div class="tool-grid">
+            <div class="tool-btn active" id="tool-select" onclick="setTool('select')" title="Select (S)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>Select
+            </div>
+            <div class="tool-btn" id="tool-pan" onclick="setTool('pan')" title="Pan (V)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>Pan
+            </div>
+            <div class="tool-btn" id="tool-line" onclick="setTool('line')" title="Line (L)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19L19 5"/></svg>Line
+            </div>
+            <div class="tool-btn" id="tool-arrow" onclick="setTool('arrow')" title="Arrow (A)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>Arrow
+            </div>
+            <div class="tool-btn" id="tool-dashed" onclick="setTool('dashed')" title="Dashed (D)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-dasharray="3 3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16"/></svg>Dashed
+            </div>
+            <div class="tool-btn" id="tool-curve" onclick="setTool('curve')" title="Curve (C)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20c4-8 12-8 16-4"/></svg>Curve
+            </div>
+            <div class="tool-btn" id="tool-text" onclick="setTool('text')" title="Text (T)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Text
+            </div>
+            <div class="tool-btn" id="tool-zone" onclick="setTool('zone')" title="Zone (Z)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="3" stroke-width="2"/></svg>Zone
+            </div>
+          </div>
+        </div>
+        <div class="tool-section">
+          <div class="tool-section-title">Action Type</div>
+          <div class="tool-grid">
+            <div class="tool-btn active" id="act-pass" onclick="setAction('pass')"><span style="font-size:16px">→</span>Pass</div>
+            <div class="tool-btn" id="act-dribble" onclick="setAction('dribble')"><span style="font-size:16px">⤳</span>Dribble</div>
+            <div class="tool-btn" id="act-cut" onclick="setAction('cut')"><span style="font-size:16px">↗</span>Cut</div>
+            <div class="tool-btn" id="act-screen" onclick="setAction('screen')"><span style="font-size:16px">⊣</span>Screen</div>
+            <div class="tool-btn" id="act-backdoor" onclick="setAction('backdoor')"><span style="font-size:16px">↩</span>Backdoor</div>
+            <div class="tool-btn" id="act-shot" onclick="setAction('shot')"><span style="font-size:14px">🏀</span>Shot</div>
+          </div>
+        </div>
+        <div class="tool-section">
+          <div class="tool-section-title">Players</div>
+          <div style="padding:4px 0">
+            <div class="pal-title">Offense (click or drag)</div>
+            <div class="palette-row" id="pal-off"></div>
+            <div class="pal-title" style="margin-top:8px">Defense</div>
+            <div class="palette-row" id="pal-def"></div>
+            <div class="pal-title" style="margin-top:8px">Ball</div>
+            <div class="palette-row" id="pal-ball"></div>
+          </div>
+        </div>
+        <div class="tool-section" style="border-bottom:none">
+          <div class="tool-section-title">Sequence Steps</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:7px">Step <b id="seq-num" style="color:var(--accent)">1</b> of <b id="seq-total">1</b></div>
+          <div style="display:flex;gap:4px;margin-bottom:5px">
+            <button class="icon-btn" style="flex:1;justify-content:center" onclick="prevSeq()">◀</button>
+            <button class="icon-btn" style="flex:1;justify-content:center" onclick="nextSeq()">▶</button>
+          </div>
+          <button class="icon-btn" style="width:100%;justify-content:center" onclick="addSeq()">+ Add Step</button>
+        </div>
+      </div>
+
+      <div id="ds-canvas-wrap">
+        <div class="canvas-toolbar">
+          <button class="tb-btn" onclick="undoAct()">↩ Undo</button>
+          <button class="tb-btn" onclick="redoAct()">↪ Redo</button>
+          <div class="topbar-sep"></div>
+          <button class="tb-btn" onclick="deleteSelected()">🗑 Del</button>
+          <button class="tb-btn" onclick="clearSeq()">⊘ Clear</button>
+          <button class="tb-btn" onclick="zoomIn()">＋</button>
+          <button class="tb-btn" onclick="zoomOut()">－</button>
+          <button class="tb-btn" onclick="resetView()">⊡ Fit</button>
+          <div class="topbar-spacer"></div>
+          <button class="tb-btn primary" onclick="savePlay()">💾 Save Play</button>
+        </div>
+        <div id="canvas-container" style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative">
+          <canvas id="play-canvas"></canvas>
+        </div>
+        <div id="curve-hint" style="display:none;position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;font-size:11px;padding:5px 12px;border-radius:4px">Click 3 points for curve: start → control → end</div>
+      </div>
+
+      <div id="ds-right">
+        <div class="props-section">
+          <div class="props-title">Court Setup</div>
+          <label class="prop-label">Court Type</label>
+          <select class="prop-select" id="prop-court" onchange="updateCourtProp()">
+            <option value="half">Half Court</option>
+            <option value="full">Full Court</option>
+          </select>
+          <label class="prop-label">Rules</label>
+          <select class="prop-select" id="prop-rules" onchange="updateCourtProp()">
+            <option value="hs">High School</option>
+            <option value="ncaa">NCAA</option>
+            <option value="wnba">WNBA</option>
+            <option value="nba">NBA</option>
+          </select>
+        </div>
+        <div class="props-section">
+          <div class="props-title">Play Info</div>
+          <label class="prop-label">Name</label>
+          <input class="prop-input" type="text" id="prop-name" placeholder="Play name…" oninput="updateMeta()">
+          <label class="prop-label">Type</label>
+          <select class="prop-select" id="prop-type" onchange="updateMeta()">
+            <option value="hc">Half Court</option>
+            <option value="tr">Transition</option>
+            <option value="sob">SOB</option>
+            <option value="bob">BOB</option>
+          </select>
+          <label class="prop-label">Description</label>
+          <textarea class="prop-textarea" id="prop-desc" rows="3" placeholder="Describe the play…" oninput="updateMeta()"></textarea>
+          <label class="prop-label">Team</label>
+          <select class="prop-select" id="prop-team" onchange="updateMeta()"><option value="">None</option></select>
+        </div>
+        <div class="props-section">
+          <div class="props-title">Tags</div>
+          <div id="tags-row" style="display:flex;flex-wrap:wrap;margin-bottom:6px"></div>
+          <div style="display:flex;gap:5px">
+            <input type="text" id="tag-input" placeholder="Add tag…" style="flex:1;background:var(--ink3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);padding:5px 8px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none" onkeydown="if(event.key==='Enter')addTag()">
+            <button class="icon-btn" onclick="addTag()">+</button>
+          </div>
+        </div>
+        <div class="props-section">
+          <div class="props-title">Line Color</div>
+          <div id="color-row" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:3px"></div>
+        </div>
+        <div class="props-section" style="border-bottom:none">
+          <div class="props-title">Integrations</div>
+          <button class="int-badge" onclick="shareToCourtIQ()">📊 Share to CourtIQ</button>
+          <button class="int-badge" onclick="openLink('https://tlew-account.github.io/bap/practice-plan.html')">⏱ Add to HoopIQ</button>
+          <button class="int-badge" onclick="openLink('https://tlew-account.github.io/bap/scouting-reports.html')">🔍 Link to ScoutPRO</button>
+          <button class="int-badge" onclick="openLink('https://tlew-account.github.io/bap/player-development-plans.html')">📈 Add to Dev Plans</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAMS -->
+    <div class="page" id="page-teams">
+      <div class="plays-toolbar">
+        <span style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--text)">Teams</span>
+        <div class="topbar-spacer"></div>
+        <button class="tb-btn primary" onclick="openNewTeamModal()">+ New Team</button>
+      </div>
+      <div class="entity-grid" id="teams-grid"></div>
+    </div>
+
+    <!-- PLAYERS -->
+    <div class="page" id="page-players">
+      <div class="plays-toolbar">
+        <span style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--text)">Players</span>
+        <div class="topbar-spacer"></div>
+        <button class="tb-btn primary" onclick="openNewPlayerModal()">+ New Player</button>
+      </div>
+      <div class="entity-grid" id="players-grid"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+<div id="toast"></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-new-play">
+  <div class="modal">
+    <div class="modal-title">New Play</div>
+    <div class="form-grid">
+      <div class="fg fg-full"><label>Play Name</label><input type="text" id="np-name" placeholder="e.g. Horns Action"></div>
+      <div class="fg"><label>Play Type</label><select id="np-type"><option value="hc">Half Court</option><option value="tr">Transition</option><option value="sob">Side Out</option><option value="bob">Baseline Out</option></select></div>
+      <div class="fg"><label>Court</label><select id="np-court"><option value="half">Half Court</option><option value="full">Full Court</option></select></div>
+      <div class="fg"><label>Rules</label><select id="np-rules"><option value="hs">High School</option><option value="ncaa">NCAA</option><option value="wnba">WNBA</option><option value="nba">NBA</option></select></div>
+      <div class="fg"><label>Team</label><select id="np-team"><option value="">None</option></select></div>
+      <div class="fg fg-full"><label>Description</label><textarea id="np-desc" rows="2" placeholder="Describe the play…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal('modal-new-play')">Cancel</button>
+      <button class="modal-save" onclick="createPlay()">Open Designer →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-new-pb">
+  <div class="modal">
+    <div class="modal-title">New Playbook</div>
+    <div class="fg"><label>Name</label><input type="text" id="npb-name" placeholder="e.g. Offensive Sets"></div>
+    <div class="fg"><label>Description</label><textarea id="npb-desc" rows="2" placeholder="What this playbook covers…"></textarea></div>
+    <div class="form-grid">
+      <div class="fg"><label>Category</label><select id="npb-cat"><option value="offense">Offense</option><option value="defense">Defense</option><option value="transition">Transition Off.</option><option value="trans-def">Transition Def.</option><option value="blob">BLOB</option><option value="slob">SLOB</option><option value="special">Special Situations</option></select></div>
+      <div class="fg"><label>Team</label><select id="npb-team"><option value="">None</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal('modal-new-pb')">Cancel</button>
+      <button class="modal-save" onclick="createPlaybook()">Create Playbook</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-new-team">
+  <div class="modal">
+    <div class="modal-title">New Team</div>
+    <div class="form-grid">
+      <div class="fg fg-full"><label>Team Name</label><input type="text" id="nt-name" placeholder="e.g. Varsity Hoops"></div>
+      <div class="fg"><label>Level</label><input type="text" id="nt-level" placeholder="Varsity / JV / Youth"></div>
+      <div class="fg"><label>Season</label><input type="text" id="nt-season" placeholder="2025-26"></div>
+      <div class="fg"><label>Head Coach</label><input type="text" id="nt-coach" placeholder="Coach name"></div>
+      <div class="fg"><label>Organization</label><input type="text" id="nt-org" placeholder="School / club name"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal('modal-new-team')">Cancel</button>
+      <button class="modal-save" onclick="createTeam()">Create Team</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-new-player">
+  <div class="modal">
+    <div class="modal-title">New Player</div>
+    <div class="form-grid">
+      <div class="fg fg-full"><label>Full Name</label><input type="text" id="npl-name" placeholder="Player name"></div>
+      <div class="fg"><label>Jersey #</label><input type="number" id="npl-num" placeholder="23" min="0" max="99"></div>
+      <div class="fg"><label>Position</label><select id="npl-pos"><option>PG</option><option>SG</option><option>SF</option><option>PF</option><option>C</option></select></div>
+      <div class="fg fg-full"><label>Team</label><select id="npl-team"><option value="">None</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal('modal-new-player')">Cancel</button>
+      <button class="modal-save" onclick="createPlayer()">Add Player</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-play">
+  <div class="modal">
+    <div class="modal-title">Add Play to Playbook</div>
+    <div id="add-play-list" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:5px"></div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal('modal-add-play')">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LS='pbpro_v3';
+const SB_URL='https://ofncwpbpsgmoezxhfxya.supabase.co';
+const SB_KEY='sb_publishable_7-tKwWBogVdwo6TCWUpGGw_8CGOdmy2';
+const SB_TABLE='hoopiq_data';
+const SB_ROW='playbook-main';
+const gid=()=>Math.random().toString(36).slice(2,9);
+const now=()=>new Date().toISOString();
+
+let _sb=null;
+function getSb(){if(!_sb&&window.supabase)_sb=window.supabase.createClient(SB_URL,SB_KEY);return _sb;}
+
+function load(){try{const r=localStorage.getItem(LS);return r?JSON.parse(r):null;}catch{return null;}}
+function persist(){
+  try{localStorage.setItem(LS,JSON.stringify({plays,playbooks,teams,players}));}catch{}
+  document.getElementById('save-dot').classList.remove('dirty');
+  document.getElementById('save-label').textContent='Saved';
+}
+let _dt=null;
+function dirty(){
+  document.getElementById('save-dot').classList.add('dirty');
+  document.getElementById('save-label').textContent='Unsaved';
+  clearTimeout(_dt);_dt=setTimeout(persist,2000);
+}
+
+const s=load();
+let plays=s?.plays||[];
+let playbooks=s?.playbooks||[];
+let teams=s?.teams||[{id:'t1',name:'Varsity Hoops',level:'Varsity',season:'2025-26',coach:'Coach Smith',org:'Downtown HS'},{id:'t2',name:'JV Ballers',level:'JV',season:'2025-26',coach:'Coach Johnson',org:'Downtown HS'}];
+let players=s?.players||[{id:'p1',name:'Marcus Johnson',number:'23',position:'SG',teamId:'t1'},{id:'p2',name:'Devon Williams',number:'11',position:'PG',teamId:'t1'}];
+if(!plays.length){plays=[
+  {id:'pl1',name:'Horns Action',type:'hc',court:'half',rules:'ncaa',description:'Classic horns set into PnR or pop.',tags:['PnR','Horns'],teamId:'t1',dd:{els:[],seqs:[[]]},createdAt:now(),updatedAt:now()},
+  {id:'pl2',name:'Press Break',type:'tr',court:'full',rules:'hs',description:'5-man press break.',tags:['Press','Transition'],teamId:'t1',dd:{els:[],seqs:[[]]},createdAt:now(),updatedAt:now()},
+  {id:'pl3',name:'Corner BLOB',type:'bob',court:'half',rules:'nba',description:'Corner inbound with curl.',tags:['BLOB','Curl'],teamId:'t2',dd:{els:[],seqs:[[]]},createdAt:now(),updatedAt:now()},
+];}
+if(!playbooks.length){playbooks=[
+  {id:'pb1',name:'Offensive Playbook',description:'Core offensive sets.',category:'offense',teamId:'t1',playIds:['pl1','pl3']},
+  {id:'pb2',name:'Transition System',description:'Full court transition.',category:'transition',teamId:'t1',playIds:['pl2']},
+];}
+
+// NAV
+const PAGE_TITLES={dash:'Dashboard',plays:'Plays',playbooks:'Playbooks','pb-detail':'Playbook Detail',designer:'Play Designer',teams:'Teams',players:'Players'};
+let curPage='dash';
+function go(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const si=document.querySelector('.sb-item[data-page="'+p+'"]');if(si)si.classList.add('active');
+  document.getElementById('tb-title').textContent=PAGE_TITLES[p]||p;
+  curPage=p;
+  if(p==='dash')renderDash();
+  if(p==='plays')renderPlaysGrid();
+  if(p==='playbooks')renderPlaybooks();
+  if(p==='teams')renderTeams();
+  if(p==='players')renderPlayersGrid();
+}
+function openLink(u){window.open(u,'_blank');}
+
+// UTILS
+const TYPE_LABELS={hc:'Half Court',tr:'Transition',sob:'SOB',bob:'BOB'};
+const TYPE_CLS={hc:'badge-hc',tr:'badge-tr',sob:'badge-sob',bob:'badge-bob'};
+const RULE_CLS={hs:'rule-hs',ncaa:'rule-ncaa',wnba:'rule-wnba',nba:'rule-nba'};
+const RULE_LABELS={hs:'HS',ncaa:'NCAA',wnba:'WNBA',nba:'NBA'};
+const CAT_EMOJI={offense:'⚔️',defense:'🛡️',transition:'⚡','trans-def':'🔄',blob:'📍',slob:'📌',special:'⭐'};
+function tbadge(t){return`<span class="play-type-badge ${TYPE_CLS[t]||'badge-hc'}">${TYPE_LABELS[t]||t}</span>`;}
+function rbadge(r){return`<span class="rule-pill ${RULE_CLS[r]||'rule-hs'}">${RULE_LABELS[r]||r}</span>`;}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function refreshTeamSels(){
+  const opts='<option value="">None</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  ['np-team','npb-team','npl-team','prop-team'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=opts;});
+}
+
+// DASHBOARD
+function renderDash(){
+  document.getElementById('dash-stats').innerHTML=[
+    {v:plays.length,l:'Total Plays',c:'var(--accent)'},{v:playbooks.length,l:'Playbooks',c:'var(--gold)'},
+    {v:teams.length,l:'Teams',c:'var(--blue)'},{v:players.length,l:'Players',c:'var(--green)'},
+  ].map(x=>`<div class="stat-card"><div class="sv" style="color:${x.c}">${x.v}</div><div class="sl">${x.l}</div></div>`).join('');
+  const rp=plays.slice(-5).reverse();
+  document.getElementById('dash-recent').innerHTML=rp.length?rp.map(p=>`<div class="play-row" onclick="openDesigner('${p.id}')">${tbadge(p.type)}<div class="play-name">${p.name||'Untitled'}</div>${rbadge(p.rules)}</div>`).join(''):`<div class="empty-state">No plays yet</div>`;
+  document.getElementById('dash-pbs').innerHTML=playbooks.length?playbooks.map(pb=>`<div class="play-row" onclick="openPlaybook('${pb.id}')"><span style="font-size:18px">${CAT_EMOJI[pb.category]||'📋'}</span><div class="play-name">${pb.name}</div><div class="play-meta">${pb.playIds.length} plays</div></div>`).join(''):`<div class="empty-state">No playbooks yet</div>`;
+}
+
+// PLAYS
+function renderPlaysGrid(){
+  const q=(document.getElementById('play-search')?.value||'').toLowerCase();
+  const tf=document.getElementById('type-filter')?.value||'';
+  const cf=document.getElementById('court-filter')?.value||'';
+  const filtered=plays.filter(p=>(!q||(p.name||'').toLowerCase().includes(q)||(p.tags||[]).some(t=>t.toLowerCase().includes(q)))&&(!tf||p.type===tf)&&(!cf||p.court===cf));
+  const grid=document.getElementById('plays-grid');
+  if(!filtered.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1;padding:60px 20px"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>No plays found</div>`;return;}
+  grid.innerHTML=filtered.map(p=>`<div class="play-card">
+    <div class="play-card-preview" onclick="openDesigner('${p.id}')">
+      <canvas id="mini-${p.id}" width="250" height="120" style="display:block;width:100%;height:100%"></canvas>
+    </div>
+    <div class="play-card-body">
+      <div class="play-card-name">${p.name||'Untitled'}</div>
+      <div class="play-card-meta">${tbadge(p.type)} ${rbadge(p.rules)}</div>
+      ${(p.tags||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:5px">${p.tags.map(t=>`<span style="font-size:9px;background:var(--ink3);border:1px solid var(--border);border-radius:3px;padding:1px 5px;color:var(--text3)">${t}</span>`).join('')}</div>`:''}
+    </div>
+    <div class="play-card-actions">
+      <button class="icon-btn" onclick="openDesigner('${p.id}')">✏️ Edit</button>
+      <button class="icon-btn" onclick="dupPlay('${p.id}')">⧉ Dup</button>
+      <button class="icon-btn danger" onclick="delPlay('${p.id}')">✕</button>
+    </div>
+  </div>`).join('');
+  setTimeout(()=>filtered.forEach(p=>miniDraw('mini-'+p.id,p)),60);
+}
+function delPlay(id){if(!confirm('Delete this play?'))return;plays=plays.filter(p=>p.id!==id);playbooks.forEach(pb=>{pb.playIds=pb.playIds.filter(x=>x!==id);});dirty();renderPlaysGrid();toast('Play deleted');}
+function dupPlay(id){const o=plays.find(p=>p.id===id);if(!o)return;const c=JSON.parse(JSON.stringify(o));c.id=gid();c.name=(c.name||'Untitled')+' (Copy)';c.createdAt=now();c.updatedAt=now();plays.push(c);dirty();renderPlaysGrid();toast('Duplicated');}
+
+// MINI COURT DRAW
+function miniDraw(cid,play){
+  const c=document.getElementById(cid);if(!c)return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height;
+  ctx.clearRect(0,0,W,H);
+  // floor
+  const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#d4924a');g.addColorStop(1,'#c0773a');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // grain
+  ctx.strokeStyle='rgba(0,0,0,0.05)';ctx.lineWidth=1;
+  for(let i=0;i<H;i+=5){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+  // simple half court lines
+  ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=1.5;
+  ctx.strokeRect(2,2,W-4,H-4);
+  const s=W/50;
+  const keyW=16*s,keyH=19*s;
+  ctx.strokeRect(W/2-keyW/2,H-keyH,keyW,keyH);
+  ctx.beginPath();ctx.arc(W/2,H-keyH,keyW/2,-Math.PI,0);ctx.stroke();
+  ctx.beginPath();ctx.arc(W/2,H-keyH,keyW/2,0,Math.PI);ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,140,50,0.8)';ctx.beginPath();ctx.arc(W/2,H-5.25*s,1.5*s,0,2*Math.PI);ctx.fill();
+  // 3pt arc simplified
+  const arcR=(play.rules==='nba'?23.75:20.75)*s;
+  const cx2=Math.min(22*s/2,arcR*0.98);
+  const ang=Math.acos(Math.min(1,cx2/arcR));
+  ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(W/2-cx2,H);ctx.lineTo(W/2-cx2,H-14*s);
+  ctx.arc(W/2,H-5.25*s,arcR,Math.PI-ang,ang,false);
+  ctx.lineTo(W/2+cx2,H);ctx.stroke();
+  // draw elements
+  const els=play.dd?.els||[];
+  els.forEach(el=>miniEl(ctx,el,W/400,H/280));
+}
+function miniEl(ctx,el,sx,sy){
+  if(!el)return;ctx.save();
+  ctx.strokeStyle=el.c||'#ff5733';ctx.fillStyle=el.c||'#ff5733';ctx.lineWidth=2*Math.min(sx,sy);
+  if(el.dash)ctx.setLineDash([4,4]);
+  if(el.t==='pl'){
+    const cx=el.x*sx,cy=el.y*sy,r=12*Math.min(sx,sy);
+    ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);
+    ctx.fillStyle=el.pt==='def'?'#3d9bff':el.pt==='ball'?'#f5c842':'#ff5733';
+    ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=el.pt==='ball'?'#1a1a26':'white';ctx.font=`bold ${8*Math.min(sx,sy)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(el.lb||'',cx,cy);
+  }else if(el.t==='ln'||el.t==='ar'||el.t==='da'){
+    ctx.beginPath();ctx.moveTo(el.x1*sx,el.y1*sy);ctx.lineTo(el.x2*sx,el.y2*sy);ctx.stroke();
+    if(el.t==='ar'){const a=Math.atan2((el.y2-el.y1)*sy,(el.x2-el.x1)*sx),h=8*Math.min(sx,sy);ctx.fillStyle=el.c||'#ff5733';ctx.beginPath();ctx.moveTo(el.x2*sx,el.y2*sy);ctx.lineTo(el.x2*sx-h*Math.cos(a-.4),el.y2*sy-h*Math.sin(a-.4));ctx.lineTo(el.x2*sx-h*Math.cos(a+.4),el.y2*sy-h*Math.sin(a+.4));ctx.closePath();ctx.fill();}
+  }else if(el.t==='cv'){ctx.beginPath();ctx.moveTo(el.x1*sx,el.y1*sy);ctx.quadraticCurveTo(el.cx*sx,el.cy*sy,el.x2*sx,el.y2*sy);ctx.stroke();}
+  else if(el.t==='tx'){ctx.fillStyle=el.c||'#ff5733';ctx.font=`${10*Math.min(sx,sy)}px sans-serif`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(el.tx||'',el.x*sx,el.y*sy);}
+  ctx.restore();
+}
+
+// PLAYBOOKS
+function renderPlaybooks(){
+  const q=(document.getElementById('pb-search')?.value||'').toLowerCase();
+  const filtered=playbooks.filter(pb=>!q||(pb.name||'').toLowerCase().includes(q));
+  document.getElementById('pb-list').innerHTML=filtered.map(pb=>{
+    const team=teams.find(t=>t.id===pb.teamId);
+    return`<div class="pb-card" onclick="openPlaybook('${pb.id}')">
+      <div class="pb-card-head">
+        <div class="pb-icon">${CAT_EMOJI[pb.category]||'📋'}</div>
+        <div style="flex:1;min-width:0"><div class="pb-name">${pb.name}</div><div class="pb-sub">${pb.playIds.length} plays${team?' · '+team.name:''}</div></div>
+        <div class="pb-actions">
+          <button class="icon-btn" onclick="event.stopPropagation();exportPBPDFById('${pb.id}')">📄 PDF</button>
+          <button class="icon-btn danger" onclick="event.stopPropagation();delPlaybook('${pb.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty-state" style="padding:60px">No playbooks yet</div>';
+}
+function delPlaybook(id){if(!confirm('Delete playbook?'))return;playbooks=playbooks.filter(pb=>pb.id!==id);dirty();renderPlaybooks();toast('Deleted');}
+
+let curPBId=null;
+function openPlaybook(id){
+  const pb=playbooks.find(x=>x.id===id);if(!pb)return;
+  curPBId=id;
+  document.getElementById('pb-detail-name').textContent=pb.name;
+  document.getElementById('pb-detail-sub').textContent=pb.description||'';
+  renderPBPlays(pb);
+  go('pb-detail');
+}
+function renderPBPlays(pb){
+  const panel=document.getElementById('pb-plays-panel');
+  panel.innerHTML=pb.playIds.map((pid,i)=>{
+    const p=plays.find(x=>x.id===pid);if(!p)return'';
+    return`<div class="pb-play-row" onclick="previewPlay('${pid}')">
+      <span style="color:var(--text3);font-family:'Space Mono',monospace;font-size:11px;min-width:24px">${i+1}.</span>
+      ${tbadge(p.type)}
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name||'Untitled'}</div><div style="font-size:11px;color:var(--text3)">${p.description?.slice(0,50)||''}</div></div>
+      <button class="icon-btn" onclick="event.stopPropagation();openDesigner('${pid}')">✏️</button>
+      <button class="icon-btn danger" onclick="event.stopPropagation();removeFromPB('${pid}')">✕</button>
+    </div>`;
+  }).filter(Boolean).join('')||'<div class="empty-state" style="padding:40px">Add plays to this playbook</div>';
+}
+function previewPlay(pid){
+  const p=plays.find(x=>x.id===pid);if(!p)return;
+  miniDraw('preview-canvas',p);
+  document.getElementById('preview-info').innerHTML=`<b style="color:var(--text)">${p.name||'Untitled'}</b><br>${tbadge(p.type)} ${rbadge(p.rules)}<br><span style="font-size:11px">${p.description||''}</span>`;
+}
+function removeFromPB(pid){
+  const pb=playbooks.find(x=>x.id===curPBId);if(!pb)return;
+  pb.playIds=pb.playIds.filter(id=>id!==pid);dirty();renderPBPlays(pb);toast('Removed');
+}
+function openAddPlayToPB(){
+  const pb=playbooks.find(x=>x.id===curPBId);if(!pb)return;
+  document.getElementById('add-play-list').innerHTML=plays.map(p=>{
+    const inPB=pb.playIds.includes(p.id);
+    return`<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)">
+      ${tbadge(p.type)}<div style="flex:1;font-size:13px;font-weight:500;color:var(--text)">${p.name||'Untitled'}</div>
+      <button class="icon-btn ${inPB?'danger':''}" onclick="${inPB?`pbRemove('${pb.id}','${p.id}')`:  `pbAdd('${pb.id}','${p.id}')`}">${inPB?'✕ Remove':'+ Add'}</button>
+    </div>`;
+  }).join('')||'<div class="empty-state">No plays yet</div>';
+  openModal('modal-add-play');
+}
+function pbAdd(pbId,pid){const pb=playbooks.find(x=>x.id===pbId);if(!pb)return;if(!pb.playIds.includes(pid))pb.playIds.push(pid);dirty();renderPBPlays(pb);openAddPlayToPB();toast('Added');}
+function pbRemove(pbId,pid){const pb=playbooks.find(x=>x.id===pbId);if(!pb)return;pb.playIds=pb.playIds.filter(x=>x!==pid);dirty();renderPBPlays(pb);openAddPlayToPB();toast('Removed');}
+function sharePlaybook(){navigator.clipboard?.writeText(window.location.href).then(()=>toast('Link copied!')).catch(()=>toast('Playbook link ready'));}
+function exportPBPDF(){exportPBPDFById(curPBId);}
+function exportPBPDFById(id){
+  const pb=playbooks.find(x=>x.id===id);if(!pb)return;
+  const w=window.open('','_blank');
+  const rows=pb.playIds.map((pid,i)=>{const p=plays.find(x=>x.id===pid);if(!p)return'';
+    return`<div class="pi"><div class="pn">${i+1}</div><div><strong>${p.name||'Untitled'}</strong><div class="pt">${(TYPE_LABELS[p.type]||p.type).toUpperCase()} · ${(RULE_LABELS[p.rules]||p.rules).toUpperCase()}</div><p>${p.description||''}</p>${(p.tags||[]).length?`<div class="tags">${p.tags.map(t=>`<span>${t}</span>`).join('')}</div>`:''}</div></div>`;
+  }).join('');
+  w.document.write(`<!DOCTYPE html><html><head><title>${pb.name}</title><style>body{font-family:Georgia,serif;padding:40px;color:#111;max-width:800px;margin:0 auto}h1{font-size:26px;border-bottom:3px solid #ff5733;padding-bottom:8px;margin-bottom:4px}p.sub{color:#666;font-size:13px;margin-bottom:24px}.pi{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid #ddd}.pn{width:30px;height:30px;background:#ff5733;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px}.pt{font-size:10px;color:#ff5733;font-weight:700;letter-spacing:1px;margin:3px 0}p{font-size:13px;color:#555;margin:4px 0 0}.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.tags span{font-size:10px;background:#f0f0f0;border-radius:3px;padding:2px 7px;color:#555}@media print{button{display:none}}</style></head><body><h1>${pb.name}</h1><p class="sub">${pb.description||''} · ${pb.playIds.length} plays · ${new Date().toLocaleDateString()}</p>${rows}<div style="margin-top:28px;font-size:11px;color:#aaa">PlayBook Pro</div><script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+
+// TEAMS
+function renderTeams(){
+  document.getElementById('teams-grid').innerHTML=teams.map(t=>{
+    const pc=players.filter(p=>p.teamId===t.id).length;
+    const pbc=playbooks.filter(pb=>pb.teamId===t.id).length;
+    return`<div class="entity-card"><div style="font-size:24px;margin-bottom:8px">🏟️</div><div class="entity-name">${t.name}</div><div class="entity-sub">${t.level} · ${t.season}</div><div style="font-size:12px;color:var(--text3);margin-top:6px">${pc} players · ${pbc} playbooks</div>${t.coach?`<div style="font-size:12px;color:var(--text3)">👤 ${t.coach}</div>`:''}</div>`;
+  }).join('')||'<div class="empty-state" style="grid-column:1/-1;padding:60px">No teams yet</div>';
+}
+function renderPlayersGrid(){
+  document.getElementById('players-grid').innerHTML=players.map(p=>{
+    const t=teams.find(x=>x.id===p.teamId);
+    return`<div class="entity-card"><div style="font-size:24px;margin-bottom:8px">🏀</div><div class="entity-name">#${p.number} ${p.name}</div><div class="entity-sub">${p.position}${t?' · '+t.name:''}</div></div>`;
+  }).join('')||'<div class="empty-state" style="grid-column:1/-1;padding:60px">No players yet</div>';
+}
+
+// MODALS
+function openNewPlayModal(){refreshTeamSels();document.getElementById('np-name').value='';document.getElementById('np-desc').value='';openModal('modal-new-play');}
+function createPlay(){
+  const name=document.getElementById('np-name').value.trim();if(!name){toast('Enter play name');return;}
+  const p={id:gid(),name,type:document.getElementById('np-type').value,court:document.getElementById('np-court').value,rules:document.getElementById('np-rules').value,description:document.getElementById('np-desc').value.trim(),teamId:document.getElementById('np-team').value,tags:[],dd:{els:[],seqs:[[]]},createdAt:now(),updatedAt:now()};
+  plays.push(p);dirty();closeModal('modal-new-play');openDesigner(p.id);
+}
+function openNewPlaybookModal(){refreshTeamSels();document.getElementById('npb-name').value='';document.getElementById('npb-desc').value='';openModal('modal-new-pb');}
+function createPlaybook(){
+  const name=document.getElementById('npb-name').value.trim();if(!name){toast('Enter playbook name');return;}
+  playbooks.push({id:gid(),name,description:document.getElementById('npb-desc').value.trim(),category:document.getElementById('npb-cat').value,teamId:document.getElementById('npb-team').value,playIds:[]});
+  dirty();closeModal('modal-new-pb');go('playbooks');toast('Playbook created');
+}
+function openNewTeamModal(){['nt-name','nt-level','nt-season','nt-coach','nt-org'].forEach(id=>document.getElementById(id).value='');openModal('modal-new-team');}
+function createTeam(){
+  const name=document.getElementById('nt-name').value.trim();if(!name){toast('Enter team name');return;}
+  teams.push({id:gid(),name,level:document.getElementById('nt-level').value,season:document.getElementById('nt-season').value,coach:document.getElementById('nt-coach').value,org:document.getElementById('nt-org').value});
+  dirty();closeModal('modal-new-team');renderTeams();refreshTeamSels();toast('Team created');
+}
+function openNewPlayerModal(){refreshTeamSels();['npl-name','npl-num'].forEach(id=>document.getElementById(id).value='');openModal('modal-new-player');}
+function createPlayer(){
+  const name=document.getElementById('npl-name').value.trim();if(!name){toast('Enter player name');return;}
+  players.push({id:gid(),name,number:document.getElementById('npl-num').value,position:document.getElementById('npl-pos').value,teamId:document.getElementById('npl-team').value});
+  dirty();closeModal('modal-new-player');renderPlayersGrid();toast('Player added');
+}
+
+// ─── DESIGNER ENGINE ───────────────────────────────────────────────────────
+let dPlay=null,canvas,ctx,tool='select',action='pass',color='#ff5733';
+let zoom=1,pan={x:0,y:0},selEl=null,dragEl=null,dragOff={x:0,y:0};
+let isPan=false,panStart=null,drawStart=null,prev=null;
+let history=[],redo=[],curSeq=0,curvePts=[];
+const LINE_COLORS=['#ff5733','#3d9bff','#2ecc71','#f5c842','#ea4c8a','#ffffff','#9b59b6','#e67e22'];
+
+function openDesigner(id){
+  dPlay=plays.find(p=>p.id===id);if(!dPlay)return;
+  if(!dPlay.dd){dPlay.dd={els:[],seqs:[[]]};}
+  if(!dPlay.dd.seqs){dPlay.dd.seqs=[[]];}
+  go('designer');
+  refreshTeamSels();
+  document.getElementById('prop-name').value=dPlay.name||'';
+  document.getElementById('prop-type').value=dPlay.type||'hc';
+  document.getElementById('prop-court').value=dPlay.court||'half';
+  document.getElementById('prop-rules').value=dPlay.rules||'ncaa';
+  document.getElementById('prop-desc').value=dPlay.description||'';
+  document.getElementById('prop-team').value=dPlay.teamId||'';
+  curSeq=0;history=[];redo=[];selEl=null;dragEl=null;curvePts=[];
+  renderTags();buildColorRow();buildPalette();
+  document.getElementById('seq-num').textContent=1;
+  document.getElementById('seq-total').textContent=dPlay.dd.seqs.length;
+  setTimeout(initCanvas,50);
+}
+
+function initCanvas(){
+  canvas=document.getElementById('play-canvas');
+  ctx=canvas.getContext('2d');
+  const con=document.getElementById('canvas-container');
+  const r=con.getBoundingClientRect();
+  canvas.width=r.width||800;canvas.height=r.height||540;
+  zoom=1;pan={x:0,y:0};
+  draw();
+  canvas.onmousedown=onDn;canvas.onmousemove=onMv;canvas.onmouseup=onUp;
+  canvas.ondblclick=onDbl;canvas.onwheel=onWheel;
+  canvas.ontouchstart=e=>{e.preventDefault();onDn(t2m(e));};
+  canvas.ontouchmove=e=>{e.preventDefault();onMv(t2m(e));};
+  canvas.ontouchend=e=>{e.preventDefault();onUp(t2m(e));};
+}
+
+function t2m(e){const t=e.touches[0]||e.changedTouches[0];const r=canvas.getBoundingClientRect();return{clientX:t.clientX,clientY:t.clientY,buttons:1,offsetX:t.clientX-r.left,offsetY:t.clientY-r.top};}
+function w2s(x,y){return{x:(x+pan.x)*zoom+canvas.width/2,y:(y+pan.y)*zoom+canvas.height/2};}
+function s2w(sx,sy){return{x:(sx-canvas.width/2)/zoom-pan.x,y:(sy-canvas.height/2)/zoom-pan.y};}
+function gPos(e){const r=canvas.getBoundingClientRect();return s2w(e.clientX-r.left,e.clientY-r.top);}
+
+function draw(){
+  if(!canvas||!ctx)return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width/2,canvas.height/2);ctx.scale(zoom,zoom);ctx.translate(pan.x,pan.y);
+  drawCourt();
+  seqEls().forEach(el=>drawEl(el,el===selEl));
+  if(prev)drawEl(prev,false,true);
+  if(curvePts.length){curvePts.forEach(p=>{ctx.save();ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,4,0,2*Math.PI);ctx.fill();ctx.restore();});}
+  ctx.restore();
+}
+
+function seqEls(){return(dPlay?.dd?.els||[]).filter(el=>el.seq===curSeq||el.seq===undefined);}
+
+// COURT DRAWING
+function drawCourt(){
+  const isHalf=dPlay?.court!=='full';
+  const rules=dPlay?.rules||'ncaa';
+  const W=400,H=isHalf?280:560;
+  const s=W/50;
+  // Wood floor
+  const g=ctx.createLinearGradient(-W/2,-H/2,W/2,H/2);
+  g.addColorStop(0,'#d4924a');g.addColorStop(0.5,'#c0773a');g.addColorStop(1,'#d4924a');
+  ctx.fillStyle=g;ctx.fillRect(-W/2,-H/2,W,H);
+  // grain
+  ctx.strokeStyle='rgba(0,0,0,0.04)';ctx.lineWidth=1;
+  for(let i=0;i<H;i+=4){ctx.beginPath();ctx.moveTo(-W/2,-H/2+i);ctx.lineTo(W/2,-H/2+i);ctx.stroke();}
+  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=2;
+  ctx.strokeRect(-W/2,-H/2,W,H);
+  const three=(rules==='nba'?23.75:20.75)*s;
+  const keyW=16*s,keyH=19*s;
+  if(isHalf){
+    drawHalfCourtLines(0,H/2,W,keyW,keyH,three,s);
+    ctx.beginPath();ctx.arc(0,-H/2,6*s,0,2*Math.PI);ctx.stroke();
+  }else{
+    ctx.beginPath();ctx.moveTo(-W/2,0);ctx.lineTo(W/2,0);ctx.stroke();
+    ctx.beginPath();ctx.arc(0,0,6*s,0,2*Math.PI);ctx.stroke();
+    drawHalfCourtLines(0,H/2,W,keyW,keyH,three,s);
+    ctx.save();ctx.scale(1,-1);drawHalfCourtLines(0,H/2,W,keyW,keyH,three,s);ctx.restore();
+  }
+}
+function drawHalfCourtLines(cx,baseY,W,keyW,keyH,arcR,s){
+  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=2;
+  ctx.strokeRect(cx-keyW/2,baseY-keyH,keyW,keyH);
+  ctx.beginPath();ctx.moveTo(cx-keyW/2,baseY-keyH);ctx.lineTo(cx+keyW/2,baseY-keyH);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,baseY-keyH,keyW/2,-Math.PI,0);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,baseY-keyH,keyW/2,0,Math.PI);ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
+  const rimY=baseY-5.25*s;
+  ctx.fillStyle='rgba(255,140,50,0.9)';ctx.beginPath();ctx.arc(cx,rimY,1.5*s,0,2*Math.PI);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,rimY,1.5*s,0,2*Math.PI);ctx.stroke();ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(cx-3*s,baseY-4*s);ctx.lineTo(cx+3*s,baseY-4*s);ctx.stroke();
+  const cx2=Math.min(22*s/2,arcR*0.98);
+  const ang=Math.acos(Math.min(1,cx2/arcR));
+  ctx.beginPath();ctx.moveTo(cx-cx2,baseY);ctx.lineTo(cx-cx2,baseY-14*s);
+  ctx.arc(cx,rimY,arcR,Math.PI-ang,ang,false);ctx.lineTo(cx+cx2,baseY);ctx.stroke();
+}
+
+// ELEMENT DRAWING
+function drawEl(el,isSel,isPreview){
+  if(!el)return;ctx.save();
+  if(isPreview)ctx.globalAlpha=0.55;
+  const c=el.c||'#ff5733';
+  ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=el.lw||2.5;
+  if(el.dash)ctx.setLineDash([8,5]);
+  switch(el.t){
+    case'pl':{
+      const r=14;
+      ctx.beginPath();ctx.arc(el.x,el.y,r,0,2*Math.PI);
+      ctx.fillStyle=el.pt==='def'?'#3d9bff':el.pt==='ball'?'#f5c842':'#ff5733';
+      ctx.fill();
+      if(isSel){ctx.strokeStyle='white';ctx.lineWidth=3;ctx.stroke();}
+      else{ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=1;ctx.stroke();}
+      ctx.fillStyle=el.pt==='ball'?'#1a1a26':'white';
+      ctx.font='bold 10px "Space Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(el.lb||'',el.x,el.y);
+      break;}
+    case'ln':case'ar':case'da':
+      ctx.beginPath();ctx.moveTo(el.x1,el.y1);ctx.lineTo(el.x2,el.y2);ctx.stroke();
+      if(el.t==='ar')arrowHead(el.x1,el.y1,el.x2,el.y2,c);
+      break;
+    case'cv':
+      ctx.beginPath();ctx.moveTo(el.x1,el.y1);ctx.quadraticCurveTo(el.cx,el.cy,el.x2,el.y2);ctx.stroke();
+      arrowHead(el.cx,el.cy,el.x2,el.y2,c);break;
+    case'zn':
+      ctx.strokeStyle=c;ctx.fillStyle=c+'28';
+      ctx.fillRect(el.x,el.y,el.w,el.h);ctx.strokeRect(el.x,el.y,el.w,el.h);break;
+    case'tx':
+      ctx.fillStyle=c;ctx.font=`${el.sz||14}px "DM Sans",sans-serif`;
+      ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(el.tx||'',el.x,el.y);
+      if(isSel){ctx.strokeStyle=c;ctx.lineWidth=1;ctx.setLineDash([3,3]);const mw=ctx.measureText(el.tx||'').width;ctx.strokeRect(el.x-2,el.y-2,mw+4,20);}break;
+  }
+  ctx.restore();
+}
+function arrowHead(x1,y1,x2,y2,c){
+  const a=Math.atan2(y2-y1,x2-x1),h=12;
+  ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-h*Math.cos(a-.35),y2-h*Math.sin(a-.35));
+  ctx.lineTo(x2-h*Math.cos(a+.35),y2-h*Math.sin(a+.35));
+  ctx.closePath();ctx.fill();
+}
+
+// EVENTS
+function onDn(e){
+  const wp=gPos(e);
+  if(tool==='pan'){isPan=true;panStart={x:e.clientX-pan.x*zoom,y:e.clientY-pan.y*zoom};return;}
+  if(tool==='select'){
+    selEl=findEl(wp.x,wp.y);
+    if(selEl?.t==='pl'){dragEl=selEl;dragOff={x:wp.x-selEl.x,y:wp.y-selEl.y};} 
+    draw();return;
+  }
+  if(tool==='text'){addText(wp);return;}
+  if(tool==='curve'){
+    curvePts.push(wp);
+    if(curvePts.length===3){finishCurve();}
+    else{document.getElementById('curve-hint').style.display=curvePts.length?'block':'none';}
+    draw();return;
+  }
+  drawStart=wp;
+}
+function onMv(e){
+  const wp=gPos(e);
+  if(isPan&&panStart){pan.x=(e.clientX-panStart.x)/zoom;pan.y=(e.clientY-panStart.y)/zoom;draw();return;}
+  if(dragEl){dragEl.x=wp.x-dragOff.x;dragEl.y=wp.y-dragOff.y;draw();return;}
+  if(!drawStart)return;
+  if(tool==='ln')prev={t:'ln',x1:drawStart.x,y1:drawStart.y,x2:wp.x,y2:wp.y,c:color};
+  else if(tool==='ar')prev={t:'ar',x1:drawStart.x,y1:drawStart.y,x2:wp.x,y2:wp.y,c:color};
+  else if(tool==='dashed')prev={t:'da',dash:true,x1:drawStart.x,y1:drawStart.y,x2:wp.x,y2:wp.y,c:color};
+  else if(tool==='zone')prev={t:'zn',x:drawStart.x,y:drawStart.y,w:wp.x-drawStart.x,h:wp.y-drawStart.y,c:color};
+  draw();
+}
+function onUp(e){
+  if(isPan){isPan=false;panStart=null;return;}
+  if(dragEl){dragEl=null;saveHistory();dirty();return;}
+  if(!drawStart)return;
+  const wp=gPos(e);
+  let el=null;
+  const dist=Math.hypot(wp.x-drawStart.x,wp.y-drawStart.y);
+  if(dist>4){
+    if(tool==='ln')el={id:gid(),t:'ln',x1:drawStart.x,y1:drawStart.y,x2:wp.x,y2:wp.y,c:color,seq:curSeq};
+    else if(tool==='ar')el={id:gid(),t:'ar',x1:drawStart.x,y1:drawStart.y,x2:wp.x,y2:wp.y,c:color,seq:curSeq};
+    else if(tool==='dashed')el={id:gid(),t:'da',dash:true,x1:drawStart.x,y1:drawStart.y,x2:wp.x,y2:wp.y,c:color,seq:curSeq};
+    else if(tool==='zone')el={id:gid(),t:'zn',x:drawStart.x,y:drawStart.y,w:wp.x-drawStart.x,h:wp.y-drawStart.y,c:color,seq:curSeq};
+  }
+  if(el){addEl(el);}
+  drawStart=null;prev=null;draw();
+}
+function onDbl(e){
+  if(!selEl)return;
+  if(selEl.t==='pl'){const l=prompt('Player label:',selEl.lb||'');if(l!==null){selEl.lb=l;dirty();draw();}}
+  else if(selEl.t==='tx'){const t=prompt('Edit text:',selEl.tx||'');if(t!==null){selEl.tx=t;dirty();draw();}}
+}
+function onWheel(e){e.preventDefault();zoom=Math.max(0.3,Math.min(5,zoom*(e.deltaY>0?0.9:1.1)));draw();}
+
+function addEl(el){
+  saveHistory();
+  if(!dPlay.dd)dPlay.dd={els:[],seqs:[[]]};
+  if(!dPlay.dd.els)dPlay.dd.els=[];
+  dPlay.dd.els.push(el);dirty();draw();
+}
+function finishCurve(){
+  const[p1,p2,p3]=curvePts;
+  addEl({id:gid(),t:'cv',x1:p1.x,y1:p1.y,cx:p2.x,cy:p2.y,x2:p3.x,y2:p3.y,c:color,seq:curSeq});
+  curvePts=[];document.getElementById('curve-hint').style.display='none';
+}
+function addText(wp){const tx=prompt('Enter text:');if(!tx)return;addEl({id:gid(),t:'tx',x:wp.x,y:wp.y,tx,c:color,sz:14,seq:curSeq});}
+
+function findEl(wx,wy){
+  const els=seqEls().slice().reverse();
+  for(const el of els){
+    if(el.t==='pl'&&Math.hypot(wx-el.x,wy-el.y)<16)return el;
+    if((el.t==='ln'||el.t==='ar'||el.t==='da')&&seg2pt(wx,wy,el.x1,el.y1,el.x2,el.y2)<9)return el;
+    if(el.t==='tx'&&wx>=el.x&&wx<=el.x+120&&wy>=el.y&&wy<=el.y+20)return el;
+    if(el.t==='zn'&&wx>=el.x&&wx<=el.x+el.w&&wy>=el.y&&wy<=el.y+el.h)return el;
+  }
+  return null;
+}
+function seg2pt(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1;const t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/(dx*dx+dy*dy)));return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));}
+
+// HISTORY
+function saveHistory(){history.push(JSON.stringify(dPlay.dd));redo=[];if(history.length>60)history.shift();}
+function undoAct(){if(!history.length)return;redo.push(JSON.stringify(dPlay.dd));dPlay.dd=JSON.parse(history.pop());selEl=null;draw();dirty();}
+function redoAct(){if(!redo.length)return;history.push(JSON.stringify(dPlay.dd));dPlay.dd=JSON.parse(redo.pop());selEl=null;draw();dirty();}
+function deleteSelected(){if(!selEl)return;saveHistory();dPlay.dd.els=dPlay.dd.els.filter(el=>el!==selEl);selEl=null;dirty();draw();}
+function clearSeq(){if(!confirm('Clear all elements on this step?'))return;saveHistory();dPlay.dd.els=dPlay.dd.els.filter(el=>el.seq!==curSeq);selEl=null;dirty();draw();}
+function zoomIn(){zoom=Math.min(5,zoom*1.2);draw();}
+function zoomOut(){zoom=Math.max(0.3,zoom/1.2);draw();}
+function resetView(){zoom=1;pan={x:0,y:0};draw();}
+
+// SEQUENCE
+function prevSeq(){if(curSeq>0){curSeq--;updSeq();}}
+function nextSeq(){if(curSeq<(dPlay.dd.seqs||[[]]).length-1){curSeq++;updSeq();}}
+function addSeq(){if(!dPlay.dd.seqs)dPlay.dd.seqs=[[]];dPlay.dd.seqs.push([]);curSeq=dPlay.dd.seqs.length-1;dirty();updSeq();}
+function updSeq(){document.getElementById('seq-num').textContent=curSeq+1;document.getElementById('seq-total').textContent=(dPlay.dd.seqs||[[]]).length;draw();}
+
+// TOOLS
+function setTool(t){
+  tool=t;curvePts=[];document.getElementById('curve-hint').style.display='none';
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tool-'+t)?.classList.add('active');
+  canvas.style.cursor=t==='pan'?'grab':t==='select'?'default':t==='text'?'text':'crosshair';
+}
+function setAction(a){
+  action=a;
+  document.querySelectorAll('[id^="act-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('act-'+a)?.classList.add('active');
+}
+
+// PALETTE
+function buildPalette(){
+  document.getElementById('pal-off').innerHTML=[1,2,3,4,5].map(n=>`<div class="pal-player pal-off" draggable="true" title="Offensive Player ${n}" ondragstart="palDrag(event,'off','${n}')" onclick="placePlayer('off','${n}')">${n}</div>`).join('');
+  document.getElementById('pal-def').innerHTML=['X1','X2','X3','X4','X5'].map(n=>`<div class="pal-player pal-def" draggable="true" title="Defensive ${n}" ondragstart="palDrag(event,'def','${n}')" onclick="placePlayer('def','${n}')">${n}</div>`).join('');
+  document.getElementById('pal-ball').innerHTML=`<div class="pal-player pal-ball" draggable="true" title="Ball" ondragstart="palDrag(event,'ball','B')" onclick="placePlayer('ball','B')">🏀</div>`;
+}
+let palData=null;
+function palDrag(e,pt,lb){palData={pt,lb};e.dataTransfer.effectAllowed='copy';}
+document.addEventListener('dragover',e=>{if(palData&&e.target===canvas)e.preventDefault();});
+document.addEventListener('drop',e=>{if(!palData||e.target!==canvas)return;e.preventDefault();const wp=gPos(e);addEl({id:gid(),t:'pl',pt:palData.pt,lb:palData.lb,x:wp.x,y:wp.y,seq:curSeq});palData=null;});
+function placePlayer(pt,lb){addEl({id:gid(),t:'pl',pt,lb,x:(Math.random()-0.5)*200,y:(Math.random()-0.5)*150,seq:curSeq});}
+
+// PROPS
+function updateMeta(){if(!dPlay)return;dPlay.name=document.getElementById('prop-name').value;dPlay.type=document.getElementById('prop-type').value;dPlay.description=document.getElementById('prop-desc').value;dPlay.teamId=document.getElementById('prop-team').value;dirty();}
+function updateCourtProp(){if(!dPlay)return;dPlay.court=document.getElementById('prop-court').value;dPlay.rules=document.getElementById('prop-rules').value;draw();dirty();}
+function renderTags(){document.getElementById('tags-row').innerHTML=(dPlay?.tags||[]).map((t,i)=>`<span class="tag-chip">${t}<button onclick="rmTag(${i})">×</button></span>`).join('');}
+function addTag(){const inp=document.getElementById('tag-input');const v=inp.value.trim();if(!v)return;if(!dPlay.tags)dPlay.tags=[];dPlay.tags.push(v);inp.value='';renderTags();dirty();}
+function rmTag(i){dPlay.tags.splice(i,1);renderTags();dirty();}
+function buildColorRow(){document.getElementById('color-row').innerHTML=LINE_COLORS.map(c=>`<div class="color-swatch ${c===color?'sel':''}" style="background:${c}" onclick="setColor('${c}')"></div>`).join('');}
+function setColor(c){color=c;buildColorRow();}
+function savePlay(){if(!dPlay)return;dPlay.updatedAt=now();const idx=plays.findIndex(p=>p.id===dPlay.id);if(idx>=0)plays[idx]=dPlay;else plays.push(dPlay);persist();toast('Play saved!');}
+
+// SUPABASE SYNC
+async function syncSupabase(){
+  const sb=getSb();if(!sb){toast('No connection');return;}
+  toast('Syncing…');
+  try{
+    const{error}=await sb.from(SB_TABLE).upsert({id:SB_ROW,user_id:'default',data:{plays,playbooks,teams,players,updatedAt:now()},updated_at:now()},{onConflict:'id'});
+    if(error)throw error;toast('✓ Synced to platform!');
+  }catch(e){toast('Sync failed: '+e.message);}
+}
+async function shareToCourtIQ(){if(!dPlay)return;await syncSupabase();toast('✓ Shared to CourtIQ!');}
+
+// KEYBOARD
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if((e.key==='Delete'||e.key==='Backspace')&&curPage==='designer')deleteSelected();
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undoAct();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='y'){e.preventDefault();redoAct();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();savePlay();}
+  if(curPage==='designer'){
+    const map={s:'select',v:'pan',l:'ln',a:'arrow',d:'dashed',c:'curve',t:'text',z:'zone'};
+    if(map[e.key]&&!e.ctrlKey&&!e.metaKey)setTool(e.key==='l'?'line':e.key==='a'?'arrow':e.key==='d'?'dashed':e.key==='c'?'curve':e.key==='t'?'text':e.key==='z'?'zone':e.key==='v'?'pan':'select');
+  }
+});
+
+// MODAL CLOSE
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+window.addEventListener('resize',()=>{if(curPage==='designer')initCanvas();});
+
+// BOOT
+refreshTeamSels();
+renderDash();
+</script>
+</body>
+</html>
