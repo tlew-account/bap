@@ -2726,7 +2726,9 @@ function renderCategories() {
       ondragstart="catDragStart(event,'${cat.id}')"
       ondragover="catDragOver(event,'${cat.id}')"
       ondragend="catDragEnd(event)">
-      <div class="cat-block-header">
+      <div class="cat-block-header"
+        ondragover="statDragOverCat(event,'${cat.id}')"
+        ondrop="statDragOverCat(event,'${cat.id}')">
         <i class="fa-solid fa-grip-vertical drag-handle" title="Drag to reorder category"></i>
         <div class="cat-block-title" style="color:${cat.color};flex:1;">${cat.name}</div>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -2773,19 +2775,51 @@ function catDragOver(e, targetCatId) {
 function catDragEnd(e) { _catDragId = null; document.querySelectorAll('.cat-block').forEach(el => el.classList.remove('dragging-item')); }
 
 let _statDragCatId = null, _statDragId = null;
-function statDragStart(e, catId, statId) { e.stopPropagation(); _statDragCatId = catId; _statDragId = statId; e.target.classList.add('dragging-item'); e.dataTransfer.effectAllowed = 'move'; }
-function statDragOver(e, catId, targetStatId) {
+function statDragStart(e, catId, statId) {
+  e.stopPropagation();
+  _statDragCatId = catId; _statDragId = statId;
+  e.target.closest('.stat-pill').classList.add('dragging-item');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function statDragOver(e, targetCatId, targetStatId) {
   e.preventDefault(); e.stopPropagation();
-  if (_statDragCatId !== catId || _statDragId === targetStatId) return;
-  const cat = categories.find(c => c.id === catId); if (!cat) return;
-  const fromIdx = cat.stats.findIndex(s => s.id === _statDragId);
-  const toIdx   = cat.stats.findIndex(s => s.id === targetStatId);
-  if (fromIdx < 0 || toIdx < 0) return;
-  const moved = cat.stats.splice(fromIdx, 1)[0];
-  cat.stats.splice(toIdx, 0, moved);
+  if (!_statDragId) return;
+  const fromCat = categories.find(c => c.id === _statDragCatId);
+  const toCat   = categories.find(c => c.id === targetCatId);
+  if (!fromCat || !toCat) return;
+  const fromIdx = fromCat.stats.findIndex(s => s.id === _statDragId);
+  if (fromIdx < 0) return;
+  const moved = fromCat.stats.splice(fromIdx, 1)[0];
+  if (_statDragCatId !== targetCatId) {
+    // Cross-category move
+    const toIdx = toCat.stats.findIndex(s => s.id === targetStatId);
+    toCat.stats.splice(toIdx >= 0 ? toIdx : toCat.stats.length, 0, moved);
+    _statDragCatId = targetCatId;
+  } else {
+    // Same-category reorder
+    const toIdx = toCat.stats.findIndex(s => s.id === targetStatId);
+    toCat.stats.splice(toIdx >= 0 ? toIdx : toCat.stats.length, 0, moved);
+  }
   renderCategories(); markDirty();
 }
-function statDragEnd(e) { e.stopPropagation(); _statDragCatId = null; _statDragId = null; document.querySelectorAll('.stat-pill').forEach(el => el.classList.remove('dragging-item')); }
+function statDragOverCat(e, targetCatId) {
+  // Handles drop onto a category header or empty stat grid (appends to end)
+  e.preventDefault(); e.stopPropagation();
+  if (!_statDragId || _statDragCatId === targetCatId) return;
+  const fromCat = categories.find(c => c.id === _statDragCatId);
+  const toCat   = categories.find(c => c.id === targetCatId);
+  if (!fromCat || !toCat) return;
+  const fromIdx = fromCat.stats.findIndex(s => s.id === _statDragId);
+  if (fromIdx < 0) return;
+  const moved = fromCat.stats.splice(fromIdx, 1)[0];
+  toCat.stats.push(moved);
+  _statDragCatId = targetCatId;
+  renderCategories(); markDirty();
+}
+function statDragEnd(e) {
+  e.stopPropagation(); _statDragCatId = null; _statDragId = null;
+  document.querySelectorAll('.stat-pill').forEach(el => el.classList.remove('dragging-item'));
+}
 
 function deleteCat(id) { if (!confirm('Delete this category and all its stats?')) return; categories = categories.filter(c=>c.id!==id); renderCategories(); }
 function deleteStat(catId, sid) { if (!confirm('Delete this stat?')) return; categories = categories.map(c => c.id===catId ? {...c, stats: c.stats.filter(s=>s.id!==sid)} : c); renderCategories(); }
