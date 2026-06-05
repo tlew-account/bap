@@ -2738,7 +2738,9 @@ function renderCategories() {
         </div>
       </div>
       <div class="cat-block-stats">
-        <div class="stat-grid" id="stat-grid-${cat.id}">
+        <div class="stat-grid" id="stat-grid-${cat.id}"
+          ondragover="statDragOverCat(event,'${cat.id}')"
+          ondrop="statDragOverCat(event,'${cat.id}')">
           ${cat.stats.map((s) => `
             <div class="stat-pill" data-stat-id="${s.id}" data-cat-id="${cat.id}" draggable="true"
               ondragstart="statDragStart(event,'${cat.id}','${s.id}')"
