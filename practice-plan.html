@@ -983,8 +983,127 @@ function renderTeams(){
 function openTeamDetail(id){
   currentTeamId=id;
   const t=teams.find(x=>x.id===id);if(!t)return;
-  // For now just show team edit
-  openTeamModal(id);
+  document.getElementById('td-title').textContent=t.name;
+  document.getElementById('td-sub').textContent=[t.level,t.season,t.coach?'Coach: '+t.coach:'',t.court?t.court:''].filter(Boolean).join(' · ');
+  document.getElementById('td-edit-btn').onclick=function(){openTeamModal(id);};
+
+  const roster=players.filter(p=>(p.teamIds||[]).includes(id));
+  const allSessions=roster.flatMap(p=>p.sessions||[]);
+  const totM=allSessions.reduce((a,s)=>a+s.makes,0);
+  const totA=allSessions.reduce((a,s)=>a+s.att,0);
+  const pct=totA?Math.round(totM/totA*100):0;
+
+  // Per-player stats rows
+  const rosterRows=roster.length
+    ?roster.map(p=>{
+        const pm=p.sessions.reduce((a,s)=>a+s.makes,0);
+        const pa=p.sessions.reduce((a,s)=>a+s.att,0);
+        const ppct=pa?Math.round(pm/pa*100):0;
+        const pctColor=ppct>=65?'var(--gr)':ppct>=45?'var(--am)':'var(--re)';
+        return`<div class="detail-roster-row" onclick="openProfile(${p.id})">
+          <div class="detail-mini-avatar" style="background:${p.color}">${initials(p.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px">${p.name}</div>
+            <div style="font-size:11px;color:var(--mu)">#${p.num} · ${p.pos} · ${p.sessions.length} session${p.sessions.length!==1?'s':''}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;font-size:15px;color:${pctColor}">${pa?ppct+'%':'—'}</div>
+            <div style="font-size:10px;color:var(--mu)">${pm} makes</div>
+          </div>
+          <i class="ti ti-chevron-right" style="color:var(--mu);font-size:14px;flex-shrink:0"></i>
+        </div>`;
+      }).join('')
+    :'<div style="color:var(--mu);font-size:13px;padding:12px 0;text-align:center">No players assigned to this team yet.</div>';
+
+  // Category breakdown across all roster sessions
+  const catRows=categories.map(cat=>{
+    const cm=allSessions.filter(s=>s.cat===cat.name).reduce((a,s)=>a+s.makes,0);
+    const ca=allSessions.filter(s=>s.cat===cat.name).reduce((a,s)=>a+s.att,0);
+    if(!ca)return'';
+    const cpct=Math.round(cm/ca*100);
+    return`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cat.color};display:inline-block"></span>${cat.name}</span>
+        <span style="color:var(--mu)">${cpct}% (${cm}/${ca})</span>
+      </div>
+      <div style="background:var(--sur2);border-radius:20px;height:7px;overflow:hidden;border:1px solid var(--bd)">
+        <div style="height:100%;border-radius:20px;background:${cat.color};width:${cpct}%;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Goals list
+  const goalsHtml=(t.goals&&t.goals.length)
+    ?t.goals.map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd)"><i class="ti ti-target-arrow" style="color:var(--or);font-size:16px;flex-shrink:0"></i><span style="font-size:13px">${g}</span></div>`).join('')
+    :'<div style="color:var(--mu);font-size:13px;padding:8px 0">No goals set yet.</div>';
+
+  document.getElementById('td-content').innerHTML=`
+    <!-- Banner -->
+    <div class="detail-card" style="margin-bottom:16px">
+      <div class="detail-banner" style="background:linear-gradient(135deg,${t.color}40,${t.color}15)">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 24px">
+          <div style="width:56px;height:56px;border-radius:12px;background:${t.color};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px ${t.color}44">
+            <i class="ti ti-shield" style="color:#fff;font-size:26px"></i>
+          </div>
+        </div>
+      </div>
+      <div style="padding:20px 24px">
+        <div style="font-size:20px;font-weight:700;color:var(--tx)">${t.name}</div>
+        <div style="font-size:13px;color:var(--mu);margin-top:3px">${[t.level,t.season].filter(Boolean).join(' · ')||'No level / season set'}</div>
+        ${t.notes?`<div style="margin-top:12px;font-size:13px;color:var(--mu);background:var(--sur2);border-radius:8px;padding:10px 14px;border-left:3px solid ${t.color}"><i class="ti ti-notes" style="margin-right:4px"></i>${t.notes}</div>`:''}
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="detail-stat-grid">
+      <div class="detail-stat-box"><div class="detail-stat-val" style="color:${t.color}">${pct}%</div><div class="detail-stat-lbl">Team Make %</div></div>
+      <div class="detail-stat-box"><div class="detail-stat-val" style="color:var(--gr)">${totM}</div><div class="detail-stat-lbl">Total Makes</div></div>
+      <div class="detail-stat-box"><div class="detail-stat-val" style="color:var(--bl)">${roster.length}</div><div class="detail-stat-lbl">Players</div></div>
+      <div class="detail-stat-box"><div class="detail-stat-val" style="color:var(--pu)">${allSessions.length}</div><div class="detail-stat-lbl">Sessions</div></div>
+    </div>
+
+    <div class="grid2" style="gap:16px;margin-bottom:16px">
+      <!-- Team info + goals -->
+      <div>
+        <div class="detail-card">
+          <div class="detail-card-head"><i class="ti ti-info-circle"></i>Team Info</div>
+          <div class="detail-card-body">
+            <div class="detail-info-grid">
+              ${t.coach?`<div class="detail-info-item"><div class="detail-info-lbl">Head Coach</div><div class="detail-info-val">${t.coach}</div></div>`:''}
+              ${t.court?`<div class="detail-info-item"><div class="detail-info-lbl">Home Court</div><div class="detail-info-val">${t.court}</div></div>`:''}
+              ${t.level?`<div class="detail-info-item"><div class="detail-info-lbl">Level</div><div class="detail-info-val">${t.level}</div></div>`:''}
+              ${t.season?`<div class="detail-info-item"><div class="detail-info-lbl">Season</div><div class="detail-info-val">${t.season}</div></div>`:''}
+            </div>
+          </div>
+        </div>
+        ${(t.goals&&t.goals.length)?`<div class="detail-card" style="margin-top:16px">
+          <div class="detail-card-head"><i class="ti ti-trophy"></i>Team Goals</div>
+          <div class="detail-card-body">${goalsHtml}</div>
+        </div>`:''}
+      </div>
+      <!-- Shooting breakdown -->
+      <div class="detail-card">
+        <div class="detail-card-head"><i class="ti ti-chart-bar"></i>Shooting Breakdown</div>
+        <div class="detail-card-body">
+          ${catRows||'<div style="color:var(--mu);font-size:13px;padding:8px 0">Log sessions to see a breakdown.</div>'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Roster -->
+    <div class="detail-card">
+      <div class="detail-card-head" style="justify-content:space-between">
+        <span><i class="ti ti-users"></i>&nbsp; Roster <span style="font-size:11px;font-weight:400;color:var(--mu)">(${roster.length} player${roster.length!==1?'s':''})</span></span>
+        <button class="btn btn-g btn-sm" onclick="switchProfileTab('players');go('profiles')"><i class="ti ti-user-plus"></i>Manage Players</button>
+      </div>
+      <div class="detail-card-body">${rosterRows}</div>
+    </div>
+  `;
+
+  // Navigate to team detail page
+  document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));
+  document.getElementById('page-team-detail').classList.add('active');
+  window.scrollTo(0,0);
 }
 
 function openTeamModal(id){
