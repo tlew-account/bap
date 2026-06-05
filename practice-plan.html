@@ -296,7 +296,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--or)}
 <div class="page" id="page-player-detail">
   <div class="ph">
     <div style="display:flex;align-items:center;gap:10px">
-      <button class="btn btn-g btn-sm" onclick="go('profiles')"><i class="ti ti-arrow-left"></i>Back</button>
+      <button class="btn btn-g btn-sm" onclick="switchProfileTab('players');go('profiles')"><i class="ti ti-arrow-left"></i>Back</button>
       <div><div class="pt" id="pd-title">Player</div><div class="ps" id="pd-sub"></div></div>
     </div>
     <div style="display:flex;gap:8px">
@@ -311,7 +311,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--or)}
 <div class="page" id="page-team-detail">
   <div class="ph">
     <div style="display:flex;align-items:center;gap:10px">
-      <button class="btn btn-g btn-sm" onclick="go('profiles')"><i class="ti ti-arrow-left"></i>Back</button>
+      <button class="btn btn-g btn-sm" onclick="switchProfileTab('teams');go('profiles')"><i class="ti ti-arrow-left"></i>Back</button>
       <div><div class="pt" id="td-title">Team</div><div class="ps" id="td-sub"></div></div>
     </div>
     <div style="display:flex;gap:8px">
@@ -874,8 +874,17 @@ function planColor(plan){
 function go(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  document.querySelectorAll('.ni').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});
+
+  // Detail sub-pages map back to 'profiles' nav highlight
+  const navId = (id==='player-detail'||id==='team-detail') ? 'profiles' : id;
+  const pageEl = document.getElementById('page-'+id);
+  if(pageEl) pageEl.classList.add('active');
+
+  document.querySelectorAll('.ni').forEach(n=>{
+    if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+navId+"'"))
+      n.classList.add('active');
+  });
+
   if(id==='dash')renderDash();
   if(id==='profiles'){renderProfiles();}
   if(id==='drills'){renderDrills();renderPartPills();}
@@ -1142,7 +1151,14 @@ function saveTeam(){
   if(editId){const idx=teams.findIndex(x=>x.id===editId);if(idx>-1)teams[idx]={...teams[idx],...obj};}
   else teams.push({id:nextTeamId++,...obj});
   ['tm-name','tm-level','tm-season','tm-coach','tm-court','tm-goals','tm-notes'].forEach(id=>document.getElementById(id).value='');
-  closeModal('teamModal');renderTeams();updatePlayerDropdowns();updateTeamDropdowns();renderDash();scheduleSave();
+  closeModal('teamModal');
+  updatePlayerDropdowns();updateTeamDropdowns();renderDash();scheduleSave();
+  // If we were editing from the team detail page, return to it; otherwise go to teams list
+  if(editId && document.getElementById('page-team-detail').classList.contains('active')){
+    openTeamDetail(editId);
+  } else {
+    switchProfileTab('teams');go('profiles');
+  }
 }
 
 function deleteTeam(){
@@ -1150,7 +1166,8 @@ function deleteTeam(){
   if(!confirm('Delete this team? Players will be unlinked.'))return;
   teams=teams.filter(x=>x.id!==id);
   players.forEach(p=>{if(p.teamIds)p.teamIds=p.teamIds.filter(tid=>tid!==id);});
-  closeModal('teamModal');renderTeams();updatePlayerDropdowns();updateTeamDropdowns();scheduleSave();
+  closeModal('teamModal');updatePlayerDropdowns();updateTeamDropdowns();scheduleSave();
+  switchProfileTab('teams');go('profiles');
 }
 
 function renderPlayerTeamCheckboxes(){
@@ -1775,12 +1792,21 @@ function populateEditPlayer(id){
 function savePlayer(){
   const name=document.getElementById('ap-name').value.trim();if(!name)return alert('Enter player name.');
   const obj={name,pos:document.getElementById('ap-pos').value,num:parseInt(document.getElementById('ap-num').value)||0,grp:document.getElementById('ap-grp').value,hand:document.getElementById('ap-hand').value,height:document.getElementById('ap-height').value,dob:document.getElementById('ap-dob').value,color:selectedColor,strengths:document.getElementById('ap-str').value.split(',').map(s=>s.trim()).filter(Boolean),improve:document.getElementById('ap-imp').value.split(',').map(s=>s.trim()).filter(Boolean),notes:document.getElementById('ap-notes').value.trim(),teamIds:[...selectedPlayerTeams]};
+  const wasEditing=!!editingPlayerId;
+  const editedId=editingPlayerId;
   if(editingPlayerId){const idx=players.findIndex(x=>x.id===editingPlayerId);if(idx>-1)players[idx]={...players[idx],...obj};editingPlayerId=null;}
   else players.push({id:Date.now(),...obj,sessions:[],goals:[]});
   document.getElementById('addPlayerTitle').textContent='Add player';
   ['ap-name','ap-num','ap-height','ap-dob','ap-str','ap-imp','ap-notes'].forEach(id=>document.getElementById(id).value='');
   selectedPlayerTeams=[];
-  closeModal('addPlayerModal');renderPlayers();updatePlayerDropdowns();scheduleSave();
+  closeModal('addPlayerModal');
+  updatePlayerDropdowns();scheduleSave();
+  // If we were editing from the player detail page, go back to it; otherwise list view
+  if(wasEditing && editedId){
+    openProfile(editedId);
+  } else {
+    switchProfileTab('players');go('profiles');
+  }
 }
 function logPlayerSession(){
   const pid=parseInt(document.getElementById('lps-pid').value);const p=players.find(x=>x.id===pid);if(!p)return;
@@ -1791,8 +1817,11 @@ function logPlayerSession(){
   const now=new Date(),d=now.toLocaleString('default',{month:'short'})+' '+now.getDate()+', '+now.getFullYear();
   const s={date:d,name,makes,att,pt3Makes:r3.makes,pt3Att:r3.att,pt2Makes:r2.makes,pt2Att:r2.att,ftMakes:rft.makes,ftAtt:rft.att,cat,drillScore:''};
   p.sessions.unshift(s);sessions.unshift({...s,player:p.name});
-  closeModal('logPlayerSessionModal');['lps-name','lps-3pt','lps-2pt','lps-ft'].forEach(id=>document.getElementById(id).value='');
+  closeModal('logPlayerSessionModal');
+  ['lps-name','lps-3pt','lps-2pt','lps-ft'].forEach(id=>document.getElementById(id).value='');
   scheduleSave();
+  // Refresh the player detail page so the new session appears immediately
+  openProfile(pid);
 }
 
 // ============================================================
