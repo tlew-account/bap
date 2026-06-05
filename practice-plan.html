@@ -142,6 +142,33 @@ input:focus,select:focus,textarea:focus{border-color:var(--or)}
 .profile-tab-btn.active{background:var(--or);border-color:var(--or);color:#fff}
 .profile-tab-btn i{font-size:16px}
 
+/* ── PLAYER / TEAM DETAIL VIEWS ── */
+.detail-banner{height:110px;position:relative;border-radius:12px 12px 0 0;overflow:hidden}
+.detail-banner-inner{position:absolute;inset:0;opacity:.18}
+.detail-avatar-wrap{position:absolute;bottom:-28px;left:24px}
+.detail-avatar{width:64px;height:64px;border-radius:50%;border:4px solid var(--sur);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff}
+.detail-card{background:var(--sur);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.detail-card-head{padding:16px 20px;border-bottom:1px solid var(--bd);font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;background:var(--sur2)}
+.detail-card-head i{font-size:16px;color:var(--or)}
+.detail-card-body{padding:16px 20px}
+.detail-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.detail-stat-box{background:var(--sur);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;text-align:center}
+.detail-stat-val{font-size:26px;font-weight:700;line-height:1}
+.detail-stat-lbl{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.detail-info-item{background:var(--sur2);border-radius:8px;padding:10px 14px}
+.detail-info-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:3px}
+.detail-info-val{font-size:13px;font-weight:600;color:var(--tx)}
+.detail-tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin:2px}
+.detail-session-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px}
+.detail-session-row:last-child{border-bottom:none}
+.detail-pct{font-family:'Segoe UI',sans-serif;font-size:15px;font-weight:700;min-width:44px;text-align:right}
+.detail-roster-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .1s}
+.detail-roster-row:last-child{border-bottom:none}
+.detail-roster-row:hover{background:var(--sur2);margin:0 -20px;padding:10px 20px}
+.detail-mini-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.detail-section-cat{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mu);padding:2px 8px;border-radius:4px;background:var(--sur2);border:1px solid var(--bd)}
+
 /* ── CALENDAR STYLES ── */
 .cal-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
 .cal-nav-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--sur);color:var(--tx);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
@@ -263,6 +290,35 @@ input:focus,select:focus,textarea:focus{border-color:var(--or)}
   </div>
   <div id="profiles-players-panel"><div class="grid3" id="player-grid"></div></div>
   <div id="profiles-teams-panel" style="display:none"><div class="grid3" id="team-grid"></div></div>
+</div>
+
+<!-- PLAYER DETAIL -->
+<div class="page" id="page-player-detail">
+  <div class="ph">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-g btn-sm" onclick="go('profiles')"><i class="ti ti-arrow-left"></i>Back</button>
+      <div><div class="pt" id="pd-title">Player</div><div class="ps" id="pd-sub"></div></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g btn-sm" id="pd-edit-btn"><i class="ti ti-pencil"></i>Edit</button>
+      <button class="btn btn-p btn-sm" id="pd-log-btn"><i class="ti ti-plus"></i>Log Session</button>
+    </div>
+  </div>
+  <div id="pd-content"></div>
+</div>
+
+<!-- TEAM DETAIL -->
+<div class="page" id="page-team-detail">
+  <div class="ph">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-g btn-sm" onclick="go('profiles')"><i class="ti ti-arrow-left"></i>Back</button>
+      <div><div class="pt" id="td-title">Team</div><div class="ps" id="td-sub"></div></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g btn-sm" id="td-edit-btn"><i class="ti ti-pencil"></i>Edit Team</button>
+    </div>
+  </div>
+  <div id="td-content"></div>
 </div>
 
 <!-- DRILLS -->
@@ -1449,10 +1505,138 @@ function renderPlayers(){
 }
 
 function openProfile(id){
-  currentProfileId=id;const p=players.find(x=>x.id===id);if(!p)return;
+  currentProfileId=id;
+  const p=players.find(x=>x.id===id);if(!p)return;
   document.getElementById('lps-pid').value=id;
-  // Simple player detail view
-  alert(`${p.name}\n#${p.num} · ${p.pos} · ${p.grp}\nSessions: ${p.sessions.length}\nStrengths: ${p.strengths.join(', ')}\nImprove: ${p.improve.join(', ')}`);
+  document.getElementById('pd-title').textContent=p.name;
+  document.getElementById('pd-sub').textContent='#'+p.num+' · '+p.pos+' · '+p.grp+(p.hand?' · '+p.hand+'-handed':'')+(p.height?' · '+p.height:'');
+  document.getElementById('pd-edit-btn').onclick=function(){editingPlayerId=id;populateEditPlayer(id);};
+  document.getElementById('pd-log-btn').onclick=function(){openModal('logPlayerSessionModal');};
+
+  const totalMakes=p.sessions.reduce((a,s)=>a+s.makes,0);
+  const totalAtt=p.sessions.reduce((a,s)=>a+s.att,0);
+  const pct=totalAtt?Math.round(totalMakes/totalAtt*100):0;
+
+  // Category breakdown
+  const catRows=categories.map(cat=>{
+    const catSessions=p.sessions.filter(s=>s.cat===cat.name);
+    const cm=catSessions.reduce((a,s)=>a+s.makes,0);
+    const ca=catSessions.reduce((a,s)=>a+s.att,0);
+    const cpct=ca?Math.round(cm/ca*100):0;
+    if(!ca)return'';
+    return`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cat.color};display:inline-block"></span>${cat.name}</span>
+        <span style="color:var(--mu)">${cpct}% (${cm}/${ca})</span>
+      </div>
+      <div style="background:var(--sur2);border-radius:20px;height:7px;overflow:hidden;border:1px solid var(--bd)">
+        <div style="height:100%;border-radius:20px;background:${cat.color};width:${cpct}%;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Session log
+  const sessionRows=p.sessions.slice(0,20).map(s=>{
+    const sp=s.att?Math.round(s.makes/s.att*100):0;
+    const pctColor=sp>=65?'var(--gr)':sp>=45?'var(--am)':'var(--re)';
+    const shots=[];
+    if(s.pt3Att)shots.push(`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#EDE9FE;color:#6D28D9">${s.pt3Makes}/${s.pt3Att} 3PT</span>`);
+    if(s.pt2Att)shots.push(`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#DBEAFE;color:#1D4ED8">${s.pt2Makes}/${s.pt2Att} 2PT</span>`);
+    if(s.ftAtt) shots.push(`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#DCFCE7;color:#15803D">${s.ftMakes}/${s.ftAtt} FT</span>`);
+    return`<div class="detail-session-row">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px">${s.name||'Session'}</div>
+        <div style="font-size:11px;color:var(--mu);display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px">
+          <span>${s.date}</span>
+          ${s.cat?`<span class="detail-section-cat"><span style="width:7px;height:7px;border-radius:50%;background:${catColor(s.cat)};display:inline-block"></span>${s.cat}</span>`:''}
+          ${shots.join('')}
+        </div>
+      </div>
+      <div class="detail-pct" style="color:${pctColor}">${s.att?sp+'%':'—'}</div>
+    </div>`;
+  }).join('')||'<div style="color:var(--mu);text-align:center;padding:20px;font-size:13px">No sessions logged yet.</div>';
+
+  // Player teams
+  const playerTeams=(p.teamIds||[]).map(tid=>teams.find(t=>t.id===tid)).filter(Boolean);
+  const teamsHtml=playerTeams.length
+    ?playerTeams.map(t=>`<span class="detail-tag" style="background:${t.color}18;color:${t.color};border:1px solid ${t.color}44">${t.name}</span>`).join('')
+    :'<span style="font-size:12px;color:var(--mu)">No team assigned</span>';
+
+  // Goals
+  const goalsHtml=p.goals&&p.goals.length
+    ?p.goals.map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd)">
+        <span style="width:16px;height:16px;border-radius:50%;border:2px solid ${g.done?'var(--gr)':'var(--bd)'};background:${g.done?'var(--gr)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:#fff">${g.done?'✓':''}</span>
+        <span style="font-size:13px;${g.done?'text-decoration:line-through;color:var(--mu)':''}">${g.text}</span>
+      </div>`).join('')
+    :'<div style="color:var(--mu);font-size:13px;padding:8px 0">No goals set yet.</div>';
+
+  document.getElementById('pd-content').innerHTML=`
+    <!-- Banner -->
+    <div class="detail-card" style="margin-bottom:16px">
+      <div class="detail-banner" style="background:linear-gradient(135deg,${p.color}30,${p.color}10)">
+        <div class="detail-avatar-wrap">
+          <div class="detail-avatar" style="background:${p.color}">${initials(p.name)}</div>
+        </div>
+      </div>
+      <div style="padding:40px 24px 20px">
+        <div style="font-size:20px;font-weight:700;color:var(--tx)">${p.name}</div>
+        <div style="font-size:13px;color:var(--mu);margin-top:3px">#${p.num} · ${p.pos} · ${p.grp}${p.hand?' · '+p.hand+'-handed':''}${p.height?' · '+p.height:''}</div>
+        <div style="margin-top:10px">${teamsHtml}</div>
+        ${p.notes?`<div style="margin-top:12px;font-size:13px;color:var(--mu);background:var(--sur2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--or)"><i class="ti ti-notes" style="margin-right:4px"></i>${p.notes}</div>`:''}
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="detail-stat-grid">
+      <div class="detail-stat-box"><div class="detail-stat-val" style="color:${p.color}">${pct}%</div><div class="detail-stat-lbl">Make %</div></div>
+      <div class="detail-stat-box"><div class="detail-stat-val" style="color:var(--gr)">${totalMakes}</div><div class="detail-stat-lbl">Total Makes</div></div>
+      <div class="detail-stat-box"><div class="detail-stat-val" style="color:var(--mu)">${totalAtt}</div><div class="detail-stat-lbl">Attempts</div></div>
+      <div class="detail-stat-box"><div class="detail-stat-val" style="color:var(--bl)">${p.sessions.length}</div><div class="detail-stat-lbl">Sessions</div></div>
+    </div>
+
+    <div class="grid2" style="gap:16px;margin-bottom:16px">
+      <!-- Info -->
+      <div>
+        <div class="detail-card">
+          <div class="detail-card-head"><i class="ti ti-user"></i>Player Info</div>
+          <div class="detail-card-body">
+            <div class="detail-info-grid">
+              <div class="detail-info-item"><div class="detail-info-lbl">Position</div><div class="detail-info-val">${p.pos||'—'}</div></div>
+              <div class="detail-info-item"><div class="detail-info-lbl">Jersey</div><div class="detail-info-val">#${p.num||'—'}</div></div>
+              <div class="detail-info-item"><div class="detail-info-lbl">Group</div><div class="detail-info-val">${p.grp||'—'}</div></div>
+              <div class="detail-info-item"><div class="detail-info-lbl">Dominant Hand</div><div class="detail-info-val">${p.hand||'—'}</div></div>
+              <div class="detail-info-item"><div class="detail-info-lbl">Height</div><div class="detail-info-val">${p.height||'—'}</div></div>
+              ${p.dob?`<div class="detail-info-item"><div class="detail-info-lbl">Date of Birth</div><div class="detail-info-val">${p.dob}</div></div>`:''}
+            </div>
+            ${p.strengths&&p.strengths.length?`<div style="margin-top:14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:6px">Strengths</div><div style="display:flex;flex-wrap:wrap;gap:5px">${p.strengths.map(s=>`<span class="detail-tag" style="background:#DCFCE7;color:#15803D;border:1px solid #BBF7D0">💚 ${s}</span>`).join('')}</div></div>`:''}
+            ${p.improve&&p.improve.length?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:6px">Areas to Improve</div><div style="display:flex;flex-wrap:wrap;gap:5px">${p.improve.map(s=>`<span class="detail-tag" style="background:#FEF3EC;color:#B84E05;border:1px solid #FCD9BD">↑ ${s}</span>`).join('')}</div></div>`:''}
+          </div>
+        </div>
+        ${p.goals&&p.goals.length?`<div class="detail-card" style="margin-top:16px">
+          <div class="detail-card-head"><i class="ti ti-target"></i>Goals</div>
+          <div class="detail-card-body">${goalsHtml}</div>
+        </div>`:''}
+      </div>
+      <!-- Category breakdown -->
+      <div class="detail-card">
+        <div class="detail-card-head"><i class="ti ti-chart-bar"></i>Shooting Breakdown</div>
+        <div class="detail-card-body">
+          ${catRows||'<div style="color:var(--mu);font-size:13px;padding:8px 0">Log sessions to see a breakdown.</div>'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Session log -->
+    <div class="detail-card">
+      <div class="detail-card-head"><i class="ti ti-clipboard-list"></i>Session Log <span style="font-size:11px;font-weight:400;color:var(--mu)">(${p.sessions.length} total)</span></div>
+      <div class="detail-card-body">${sessionRows}</div>
+    </div>
+  `;
+
+  // Show detail page
+  document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));
+  document.getElementById('page-player-detail').classList.add('active');
+  window.scrollTo(0,0);
 }
 
 function openEditPlayer(){editingPlayerId=currentProfileId;populateEditPlayer(currentProfileId);}
