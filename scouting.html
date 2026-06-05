@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scout Pro — Basketball Scouting</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,6 +24,7 @@
     --green:       #1a9e5c;
     --blue:        #2271d6;
     --red:         #d63b3b;
+    --navy:        #0d1b2a;
   }
 
   html { scroll-behavior: smooth; }
@@ -36,7 +38,6 @@
     min-height: 100vh;
   }
 
-  /* ── Court texture overlay ── */
   body::before {
     content: '';
     position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -57,7 +58,7 @@
 
   .logo {
     display: flex; align-items: center; gap: 8px;
-    margin-right: 28px; flex-shrink: 0;
+    margin-right: 20px; flex-shrink: 0;
   }
   .logo-icon { font-size: 20px; }
   .logo-text {
@@ -66,6 +67,55 @@
     color: var(--text);
   }
   .logo-text span { color: var(--accent); font-weight: 300; letter-spacing: 3px; }
+
+  /* ── Sync bar ── */
+  .sync-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-left: auto; padding-left: 16px;
+  }
+  .sync-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    white-space: nowrap;
+  }
+  .sync-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--dim); flex-shrink: 0; transition: background .3s;
+  }
+  .sync-dot.connected { background: var(--green); box-shadow: 0 0 6px rgba(26,158,92,0.5); }
+  .sync-dot.syncing   { background: var(--accent); animation: syncPulse .8s infinite; }
+  .sync-dot.error     { background: var(--red); }
+  @keyframes syncPulse { 0%,100%{opacity:1}50%{opacity:.3} }
+
+  .sync-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(196,127,0,0.1); border: 1px solid rgba(196,127,0,0.3);
+    color: var(--accent); padding: 5px 12px; border-radius: 6px;
+    font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .sync-btn:hover { background: rgba(196,127,0,0.18); }
+  .sync-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .save-indicator {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap;
+  }
+  .save-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--dim); flex-shrink: 0; transition: background .3s;
+  }
+  .save-dot.saving  { background: var(--accent); animation: syncPulse .8s infinite; }
+  .save-dot.saved   { background: var(--green); }
+  .save-dot.error   { background: var(--red); }
+  .save-now-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--muted); padding: 5px 12px; border-radius: 6px;
+    font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .save-now-btn:hover { color: var(--text); background: var(--surface2); }
 
   /* ── Nav tabs ── */
   #nav { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; }
@@ -96,7 +146,7 @@
   /* ── Page ── */
   #page {
     position: relative; z-index: 1;
-    max-width: 920px; margin: 0 auto;
+    max-width: 940px; margin: 0 auto;
     padding: 32px 20px 100px;
   }
 
@@ -112,18 +162,42 @@
     border-radius: 2px;
   }
 
+  /* ── CrossApp link banner ── */
+  .crossapp-banner {
+    background: linear-gradient(135deg, var(--navy) 0%, #1a2d42 100%);
+    border-radius: 10px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .crossapp-banner .cb-icon { font-size: 18px; flex-shrink: 0; }
+  .crossapp-banner .cb-text { flex: 1; font-size: 13px; color: rgba(255,255,255,0.75); }
+  .crossapp-banner .cb-text strong { color: #fff; }
+  .crossapp-banner .cb-stats { display: flex; gap: 14px; }
+  .crossapp-stat { text-align: center; }
+  .crossapp-stat .cs-val { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent); }
+  .crossapp-stat .cs-lbl { font-size: 10px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.5px; }
+
   /* ── List view ── */
   .list-toolbar {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
   }
-  .record-count { font-size: 12px; color: var(--muted); }
+  .search-wrap { position: relative; flex: 1; min-width: 160px; }
+  .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
+  .search-input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px 8px 34px; color: var(--text);
+    font-family: 'Barlow', sans-serif; font-size: 13px; outline: none;
+    transition: border-color .15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .record-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
 
   .record-list { display: flex; flex-direction: column; gap: 8px; }
 
   .record-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 8px; padding: 13px 16px;
-    display: flex; align-items: center; gap: 12; cursor: pointer;
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
     transition: border-color .15s, background .15s, box-shadow .15s;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   }
@@ -132,6 +206,15 @@
   .record-card-name { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 2px; }
   .record-card-sub { font-size: 12px; color: var(--muted); }
   .record-card-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  /* ── linked badge ── */
+  .linked-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(34,113,214,0.1); color: var(--blue);
+    border: 1px solid rgba(34,113,214,0.25);
+    border-radius: 20px; padding: 2px 8px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  }
 
   /* ── KYP cards grid ── */
   .kyp-grid { display: flex; flex-wrap: wrap; gap: 16px; }
@@ -177,6 +260,12 @@
     position: absolute; top: 8px; right: 8px;
     display: flex; gap: 4px;
   }
+  .kyp-linked-strip {
+    padding: 8px 16px; background: rgba(34,113,214,0.06);
+    border-top: 1px solid rgba(34,113,214,0.15);
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--blue); font-weight: 600;
+  }
 
   /* ── Empty state ── */
   .empty {
@@ -190,7 +279,6 @@
     display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
   }
   .form-title { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); }
-
   .form-actions { margin-left: auto; display: flex; gap: 8px; }
 
   /* ── Collapsible section ── */
@@ -206,7 +294,6 @@
   .section-diamond { font-size: 8px; font-weight: 900; color: var(--accent); }
   .section-label { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; }
   .section-label.blue { color: var(--blue); }
-  .section-label.blue ~ .section-diamond { color: var(--blue); }
   .section-caret { font-size: 11px; color: var(--muted); }
   .section-body { padding: 16px 16px 4px; display: block; }
   .section-body.hidden { display: none; }
@@ -220,6 +307,37 @@
   }
 
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; }
+
+  /* ── Cross-app link section ── */
+  .crossapp-link-section {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fa 100%);
+    border: 1.5px solid rgba(34,113,214,0.25);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+  .crossapp-link-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 800; color: var(--navy);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+  }
+  .crossapp-link-sub { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .link-picks { display: flex; flex-direction: column; gap: 8px; }
+  .link-pick-row { display: flex; align-items: center; gap: 10px; }
+  .link-pick-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; min-width: 60px; }
+  .link-pick-select {
+    flex: 1; background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 7px; color: var(--text); padding: 7px 10px;
+    font-family: 'Barlow', sans-serif; font-size: 13px; outline: none;
+    transition: border-color .15s;
+  }
+  .link-pick-select:focus { border-color: var(--blue); }
+  .linked-player-preview {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(34,113,214,0.08); border: 1px solid rgba(34,113,214,0.2);
+    border-radius: 7px; padding: 8px 12px; margin-top: 8px;
+    font-size: 13px; color: var(--blue);
+  }
 
   /* ── Fields ── */
   .field { margin-bottom: 14px; }
@@ -262,6 +380,7 @@
     font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
   }
   .badge-blue { background: rgba(34,113,214,0.10); color: var(--blue); border-color: rgba(34,113,214,0.25); }
+  .badge-green { background: rgba(26,158,92,0.10); color: var(--green); border-color: rgba(26,158,92,0.25); }
 
   /* ── Position picker ── */
   .pos-picker { display: flex; gap: 5px; }
@@ -308,6 +427,18 @@
   }
   .bullet-input:focus { border-color: var(--accent); }
 
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--navy); color: #fff;
+    padding: 12px 22px; border-radius: 50px;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+    z-index: 9999; transition: transform .3s ease; white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
   /* ── Animations ── */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(6px); }
@@ -315,7 +446,6 @@
   }
   .fade-in { animation: fadeIn .2s ease both; }
 
-  /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
@@ -329,38 +459,161 @@
     <div class="logo-text">SCOUT<span>PRO</span></div>
   </div>
   <nav id="nav"></nav>
+  <div class="sync-bar">
+    <div class="sync-status">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Not connected</span>
+    </div>
+    <button class="sync-btn" id="sync-btn" onclick="syncFromSupabase()">↻ Sync</button>
+    <div class="save-indicator" style="margin-left:8px;">
+      <div class="save-dot" id="save-dot"></div>
+      <span id="save-label">Saved</span>
+    </div>
+    <button class="save-now-btn" onclick="saveNow()">💾 Save</button>
+  </div>
 </div>
 
 <div id="page"></div>
+<div id="toast"></div>
 
 <script>
-// ─── State ────────────────────────────────────────────────────────────────────
+// ─── Supabase ───────────────────────────────────────────────────────────────
+const SB_URL   = 'https://ofncwpbpsgmoezxhfxya.supabase.co';
+const SB_KEY   = 'sb_publishable_7-tKwWBogVdwo6TCWUpGGw_8CGOdmy2';
+const SB_TABLE = 'hoopiq_data';
+const SB_ROW   = 'hoopiq-main';
+const SCOUT_KEY = 'scoutpro_v2';
+
+let sb = null;
+function getSB() {
+  if (!sb && window.supabase) sb = window.supabase.createClient(SB_URL, SB_KEY);
+  return sb;
+}
+
+// ─── Cross-app data (from HoopIQ / CourtIQ) ────────────────────────────────
+let crossAppData = { players: [], teams: [], categories: [] };
+
+// ─── State ──────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2,9);
 const nowStr = () => new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
-function loadStore(key, def) {
-  try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : def; } catch { return def; }
+function loadLocal() {
+  try { const s = localStorage.getItem(SCOUT_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
 }
-function saveStore(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+function saveLocal(data) {
+  try { localStorage.setItem(SCOUT_KEY, JSON.stringify(data)); } catch {}
 }
 
+const savedLocal = loadLocal();
 const DB = {
-  coaches:   loadStore('sp_coaches',   []),
-  teams:     loadStore('sp_teams',     []),
-  players:   loadStore('sp_players',   []),
-  playbooks: loadStore('sp_playbooks', []),
-  reports:   loadStore('sp_reports',   []),
-  kyps:      loadStore('sp_kyps',      []),
+  coaches:   savedLocal?.coaches   || [],
+  teams:     savedLocal?.teams     || [],
+  players:   savedLocal?.players   || [],
+  playbooks: savedLocal?.playbooks || [],
+  reports:   savedLocal?.reports   || [],
+  kyps:      savedLocal?.kyps      || [],
 };
-function persist(key) { saveStore('sp_' + key, DB[key]); }
 
-// ─── App state ────────────────────────────────────────────────────────────────
+// App state
 let currentTab = 'coaches';
-let editingRecord = null;   // null = list view
-let kypView = 'list';       // 'list' | 'cards'
+let editingRecord = null;
+let kypView = 'list';
+let _saveTimer = null;
+let _isDirty = false;
 
-// ─── TABS CONFIG ──────────────────────────────────────────────────────────────
+// ─── Save status ─────────────────────────────────────────────────────────────
+function setSaveStatus(state, msg) {
+  const dot = document.getElementById('save-dot');
+  const lbl = document.getElementById('save-label');
+  dot.className = 'save-dot' + (state === 'saving' ? ' saving' : state === 'saved' ? ' saved' : state === 'error' ? ' error' : '');
+  lbl.textContent = msg || (state === 'saved' ? 'Saved' : state === 'saving' ? 'Saving…' : state === 'error' ? 'Save failed' : 'Unsaved');
+}
+
+function markDirty() {
+  _isDirty = true;
+  setSaveStatus('unsaved', 'Unsaved');
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => saveNow(true), 2500);
+}
+
+async function saveNow(isAuto = false) {
+  clearTimeout(_saveTimer);
+  setSaveStatus('saving');
+  const snapshot = { coaches: DB.coaches, teams: DB.teams, players: DB.players, playbooks: DB.playbooks, reports: DB.reports, kyps: DB.kyps, savedAt: Date.now() };
+  saveLocal(snapshot);
+  // Also push to Supabase under scout_data key in the shared row
+  const client = getSB();
+  if (client) {
+    try {
+      const { data: existing } = await client.from(SB_TABLE).select('data').eq('id', SB_ROW).maybeSingle();
+      const base = existing?.data || {};
+      base.scout_data = snapshot;
+      await client.from(SB_TABLE).upsert({ id: SB_ROW, user_id: 'default', data: base, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    } catch(e) { console.warn('Supabase save failed:', e); }
+  }
+  _isDirty = false;
+  const now = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  setSaveStatus('saved', isAuto ? `Saved ${now}` : `Saved ${now}`);
+}
+
+// ─── Sync from Supabase ───────────────────────────────────────────────────────
+function setSyncStatus(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  const btn = document.getElementById('sync-btn');
+  dot.className = 'sync-dot' + (state === 'connected' ? ' connected' : state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  lbl.textContent = msg || (state === 'connected' ? 'Connected' : state === 'syncing' ? 'Syncing…' : state === 'error' ? 'Sync failed' : 'Not connected');
+  if (btn) btn.disabled = state === 'syncing';
+}
+
+async function syncFromSupabase() {
+  const client = getSB();
+  if (!client) { setSyncStatus('error', 'No client'); return; }
+  setSyncStatus('syncing');
+  try {
+    const { data, error } = await client.from(SB_TABLE).select('data').eq('id', SB_ROW).maybeSingle();
+    if (error) throw error;
+    const d = data?.data || {};
+
+    // Pull cross-app data
+    crossAppData.players    = d.players    || [];
+    crossAppData.teams      = d.teams      || [];
+    crossAppData.categories = d.categories || [];
+
+    // Merge any previously-saved ScoutPRO data from Supabase
+    if (d.scout_data) {
+      const sd = d.scout_data;
+      ['coaches','teams','players','playbooks','reports','kyps'].forEach(key => {
+        if (sd[key] && Array.isArray(sd[key]) && sd[key].length > 0) {
+          // Merge: Supabase is source of truth, but keep local-only records
+          const remoteIds = new Set(sd[key].map(r => r.id));
+          const localOnly = DB[key].filter(r => !remoteIds.has(r.id));
+          DB[key] = [...sd[key], ...localOnly];
+        }
+      });
+    }
+
+    const np = crossAppData.players.length;
+    const nt = crossAppData.teams.length;
+    setSyncStatus('connected', `Connected · ${np}p ${nt}t`);
+    showToast(`✓ Synced — ${np} players, ${nt} teams from CourtIQ/HoopIQ`);
+    render();
+  } catch(e) {
+    console.error('Sync error:', e);
+    setSyncStatus('error', 'Failed');
+    showToast('Sync failed — check console');
+  }
+}
+
+// ─── Utilities ───────────────────────────────────────────────────────────────
+function persist(key) { markDirty(); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── TABS CONFIG ─────────────────────────────────────────────────────────────
 const TABS = [
   { key: 'coaches',   label: 'Coaches',   icon: '🎙' },
   { key: 'teams',     label: 'Teams',     icon: '🏟' },
@@ -370,9 +623,10 @@ const TABS = [
   { key: 'kyps',      label: 'KYPs',      icon: '🃏' },
 ];
 
-// ─── BLANK RECORD FACTORIES ───────────────────────────────────────────────────
+// ─── BLANK RECORD FACTORIES ──────────────────────────────────────────────────
 function blankCoach() {
-  return { id: uid(), date: nowStr(), name:'', team:'', lineup:'', ato:'', decoys:'' };
+  return { id: uid(), date: nowStr(), name:'', team:'', lineup:'', ato:'', decoys:'',
+    linkedTeamId: '', linkedPlayerId: '' };
 }
 function blankTeam() {
   return {
@@ -391,6 +645,7 @@ function blankTeam() {
     zoneWhen:'', zoneType:'',
     press:'', doubleTeam:'',
     aggressive:'', upDown:'', fanbase:'', lockerRoom:'', triggers:'', wakesUp:'',
+    linkedTeamId: ''
   };
 }
 function blankPlayer() {
@@ -406,19 +661,23 @@ function blankPlayer() {
     bumpRecover:'', trailDeny:'', forceBackdoor:'',
     height:'', wingspan:'', athleticism:'', strengthCond:'',
     onBallAgg:'', offBallAgg:'', upDown:'', frustration:'', lateGame:'', leadership:'',
+    linkedPlayerId: '', linkedTeamId: ''
   };
 }
 function blankPlaybook() {
-  return { id:uid(), date:nowStr(), name:'', team:'', handSignals:'', howTheyCall:'', howWeCall:'', bySpacing:'', byEntry:'', byAction:'' };
+  return { id:uid(), date:nowStr(), name:'', team:'', handSignals:'', howTheyCall:'', howWeCall:'', bySpacing:'', byEntry:'', byAction:'',
+    linkedTeamId: '' };
 }
 function blankReport() {
-  return { id:uid(), date:nowStr(), name:'', opponent:'', hotPlays:'', defNotes:'', starter:'', primaryBackup:'', secondaryBackup:'', majorTendencies:'', majorKeys:'', contributors:'', minorContributors:'' };
+  return { id:uid(), date:nowStr(), name:'', opponent:'', hotPlays:'', defNotes:'', starter:'', primaryBackup:'', secondaryBackup:'', majorTendencies:'', majorKeys:'', contributors:'', minorContributors:'',
+    linkedTeamId: '' };
 }
 function blankKYP() {
-  return { id:uid(), date:nowStr(), name:'', team:'', number:'', position:'', height:'', imageUrl:'', bullets:['','','','',''], badges:[] };
+  return { id:uid(), date:nowStr(), name:'', team:'', number:'', position:'', height:'', imageUrl:'', bullets:['','','','',''], badges:[],
+    linkedPlayerId: '', linkedTeamId: '' };
 }
 
-// ─── BADGES ───────────────────────────────────────────────────────────────────
+// ─── BADGES ──────────────────────────────────────────────────────────────────
 const ALL_BADGES = [
   {icon:'🎯', key:'scorer',     label:'Scorer'},
   {icon:'🏀', key:'pnr',        label:'PNR Threat'},
@@ -441,11 +700,12 @@ const ALL_BADGES = [
 const POSITIONS = ['PG','SG','SF','PF','C'];
 
 // ─── HTML Helpers ─────────────────────────────────────────────────────────────
-const h = (tag, cls, inner='', attrs='') =>
-  `<${tag}${cls?' class="'+cls+'"':''}${attrs?(' '+attrs):''}>${inner}</${tag}>`;
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-function badge(text, blue=false) {
-  return `<span class="badge${blue?' badge-blue':''}">${text}</span>`;
+function badge(text, cls='') {
+  return `<span class="badge${cls?' '+cls:''}">${text}</span>`;
 }
 
 function field(label, key, value='', rows=3, hint='') {
@@ -480,11 +740,6 @@ function grid2(...fields) {
   return `<div class="grid2">${fields.join('')}</div>`;
 }
 
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ─── Toggle section collapse ──────────────────────────────────────────────────
 function toggleSection(id) {
   const body = document.getElementById(id);
   const caret = document.getElementById('caret_' + id);
@@ -494,7 +749,6 @@ function toggleSection(id) {
   caret.textContent = body.classList.contains('hidden') ? '▼' : '▲';
 }
 
-// ─── Update editing record ────────────────────────────────────────────────────
 function updateEdit(key, value) {
   if (!editingRecord) return;
   editingRecord[key] = value;
@@ -522,7 +776,72 @@ function updateBullet(i, val) {
   editingRecord.bullets[i] = val;
 }
 
-// ─── CRUD ops ─────────────────────────────────────────────────────────────────
+// ─── Cross-app link helpers ───────────────────────────────────────────────────
+function linkedPlayerHtml(linkedPlayerId) {
+  if (!linkedPlayerId) return '';
+  const p = crossAppData.players.find(x => String(x.id) === String(linkedPlayerId));
+  if (!p) return '';
+  const initials = (p.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const color = p.color || '#2271d6';
+  return `<div class="linked-player-preview">
+    <div style="width:24px;height:24px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;">${initials}</div>
+    <span>Linked to <strong>${p.name}</strong>${p.pos ? ' · ' + p.pos : ''}${p.grp ? ' · ' + p.grp : ''} (CourtIQ/HoopIQ)</span>
+  </div>`;
+}
+
+function linkedTeamHtml(linkedTeamId) {
+  if (!linkedTeamId) return '';
+  const t = crossAppData.teams.find(x => String(x.id) === String(linkedTeamId));
+  if (!t) return '';
+  return `<div class="linked-player-preview" style="background:rgba(26,158,92,0.08);border-color:rgba(26,158,92,0.2);color:var(--green);">
+    <span>🏟</span>
+    <span>Linked to team <strong>${t.name}</strong> (CourtIQ/HoopIQ)</span>
+  </div>`;
+}
+
+function crossAppLinkSection(record, showPlayer = true, showTeam = true) {
+  const hasPlayers = crossAppData.players.length > 0;
+  const hasTeams = crossAppData.teams.length > 0;
+  if (!hasPlayers && !hasTeams) return '';
+
+  let html = `<div class="crossapp-link-section">
+    <div class="crossapp-link-title">🔗 Link to CourtIQ / HoopIQ</div>
+    <div class="crossapp-link-sub">Connect this record to a player or team from the other apps for cross-reference.</div>
+    <div class="link-picks">`;
+
+  if (showPlayer && hasPlayers) {
+    const opts = `<option value="">— No player link —</option>` +
+      crossAppData.players.map(p => {
+        const sub = [p.pos, p.grp, p.num !== undefined ? '#'+p.num : ''].filter(Boolean).join(' · ');
+        return `<option value="${esc(String(p.id))}" ${String(p.id) === String(record.linkedPlayerId||'') ? 'selected':''}>
+          ${esc(p.name||'Unknown')}${sub ? ' — '+sub : ''}
+        </option>`;
+      }).join('');
+    html += `<div class="link-pick-row">
+      <span class="link-pick-label">Player</span>
+      <select class="link-pick-select" onchange="updateEdit('linkedPlayerId',this.value);updateCrossAppPreview()">${opts}</select>
+    </div>`;
+  }
+  if (showTeam && hasTeams) {
+    const opts2 = `<option value="">— No team link —</option>` +
+      crossAppData.teams.map(t => `<option value="${esc(String(t.id))}" ${String(t.id) === String(record.linkedTeamId||'') ? 'selected':''}>${esc(t.name||'Unknown')}</option>`).join('');
+    html += `<div class="link-pick-row">
+      <span class="link-pick-label">Team</span>
+      <select class="link-pick-select" onchange="updateEdit('linkedTeamId',this.value);updateCrossAppPreview()">${opts2}</select>
+    </div>`;
+  }
+  html += `</div><div id="crossapp-preview-area">${linkedPlayerHtml(record.linkedPlayerId)}${linkedTeamHtml(record.linkedTeamId)}</div>`;
+  html += `</div>`;
+  return html;
+}
+
+function updateCrossAppPreview() {
+  const area = document.getElementById('crossapp-preview-area');
+  if (!area || !editingRecord) return;
+  area.innerHTML = linkedPlayerHtml(editingRecord.linkedPlayerId) + linkedTeamHtml(editingRecord.linkedTeamId);
+}
+
+// ─── CRUD ops ────────────────────────────────────────────────────────────────
 function addRecord(tab) {
   const blanks = { coaches:blankCoach, teams:blankTeam, players:blankPlayer, playbooks:blankPlaybook, reports:blankReport, kyps:blankKYP };
   editingRecord = blanks[tab]();
@@ -542,6 +861,7 @@ function saveRecord() {
   persist(tab);
   editingRecord = null;
   render();
+  showToast('Record saved ✓');
 }
 
 function cancelEdit() {
@@ -558,7 +878,28 @@ function deleteRecord(tab, id) {
 
 function setKypView(v) { kypView = v; render(); }
 
-// ─── NAV RENDER ───────────────────────────────────────────────────────────────
+// ─── Cross-app summary for dashboard banner ───────────────────────────────────
+function crossAppBanner() {
+  const np = crossAppData.players.length;
+  const nt = crossAppData.teams.length;
+  if (!np && !nt) return '';
+  const linkedPlayers = DB.players.filter(r => r.linkedPlayerId).length
+    + DB.kyps.filter(r => r.linkedPlayerId).length;
+  const linkedTeams = DB.teams.filter(r => r.linkedTeamId).length
+    + DB.reports.filter(r => r.linkedTeamId).length
+    + DB.coaches.filter(r => r.linkedTeamId).length;
+  return `<div class="crossapp-banner">
+    <span class="cb-icon">🔗</span>
+    <div class="cb-text">Connected to <strong>CourtIQ / HoopIQ</strong> — cross-link scout records to players and teams from the other apps.</div>
+    <div class="cb-stats">
+      <div class="crossapp-stat"><div class="cs-val">${np}</div><div class="cs-lbl">Players</div></div>
+      <div class="crossapp-stat"><div class="cs-val">${nt}</div><div class="cs-lbl">Teams</div></div>
+      <div class="crossapp-stat"><div class="cs-val">${linkedPlayers + linkedTeams}</div><div class="cs-lbl">Linked</div></div>
+    </div>
+  </div>`;
+}
+
+// ─── NAV RENDER ──────────────────────────────────────────────────────────────
 function renderNav() {
   document.getElementById('nav').innerHTML = TABS.map(t => `
     <button class="nav-tab${currentTab===t.key?' active':''}" onclick="switchTab('${t.key}')">
@@ -574,24 +915,20 @@ function switchTab(key) {
   render();
 }
 
-// ─── PAGE RENDER ──────────────────────────────────────────────────────────────
+// ─── PAGE RENDER ─────────────────────────────────────────────────────────────
 function render() {
   renderNav();
   const page = document.getElementById('page');
   const tab = TABS.find(t => t.key === currentTab);
 
-  let content = '';
-  if (editingRecord) {
-    content = renderForm(currentTab, editingRecord);
-  } else {
-    content = renderList(currentTab);
-  }
+  let content = editingRecord ? renderForm(currentTab, editingRecord) : renderList(currentTab);
 
   page.innerHTML = `
     <div class="page-header">
       <div class="page-title">${tab.icon} ${tab.label}</div>
       <div class="page-title-bar"></div>
     </div>
+    ${!editingRecord ? crossAppBanner() : ''}
     <div class="fade-in">${content}</div>
   `;
 }
@@ -623,45 +960,70 @@ function renderList(tab) {
   const isKyp = tab === 'kyps';
 
   let toolbar = `<div class="list-toolbar">
-    <span class="record-count">${records.length} record${records.length!==1?'s':''}</span>`;
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" type="text" placeholder="Search ${singular.toLowerCase()}s…" oninput="renderListFiltered('${tab}',this.value)">
+    </div>
+    <span class="record-count" id="list-count-${tab}">${records.length} record${records.length!==1?'s':''}</span>`;
+
   if (isKyp && records.length > 0) {
-    toolbar += `<div class="view-toggle" style="margin-left:auto">
+    toolbar += `<div class="view-toggle">
       <button class="vtbtn${kypView==='list'?' active':''}" onclick="setKypView('list')">List</button>
       <button class="vtbtn${kypView==='cards'?' active':''}" onclick="setKypView('cards')">Cards</button>
     </div>`;
   }
-  toolbar += `<div style="${(!isKyp||records.length===0)?'margin-left:auto':''}">
-    <button class="btn btn-primary btn-md" onclick="addRecord('${tab}')">+ Add ${singular}</button>
-  </div></div>`;
+  toolbar += `<button class="btn btn-primary btn-md" onclick="addRecord('${tab}')">+ Add ${singular}</button>
+  </div>`;
 
   if (records.length === 0) {
     return toolbar + `<div class="empty">
       <div class="empty-icon">◎</div>
-      <div class="empty-text">No ${singular}s yet</div>
+      <div class="empty-text">No ${singular.toLowerCase()}s yet</div>
       <button class="btn btn-primary btn-md" onclick="addRecord('${tab}')">+ Add ${singular}</button>
     </div>`;
   }
 
   if (isKyp && kypView === 'cards') {
     const cards = records.map(r => renderKYPCard(r, true)).join('');
-    return toolbar + `<div class="kyp-grid">${cards}</div>`;
+    return toolbar + `<div class="kyp-grid" id="kyp-grid-container">${cards}</div>`;
   }
 
-  const items = records.map(r => {
+  return toolbar + `<div class="record-list" id="list-container-${tab}">${renderListItems(tab, records)}</div>`;
+}
+
+function renderListItems(tab, records) {
+  return records.map(r => {
     const meta = getMeta(tab, r);
+    const isLinked = r.linkedPlayerId || r.linkedTeamId;
     return `<div class="record-card" onclick="editRecord('${tab}','${r.id}')">
       <div class="record-card-body">
         <div class="record-card-name">${esc(getTitle(tab,r))}</div>
-        <div class="record-card-sub">${esc(r.date)}</div>
+        <div class="record-card-sub">${esc(r.date)}${meta ? ' · ' + esc(meta) : ''}</div>
       </div>
       <div class="record-card-actions">
         ${meta ? badge(meta) : ''}
+        ${isLinked ? `<span class="linked-badge">🔗 Linked</span>` : ''}
         <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteRecord('${tab}','${r.id}')">✕</button>
       </div>
     </div>`;
   }).join('');
+}
 
-  return toolbar + `<div class="record-list">${items}</div>`;
+function renderListFiltered(tab, query) {
+  const q = (query||'').toLowerCase();
+  const filtered = DB[tab].filter(r => {
+    const title = getTitle(tab, r).toLowerCase();
+    const meta  = (getMeta(tab, r)||'').toLowerCase();
+    return !q || title.includes(q) || meta.includes(q);
+  });
+  const countEl = document.getElementById('list-count-' + tab);
+  if (countEl) countEl.textContent = `${filtered.length} record${filtered.length!==1?'s':''}`;
+  const container = document.getElementById('list-container-' + tab);
+  if (container) container.innerHTML = renderListItems(tab, filtered);
+  const kyp = document.getElementById('kyp-grid-container');
+  if (kyp && kypView === 'cards') {
+    kyp.innerHTML = filtered.map(r => renderKYPCard(r, true)).join('');
+  }
 }
 
 // ─── KYP CARD ─────────────────────────────────────────────────────────────────
@@ -685,6 +1047,19 @@ function renderKYPCard(r, withEdit=false) {
     activeBadges.map(b=>`<div class="attr-badge"><span>${b.icon}</span><span>${b.label}</span></div>`).join('')
   }</div>` : '';
 
+  // Cross-app linked player info
+  let linkedHtml = '';
+  if (r.linkedPlayerId) {
+    const p = crossAppData.players.find(x => String(x.id) === String(r.linkedPlayerId));
+    if (p) {
+      const initials = (p.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      linkedHtml = `<div class="kyp-linked-strip">
+        <div style="width:18px;height:18px;border-radius:50%;background:${p.color||'#2271d6'};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0;">${initials}</div>
+        <span>CourtIQ: ${esc(p.name)}${p.pos?' · '+p.pos:''}</span>
+      </div>`;
+    }
+  }
+
   return `<div class="kyp-card">
     ${editBar}
     <div class="kyp-card-header">
@@ -693,13 +1068,14 @@ function renderKYPCard(r, withEdit=false) {
         <div class="kyp-player-name">${esc(r.name)||'—'}</div>
         <div class="kyp-badges-row">
           ${r.number?badge('#'+r.number):''}
-          ${r.position?badge(r.position,true):''}
+          ${r.position?badge(r.position,'badge-blue'):''}
           ${r.height?`<span style="font-size:12px;color:var(--muted)">${esc(r.height)}</span>`:''}
         </div>
       </div>
     </div>
     ${bulletsHtml}
     ${attrHtml}
+    ${linkedHtml}
   </div>`;
 }
 
@@ -730,10 +1106,11 @@ function renderForm(tab, r) {
   </div>`;
 }
 
-// ── COACH FORM ─────────────────────────────────────────────────────────────────
+// ── COACH FORM ────────────────────────────────────────────────────────────────
 function formCoach(r) {
   return `
     ${grid2(fieldInput('Coach Name','name',r.name), fieldInput('Team','team',r.team))}
+    ${crossAppLinkSection(r, false, true)}
     ${section('Trends & Styles',
       field('Lineup','lineup',r.lineup,4,'Preferred lineups, rotation patterns, situational lineups') +
       field('ATO (After Timeout)','ato',r.ato,4,'Go-to plays coming out of timeouts') +
@@ -741,11 +1118,12 @@ function formCoach(r) {
     )}`;
 }
 
-// ── TEAM FORM ──────────────────────────────────────────────────────────────────
+// ── TEAM FORM ─────────────────────────────────────────────────────────────────
 function formTeam(r) {
   return `
     ${grid2(fieldInput('Team Name','name',r.name), fieldInput('League / Conference','league',r.league))}
     ${fieldInput('Season','season',r.season,'e.g. 2024-25')}
+    ${crossAppLinkSection(r, false, true)}
     ${section('Offense — Running Lines & Transition',
       subsection('Running Lines',
         grid2(field('Corners','corners',r.corners,3),field('Overload','overload',r.overload,3)) +
@@ -812,7 +1190,7 @@ function formTeam(r) {
     )}`;
 }
 
-// ── PLAYER FORM ────────────────────────────────────────────────────────────────
+// ── PLAYER FORM ───────────────────────────────────────────────────────────────
 function formPlayer(r) {
   const posPicker = `<div class="field"><label>Position</label><div class="pos-picker">${
     POSITIONS.map(p=>`<button class="pos-btn${r.position===p?' active':''}" data-pos="${p}" onclick="setPosition('${p}')">${p}</button>`).join('')
@@ -821,6 +1199,7 @@ function formPlayer(r) {
   return `
     ${grid2(fieldInput('Player Name','name',r.name), fieldInput('Team','team',r.team))}
     ${grid2(fieldInput('Jersey #','number',r.number,'#'), posPicker)}
+    ${crossAppLinkSection(r, true, true)}
     ${section('Offense — Hand Domination',
       grid2(field('Strong hand','strongHand',r.strongHand,2),field('Location','handLocation',r.handLocation,2)) +
       field('How does the player act dribbling?','dribbling',r.dribbling,3) +
@@ -868,10 +1247,11 @@ function formPlayer(r) {
     )}`;
 }
 
-// ── PLAYBOOK FORM ──────────────────────────────────────────────────────────────
+// ── PLAYBOOK FORM ─────────────────────────────────────────────────────────────
 function formPlaybook(r) {
   return `
     ${grid2(fieldInput('Playbook Name','name',r.name), fieldInput('Team','team',r.team))}
+    ${crossAppLinkSection(r, false, true)}
     ${section('Signals & Play Calls',
       field('Hand signals and playcalls','handSignals',r.handSignals,4,'Describe hand signals, codes, and verbal playcalls observed')
     )}
@@ -886,10 +1266,11 @@ function formPlaybook(r) {
     )}`;
 }
 
-// ── REPORT FORM ────────────────────────────────────────────────────────────────
+// ── REPORT FORM ───────────────────────────────────────────────────────────────
 function formReport(r) {
   return `
     ${grid2(fieldInput('Report Title','name',r.name), fieldInput('Opponent','opponent',r.opponent))}
+    ${crossAppLinkSection(r, false, true)}
     ${section('Hot Plays & Advantages',
       field('Hot plays — how to defend and how to gain advantage','hotPlays',r.hotPlays,6)
     )}
@@ -911,7 +1292,7 @@ function formReport(r) {
     )}`;
 }
 
-// ── KYP FORM ───────────────────────────────────────────────────────────────────
+// ── KYP FORM ──────────────────────────────────────────────────────────────────
 function formKYP(r) {
   const posPicker = `<div class="field"><label>Position</label><div class="pos-picker">${
     POSITIONS.map(p=>`<button class="pos-btn${r.position===p?' active':''}" data-pos="${p}" onclick="setPosition('${p}')">${p}</button>`).join('')
@@ -925,11 +1306,19 @@ function formKYP(r) {
     `<button class="badge-pick-btn${r.badges.includes(b.key)?' active':''}" data-badge="${b.key}" onclick="toggleBadge('${b.key}')">${b.icon} ${b.label}</button>`
   ).join('');
 
+  // Auto-populate from linked player
+  const linkedPlayer = r.linkedPlayerId ? crossAppData.players.find(x => String(x.id) === String(r.linkedPlayerId)) : null;
+  const autoFillHint = linkedPlayer ? `<div style="font-size:12px;color:var(--blue);background:rgba(34,113,214,0.07);border:1px solid rgba(34,113,214,0.2);border-radius:6px;padding:8px 12px;margin-bottom:12px;">
+    💡 Tip: This KYP is linked to <strong>${linkedPlayer.name}</strong> from CourtIQ/HoopIQ. Stats and session data are available in those apps.
+  </div>` : '';
+
   return `
     ${grid2(fieldInput('Player Name','name',r.name), fieldInput('Team','team',r.team))}
     ${grid2(fieldInput('Jersey #','number',r.number,'#'), posPicker)}
     ${fieldInput('Height','height',r.height,'e.g. 6\'8"')}
     <div class="field"><label>Image URL (optional)</label><input type="url" value="${esc(r.imageUrl)}" placeholder="https://..." oninput="updateEdit('imageUrl',this.value)"></div>
+    ${crossAppLinkSection(r, true, true)}
+    ${autoFillHint}
     <div class="field">
       <label>Scout Notes (up to 5 bullet points)</label>
       ${bulletFields}
@@ -941,8 +1330,46 @@ function formKYP(r) {
     ${section('Live Preview', renderKYPCard(r))}`;
 }
 
-// ─── BOOT ──────────────────────────────────────────────────────────────────────
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
 render();
+setSaveStatus('saved');
+
+// Auto-sync on load
+setTimeout(async () => {
+  // Try to load from Supabase first on boot
+  const client = getSB();
+  if (client) {
+    setSyncStatus('syncing');
+    try {
+      const { data, error } = await client.from(SB_TABLE).select('data').eq('id', SB_ROW).maybeSingle();
+      if (!error && data?.data) {
+        const d = data.data;
+        crossAppData.players    = d.players    || [];
+        crossAppData.teams      = d.teams      || [];
+        crossAppData.categories = d.categories || [];
+        // Merge Supabase ScoutPRO data
+        if (d.scout_data) {
+          const sd = d.scout_data;
+          ['coaches','teams','players','playbooks','reports','kyps'].forEach(key => {
+            if (sd[key] && Array.isArray(sd[key]) && sd[key].length > 0) {
+              const remoteIds = new Set(sd[key].map(r => r.id));
+              const localOnly = DB[key].filter(r => !remoteIds.has(r.id));
+              DB[key] = [...sd[key], ...localOnly];
+            }
+          });
+        }
+        const np = crossAppData.players.length;
+        const nt = crossAppData.teams.length;
+        setSyncStatus('connected', `Connected · ${np}p ${nt}t`);
+        render();
+      } else {
+        setSyncStatus('error', 'Not connected');
+      }
+    } catch(e) {
+      setSyncStatus('error', 'Failed');
+    }
+  }
+}, 300);
 </script>
 </body>
 </html>
