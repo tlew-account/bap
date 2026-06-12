@@ -1566,7 +1566,7 @@ function ensureOutputId(f){ if(!f.outputId) f.outputId='fml_'+genId(); return f.
 function datasetFormulas(){ return formulas.filter(f=>f.isDataset&&f.outputId); }
 function sortedFormulas(){ const visited=new Set(),result=[]; function visit(f){ if(visited.has(f.id)) return; visited.add(f.id); (f.tokens||[]).forEach(t=>{ if(t.type==='formula'){ const dep=formulas.find(x=>x.outputId===t.id); if(dep) visit(dep); } }); result.push(f); } formulas.forEach(f=>visit(f)); return result; }
 function computeAllFormulas(rawStats){ const vals={...rawStats}; sortedFormulas().forEach(f=>{ const r=evaluateFormula(f,vals); if(r!==null&&f.outputId) vals[f.outputId]=r; }); return vals; }
-function evaluateFormula(formula,statValues){ try{ const expr=(formula.tokens||[]).map(t=>{ if(t.type==='stat'||t.type==='formula') return parseFloat(statValues[t.id]||0).toString(); if(t.type==='num') return t.value; if(t.type==='op'){ if(t.value==='/') return '/'; if(t.value==='*') return '*'; if(t.value==='+') return '+'; if(t.value==='-') return '-'; return t.value; } return '0'; }).join(' '); if(!expr.trim()) return null; if(!/^[\d\s\.+\-*/()]+$/.test(expr)) return null; const r=Function('"use strict";return('+expr+')')(); if(!isFinite(r)) return null; return r; } catch(e){ return null; } }
+function evaluateFormula(formula,statValues){ try{ const expr=(formula.tokens||[]).map(t=>{ if(t.type==='stat'||t.type==='formula') return parseFloat(statValues[t.id]||0).toString(); if(t.type==='num') return t.value; if(t.type==='op'){ if(t.value==='/') return '/'; if(t.value==='*') return '*'; if(t.value==='+') return '+'; if(t.value==='-') return '-'; return t.value; } return '0'; }).join(' '); if(!expr.trim()) return null; if(!/^[0-9\s\.+\-*/()]+$/.test(expr)) return null; const r=Function('"use strict";return('+expr+')')(); if(!isFinite(r)) return null; return r; } catch(e){ return null; } }
 function aggregateStatValues(el){ const agg={}; el.forEach(e=>{ Object.entries(e.statValues||{}).forEach(([k,v])=>{ agg[k]=(agg[k]||0)+parseFloat(v||0); }); }); return agg; }
 function formatFormulaResult(val,format){ if(val===null||val===undefined) return '—'; if(format==='percent') return (val*100).toFixed(1)+'%'; if(format==='decimal2') return val.toFixed(2); if(format==='decimal1') return val.toFixed(1); if(format==='integer') return Math.round(val).toString(); return val.toFixed(2); }
 function formulaResultBadge(formula,entryList){ const rawAgg=aggregateStatValues(entryList); const allVals=computeAllFormulas(rawAgg); const result=allVals[formula.outputId]??evaluateFormula(formula,allVals); const display=formatFormulaResult(result,formula.format); return `<div class="formula-result-badge${formula.isDataset?' dataset-badge':''}" style="background:${formula.color}18;${formula.isDataset?`border:1.5px solid ${formula.color}44;`:''}"><span class="frb-val" style="color:${formula.color};">${display}</span><span class="frb-lbl" style="color:${formula.color}cc;">${formula.name}</span></div>`; }
@@ -1766,7 +1766,13 @@ function renderExprTokens(){
 }
 function insertStat(id,name,color){ fmTokens.push({type:'stat',id,label:name}); renderExprTokens(); document.getElementById('fm-num-input').focus(); }
 function insertComputedStat(outputId,label){ fmTokens.push({type:'formula',id:outputId,label}); renderExprTokens(); document.getElementById('fm-num-input').focus(); }
-const OP_MAP={'+':'+','−':'-','×':'*','÷':'/','(':' (',')':")' };
+const const OP_MAP = {};
+OP_MAP['+'] = '+';
+OP_MAP['−'] = '-';
+OP_MAP['×'] = '*';
+OP_MAP['÷'] = '/';
+OP_MAP['('] = '(';
+OP_MAP[')'] = ')';
 function insertOperator(sym){ fmTokens.push({type:'op',label:sym,value:OP_MAP[sym]||sym}); renderExprTokens(); document.getElementById('fm-expr-input').focus(); }
 function removeToken(i){ fmTokens.splice(i,1); renderExprTokens(); }
 function clearExpr(){ fmTokens=[]; renderExprTokens(); }
