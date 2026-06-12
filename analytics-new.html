@@ -1766,7 +1766,7 @@ function renderExprTokens(){
 }
 function insertStat(id,name,color){ fmTokens.push({type:'stat',id,label:name}); renderExprTokens(); document.getElementById('fm-num-input').focus(); }
 function insertComputedStat(outputId,label){ fmTokens.push({type:'formula',id:outputId,label}); renderExprTokens(); document.getElementById('fm-num-input').focus(); }
-const const OP_MAP = {};
+const OP_MAP = {};
 OP_MAP['+'] = '+';
 OP_MAP['−'] = '-';
 OP_MAP['×'] = '*';
@@ -1952,7 +1952,7 @@ async function hoopiqSync(silent=false){
   }catch(e){console.error(e);setHoopiqStatus('error','Sync failed');if(!silent) showToast('HoopIQ sync failed');}
 }
 function mapHoopiqPlayer(hp){ return {id:String(hp.id),name:hp.name||'Unknown',number:String(hp.num??''),position:hp.pos||'',teamIds:[],color:hp.color||'#1565c0',kpiItems:[],_hoopiq:{grp:hp.grp||'',hand:hp.hand||'',height:hp.height||'',dob:hp.dob||'',strengths:hp.strengths||[],improve:hp.improve||[],notes:hp.notes||'',sessions:hp.sessions||[],goals:hp.goals||[]}}; }
-function mapToHoopiq(cp,existing){ const h=cp._hoopiq||{}; const old=existing.find(p=>String(p.id)===String(cp.id)); return {id:parseInt(cp.id)||Date.now(),name:cp.name,pos:cp.position||old?.pos||'PG',num:parseInt(cp.number)||old?.num||0,grp:h.grp||old?.grp||'Varsity',hand:h.hand||old?.hand||'Right',height:h.height||old?.height||'',dob:h.dob||old?.dob||'',color:cp.color,strengths:h.strengths||old?.strengths||[],improve:h.improve||old?.improve||[],notes:h.notes||old?.notes||'',sessions:h.sessions||old?.sessions||[],goals:h.goals||old?.goals||}; }
+function mapToHoopiq(cp,existing){ const h=cp._hoopiq||{}; const old=existing.find(p=>String(p.id)===String(cp.id)); return {id:parseInt(cp.id)||Date.now(),name:cp.name,pos:cp.position||old?.pos||'PG',num:parseInt(cp.number)||old?.num||0,grp:h.grp||old?.grp||'Varsity',hand:h.hand||old?.hand||'Right',height:h.height||old?.height||'',dob:h.dob||old?.dob||'',color:cp.color,strengths:h.strengths||old?.strengths||[],improve:h.improve||old?.improve||[],notes:h.notes||old?.notes||'',sessions:h.sessions||old?.sessions||[],goals:h.goals||old?.goals||[]}; }
 async function hoopiqPushPlayer(cp){ const sb=getHoopiqClient(); if(!sb) return; if(!/^[0-9]+$/.test(String(cp.id))) return; try{ const {data,error}=await sb.from(HOOPIQ_TABLE).select('data').eq('id',HOOPIQ_ROW).maybeSingle(); if(error||!data?.data) return; const hd=data.data; const mapped=mapToHoopiq(cp,hd.players||[]); const idx=(hd.players||[]).findIndex(p=>String(p.id)===String(cp.id)); if(idx>-1) hd.players[idx]=mapped; else hd.players.push(mapped); await sb.from(HOOPIQ_TABLE).upsert({id:HOOPIQ_ROW,user_id:'default',data:hd,updated_at:new Date().toISOString()},{onConflict:'id'}); }catch(e){console.warn('HoopIQ push failed:',e);} }
 
 // ═══════════════════════════════════════════════════════
