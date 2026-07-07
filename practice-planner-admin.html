@@ -1,1 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HoopIQ — Practice Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --navy:#0B1120;--navy2:#131C2E;--navy3:#1B2740;
+  --orange:#F06A00;--orange-lt:#FFF3E6;--orange-dk:#C45400;
+  --cream:#F8F5F0;--cream2:#EDE9E1;--white:#FFFFFF;
+  --green:#1A9E5C;--green-lt:#E3F7EE;
+  --red:#D63B3B;--red-lt:#FDEAEA;
+  --blue:#2060D8;--blue-lt:#E8F0FE;
+  --amber:#C07A00;--amber-lt:#FFF8E6;
+  --purple:#6B3FA0;--purple-lt:#F0EAFB;
+  --border:rgba(11,17,32,0.10);--border2:rgba(11,17,32,0.06);
+  --text:#0B1120;--text2:#3D4A5C;--text3:#7A8899;
+  --shadow:0 1px 3px rgba(11,17,32,0.08),0 4px 16px rgba(11,17,32,0.05);
+  --shadow-lg:0 8px 32px rgba(11,17,32,0.12);
+  --r:10px;--r-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;display:flex}
+.sidebar{width:220px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200}
+.sb-logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-logo-mark{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--orange)}
+.sb-logo-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.sb-nav{flex:1;overflow-y:auto;padding:10px 8px}
+.sb-section{font-size:9px;font-weight:600;color:rgba(255,255,255,.22);letter-spacing:1.8px;text-transform:uppercase;padding:14px 10px 5px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;cursor:pointer;color:rgba(255,255,255,.48);font-size:13px;border:none;background:none;width:100%;text-align:left;transition:all .15s}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.sb-item.active{background:rgba(240,106,0,.2);color:var(--orange);font-weight:500}
+.sb-item i{font-size:17px;width:18px;flex-shrink:0}
+.sb-badge{margin-left:auto;background:var(--orange);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px}
+.sb-footer{padding:12px 10px;border-top:1px solid rgba(255,255,255,.06)}
+.sb-user{display:flex;align-items:center;gap:9px}
+.sb-avatar{width:30px;height:30px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.sb-username{font-size:12px;color:rgba(255,255,255,.6)}
+.sb-role{font-size:9px;color:rgba(240,106,0,.8);text-transform:uppercase;letter-spacing:1px}
+.main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border2);padding:0 28px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--navy)}
+.topbar-spacer{flex:1}
+.topbar-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text2);transition:all .15s}
+.topbar-btn:hover{background:var(--cream)}
+.topbar-btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.topbar-btn.primary:hover{background:var(--orange-dk)}
+.notif-rel{position:relative;display:inline-flex}
+.notif-dot{position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid var(--white)}
+.page{display:none;flex:1;flex-direction:column;padding:28px 28px 80px}
+.page.active{display:flex}
+.card{background:var(--white);border:1px solid var(--border2);border-radius:var(--r-lg);padding:20px 22px;box-shadow:var(--shadow)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text)}
+.card-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:22px}
+.stat-card{background:var(--white);border:1px solid var(--border2);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.stat-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.stat-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--navy);line-height:1}
+.stat-trend{font-size:11px;margin-top:4px;display:flex;align-items:center;gap:3px}
+.trend-up{color:var(--green)}.trend-dn{color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;white-space:nowrap}
+.b-orange{background:var(--orange-lt);color:var(--orange-dk)}
+.b-green{background:var(--green-lt);color:#0E6B3C}
+.b-red{background:var(--red-lt);color:#A02828}
+.b-blue{background:var(--blue-lt);color:#1840A0}
+.b-amber{background:var(--amber-lt);color:var(--amber)}
+.b-purple{background:var(--purple-lt);color:var(--purple)}
+.b-gray{background:var(--cream2);color:var(--text3)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text);transition:all .15s;font-family:'Inter',sans-serif}
+.btn:hover{background:var(--cream)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn-primary:hover{background:var(--orange-dk)}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text3)}
+.btn-ghost:hover{background:var(--cream2);color:var(--text)}
+.btn-danger{color:var(--red);border-color:rgba(214,59,59,.25)}
+.btn-danger:hover{background:var(--red-lt)}
+.icon-btn{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:5px 8px;cursor:pointer;display:inline-flex;align-items:center;font-size:15px;transition:all .13s}
+.icon-btn:hover{background:var(--cream);color:var(--text)}
+input[type=text],input[type=number],input[type=date],input[type=email],select,textarea{background:var(--cream);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:9px 12px;font-size:13px;width:100%;outline:none;font-family:'Inter',sans-serif;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);background:var(--white)}
+textarea{resize:vertical;min-height:72px}
+.fl{font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fg{margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(11,17,32,.5);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:var(--r-lg);padding:26px 28px;width:min(580px,98vw);max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:18px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border2)}
+.table-wrap{overflow-x:auto;border-radius:var(--r-lg);border:1px solid var(--border2)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:10px 14px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;background:var(--cream);border-bottom:1px solid var(--border2)}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border2);color:var(--text2)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--cream)}
+.progress-bar{background:var(--cream2);border-radius:20px;height:6px;overflow:hidden}
+.progress-fill{height:100%;border-radius:20px;background:var(--orange);transition:width .4s}
+.pf-green{background:var(--green)}.pf-blue{background:var(--blue)}.pf-purple{background:var(--purple)}
+.stars{display:flex;gap:2px}
+.star{color:var(--cream2);font-size:15px}
+.star.on{color:#F5A623}
+.pill-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.pill-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text3);transition:all .15s}
+.pill-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.feed-item{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--border2)}
+.feed-item:last-child{border-bottom:none}
+.feed-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.feed-name{font-size:13px;font-weight:500;color:var(--text)}
+.feed-desc{font-size:12px;color:var(--text3);margin-top:1px}
+.feed-time{font-size:11px;color:var(--text3);flex-shrink:0;font-family:'DM Mono',monospace}
+.player-card{background:var(--white);border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
+.player-card:hover{border-color:rgba(240,106,0,.35);box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.player-banner{height:52px;position:relative}
+.player-avatar{width:48px;height:48px;border-radius:50%;border:3px solid var(--white);position:absolute;bottom:-18px;left:16px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff}
+.player-body{padding:26px 16px 16px}
+.player-name{font-size:14px;font-weight:600;color:var(--navy)}
+.player-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.ps-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px}
+.ps-stat{background:var(--cream);border-radius:6px;padding:6px 8px;text-align:center}
+.ps-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--navy)}
+.ps-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-active{background:#1A9E5C}.dot-idle{background:#C07A00}.dot-inactive{background:#D63B3B}
+.drill-card{background:var(--white);border:1px solid var(--border2);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow);transition:all .15s}
+.drill-card:hover{border-color:rgba(240,106,0,.3);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.drill-card.fav{border-left:3px solid var(--orange)}
+.drill-name{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.drill-desc{font-size:12px;color:var(--text3);line-height:1.55;margin-bottom:10px}
+.drill-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.drill-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border2)}
+.drill-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--text3)}
+.dmi{display:flex;align-items:center;gap:4px}
+.rating-mini{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500}
+.wizard-wrap{max-width:660px;margin:0 auto;width:100%}
+.wizard-progress{display:flex;align-items:center;margin-bottom:28px}
+.wstep{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.wstep:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;right:-50%;height:2px;background:var(--cream2);z-index:0}
+.wstep.done::after,.wstep.active::after{background:var(--orange)}
+.wcircle{width:26px;height:26px;border-radius:50%;border:2px solid var(--cream2);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);position:relative;z-index:1;transition:all .2s}
+.wstep.active .wcircle{border-color:var(--orange);background:var(--orange);color:#fff}
+.wstep.done .wcircle{border-color:var(--orange);background:var(--orange);color:#fff}
+.wlabel{font-size:10px;color:var(--text3);margin-top:4px;text-align:center;white-space:nowrap}
+.wstep.active .wlabel{color:var(--orange);font-weight:600}
+.wstep.done .wlabel{color:var(--orange)}
+.wizard-body{background:var(--white);border:1px solid var(--border2);border-radius:var(--r-lg);padding:28px 30px;box-shadow:var(--shadow)}
+.wizard-heading{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.wizard-sub{font-size:13px;color:var(--text3);margin-bottom:22px}
+.wizard-nav{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:18px;border-top:1px solid var(--border2)}
+.skill-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.skill-opt{border:2px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .15s;background:var(--white)}
+.skill-opt:hover{border-color:rgba(240,106,0,.4);background:var(--orange-lt)}
+.skill-opt.sel{border-color:var(--orange);background:var(--orange-lt)}
+.skill-opt-name{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.skill-opt-desc{font-size:11px;color:var(--text3)}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat-opt{border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;cursor:pointer;transition:all .15s;background:var(--white);display:flex;align-items:flex-start;gap:10px}
+.cat-opt:hover{border-color:rgba(240,106,0,.4)}
+.cat-opt.sel{border-color:var(--orange);background:var(--orange-lt)}
+.cat-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.cat-opt-name{font-size:13px;font-weight:600;color:var(--navy)}
+.cat-opt-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.subcat-wrap{padding:10px 12px;background:var(--cream);border-radius:7px;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;margin-bottom:8px}
+.subcat-tag{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;border:1.5px solid var(--border);cursor:pointer;background:var(--white);color:var(--text2);transition:all .13s}
+.subcat-tag.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+.count-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.count-opt{border:1.5px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;text-align:center;transition:all .15s;background:var(--white)}
+.count-opt:hover{border-color:rgba(240,106,0,.4)}
+.count-opt.sel{border-color:var(--orange);background:var(--orange-lt)}
+.count-icon{font-size:20px;margin-bottom:4px}
+.count-label{font-size:12px;font-weight:600;color:var(--navy)}
+.count-range{font-size:10px;color:var(--text3)}
+.plan-card{background:var(--white);border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow);transition:all .15s}
+.plan-card:hover{border-color:rgba(240,106,0,.3);box-shadow:var(--shadow-lg)}
+.plan-accent{height:5px}
+.plan-body{padding:16px 18px}
+.plan-name{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:3px}
+.plan-meta{font-size:11px;color:var(--text3)}
+.drill-row-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--cream);border-radius:6px;font-size:12px;margin-bottom:4px}
+.drill-row-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);width:16px}
+.drill-row-name{flex:1;color:var(--text2);font-weight:500}
+.drill-row-time{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace}
+.rating-star-btn{background:none;border:none;cursor:pointer;font-size:24px;color:var(--cream2);transition:color .1s;padding:2px;line-height:1}
+.rating-star-btn.on,.rating-star-btn:hover~button,.rating-star-btn:hover{color:#F5A623}
+.rating-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.rbl{font-size:11px;color:var(--text3);min-width:12px;text-align:right;font-family:'DM Mono',monospace}
+.rb-track{flex:1;background:var(--cream2);border-radius:20px;height:6px;overflow:hidden}
+.rb-fill{height:100%;border-radius:20px}
+.rb-count{font-size:11px;color:var(--text3);min-width:22px;font-family:'DM Mono',monospace}
+.exp-tags{display:flex;flex-wrap:wrap;gap:6px}
+.exp-tag{padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);font-size:11px;font-weight:500;cursor:pointer;background:var(--white);color:var(--text2);transition:all .13s}
+.exp-tag.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+.review-card{background:var(--cream);border-radius:var(--r);padding:13px 14px;margin-bottom:10px}
+.review-hdr{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.review-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.review-author{font-size:12px;font-weight:600;color:var(--navy)}
+.review-date{font-size:10px;color:var(--text3)}
+.review-text{font-size:13px;color:var(--text2);line-height:1.55}
+.review-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.chart-bars{display:flex;align-items:flex-end;gap:8px;height:100px;padding-top:8px;border-bottom:1px solid var(--border2);border-left:1px solid var(--border2)}
+.cbar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cbar{width:100%;border-radius:4px 4px 0 0;min-height:3px}
+.cbar-lbl{font-size:9px;color:var(--text3);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+.flagged-row{background:var(--red-lt);border:1px solid rgba(214,59,59,.2);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--border2)}
+.notif-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.notif-text{font-size:13px;color:var(--text);flex:1;line-height:1.5}
+.notif-time{font-size:10px;color:var(--text3);margin-top:2px}
+.notif-unread{background:rgba(240,106,0,.05)}
+.coach-note{background:var(--amber-lt);border:1px solid rgba(192,122,0,.2);border-radius:var(--r);padding:11px 13px;margin-bottom:8px}
+.coach-note-lbl{font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.coach-note-text{font-size:12px;color:var(--text2)}
+.attn-banner{background:linear-gradient(135deg,var(--red-lt),#FFF9F0);border:1px solid rgba(214,59,59,.2);border-radius:var(--r-lg);padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.attn-icon{width:36px;height:36px;background:var(--red-lt);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--red);font-size:18px;flex-shrink:0}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border2);margin-bottom:20px;overflow-x:auto}
+.tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap}
+.tab.active{color:var(--orange);border-bottom-color:var(--orange)}
+.tab:hover:not(.active){color:var(--text)}
+.divider{border:none;border-top:1px solid var(--border2);margin:16px 0}
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--navy)}
+.page-sub{font-size:13px;color:var(--text3);margin-top:3px}
+.page-hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.sec-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:18px}
+.search-wrap{position:relative;flex:1;min-width:160px}
+.search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none}
+.search-wrap input{padding-left:32px}
+.filter-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.save-bar{position:fixed;bottom:0;left:220px;right:0;background:var(--white);border-top:1px solid var(--border2);padding:10px 28px;display:flex;align-items:center;gap:12px;z-index:100;font-size:12px}
+.save-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.queue-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--white);border:1px solid var(--border2);border-radius:var(--r);margin-bottom:8px;box-shadow:var(--shadow);flex-wrap:wrap}
+.qpriority{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.hidden{display:none!important}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--cream2);border-radius:3px}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">HoopIQ</div>
+    <div class="sb-logo-sub">Practice Platform</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">Main</div>
+    <button class="sb-item active" onclick="go('dashboard')"><i class="ti ti-layout-dashboard"></i>Dashboard</button>
+    <button class="sb-item" onclick="go('questionnaire')"><i class="ti ti-clipboard-list"></i>Questionnaire</button>
+    <button class="sb-item" onclick="go('drills')"><i class="ti ti-database"></i>Drill Library</button>
+    <button class="sb-item" onclick="go('plans')"><i class="ti ti-calendar-event"></i>Practice Plans</button>
+    <div class="sb-section">Coaching</div>
+    <button class="sb-item" onclick="go('coaching')"><i class="ti ti-chart-bar"></i>Coaching View <span class="sb-badge">3</span></button>
+    <button class="sb-item" onclick="go('ratings')"><i class="ti ti-star"></i>Ratings &amp; Feedback</button>
+    <div class="sb-section">Admin</div>
+    <button class="sb-item" onclick="go('admin')"><i class="ti ti-shield-check"></i>Admin Queue <span class="sb-badge">2</span></button>
+    <button class="sb-item" onclick="go('notifications')"><i class="ti ti-bell"></i>Notifications <span class="sb-badge">5</span></button>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar">CJ</div>
+      <div><div class="sb-username">Coach Johnson</div><div class="sb-role">Coach · Admin</div></div>
+    </div>
+  </div>
+</nav>
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title" id="topbar-title">Dashboard</div>
+  <div class="topbar-spacer"></div>
+  <button class="topbar-btn" onclick="go('questionnaire')"><i class="ti ti-plus"></i>New plan</button>
+  <div class="notif-rel"><button class="topbar-btn" onclick="go('notifications')"><i class="ti ti-bell"></i></button><div class="notif-dot"></div></div>
+</div>
 
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-hdr">
+    <div><div class="page-title">Coaching Dashboard</div><div class="page-sub">12 players assigned — 3 need attention</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" onclick="go('questionnaire')"><i class="ti ti-clipboard-list"></i>New questionnaire</button>
+      <button class="btn btn-primary btn-sm"><i class="ti ti-user-plus"></i>Add player</button>
+    </div>
+  </div>
+  <div class="attn-banner">
+    <div class="attn-icon"><i class="ti ti-alert-triangle"></i></div>
+    <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--red)">3 players inactive 7+ days</div><div style="font-size:12px;color:var(--text3)">Marcus T., Devon W., Amir J. haven't logged a session recently</div></div>
+    <button class="btn btn-sm btn-danger">View players</button>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label"><i class="ti ti-users" style="font-size:13px"></i>Players</div><div class="stat-value">12</div><div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:12px"></i>2 added this month</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="ti ti-clipboard-list" style="font-size:13px"></i>Sessions this week</div><div class="stat-value" style="color:var(--orange)">34</div><div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:12px"></i>+18% vs last week</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="ti ti-ball-basketball" style="font-size:13px"></i>Avg make %</div><div class="stat-value" style="color:var(--green)">64%</div><div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:12px"></i>+3pts this month</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="ti ti-calendar-check" style="font-size:13px"></i>Plans completed</div><div class="stat-value" style="color:var(--blue)">8</div><div class="stat-trend trend-dn"><i class="ti ti-trending-down" style="font-size:12px"></i>67% completion rate</div></div>
+  </div>
+  <div class="grid2" style="gap:18px">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="sec-label" style="margin:0">Player Roster</div>
+        <select style="width:auto;font-size:11px;padding:5px 9px"><option>All groups</option><option>Varsity</option><option>JV</option></select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Player</th><th>Level</th><th>Last session</th><th>Make %</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0">JK</div><div><div style="font-weight:500;font-size:12px">James K.</div><div style="font-size:10px;color:var(--text3)">PG · Varsity</div></div></div></td><td><span class="badge b-orange">Advanced</span></td><td style="font-size:12px">Today</td><td style="font-weight:600;color:var(--green)">72%</td><td><span class="sdot dot-active"></span></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0">AL</div><div><div style="font-weight:500;font-size:12px">Aisha L.</div><div style="font-size:10px;color:var(--text3)">SG · Varsity</div></div></div></td><td><span class="badge b-blue">Intermediate</span></td><td style="font-size:12px">Yesterday</td><td style="font-weight:600;color:var(--green)">68%</td><td><span class="sdot dot-active"></span></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0">MT</div><div><div style="font-weight:500;font-size:12px">Marcus T.</div><div style="font-size:10px;color:var(--text3)">SF · JV</div></div></div></td><td><span class="badge b-green">Beginner</span></td><td style="font-size:12px;color:var(--red)">10 days ago</td><td style="font-weight:600;color:var(--amber)">51%</td><td><span class="sdot dot-inactive"></span></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0">DW</div><div><div style="font-weight:500;font-size:12px">Devon W.</div><div style="font-size:10px;color:var(--text3)">PF · Varsity</div></div></div></td><td><span class="badge b-purple">Elite</span></td><td style="font-size:12px;color:var(--amber)">8 days ago</td><td style="font-weight:600;color:var(--green)">79%</td><td><span class="sdot dot-idle"></span></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0">RC</div><div><div style="font-weight:500;font-size:12px">Riley C.</div><div style="font-size:10px;color:var(--text3)">C · JV</div></div></div></td><td><span class="badge b-orange">Advanced</span></td><td style="font-size:12px">2 days ago</td><td style="font-weight:600;color:var(--green)">66%</td><td><span class="sdot dot-active"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%">View all 12 players</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">Recent Activity</div><div class="card-sub">Across all assigned players</div></div><button class="icon-btn"><i class="ti ti-filter"></i></button></div>
+        <div class="feed-item"><div class="feed-dot" style="background:var(--green)"></div><div style="flex:1"><div class="feed-name">James K. completed a plan</div><div class="feed-desc">Morning Shooting Workout — 45 min</div></div><div class="feed-time">2m ago</div></div>
+        <div class="feed-item"><div class="feed-dot" style="background:var(--blue)"></div><div style="flex:1"><div class="feed-name">Aisha L. logged a session</div><div class="feed-desc">Mid-Range Pull-Up — 72% makes</div></div><div class="feed-time">1h ago</div></div>
+        <div class="feed-item"><div class="feed-dot" style="background:var(--orange)"></div><div style="flex:1"><div class="feed-name">Riley C. completed questionnaire</div><div class="feed-desc">Plan generated: 3PT Specialist</div></div><div class="feed-time">3h ago</div></div>
+        <div class="feed-item"><div class="feed-dot" style="background:var(--purple)"></div><div style="flex:1"><div class="feed-name">Devon W. rated a drill</div><div class="feed-desc">Corner 3-Point Series ★★★★★</div></div><div class="feed-time">5h ago</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Performance by Category</div></div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:500">Shooting</span><span style="color:var(--text3)">72%</span></div><div class="progress-bar"><div class="progress-fill pf-green" style="width:72%"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:500">Ball Handling</span><span style="color:var(--text3)">61%</span></div><div class="progress-bar"><div class="progress-fill pf-blue" style="width:61%"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:500">Defense</span><span style="color:var(--text3)">54%</span></div><div class="progress-bar"><div class="progress-fill" style="width:54%"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:500">Conditioning</span><span style="color:var(--text3)">48%</span></div><div class="progress-bar"><div class="progress-fill pf-purple" style="width:48%"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTIONNAIRE -->
+<div class="page" id="page-questionnaire">
+  <div class="page-hdr"><div><div class="page-title">Practice Plan Questionnaire</div><div class="page-sub">Answer 6 questions to get a personalized, drill-matched practice plan</div></div></div>
+  <div class="wizard-wrap">
+    <div class="wizard-progress">
+      <div class="wstep done" id="ws-1"><div class="wcircle"><i class="ti ti-check" style="font-size:11px"></i></div><div class="wlabel">Profile</div></div>
+      <div class="wstep done" id="ws-2"><div class="wcircle"><i class="ti ti-check" style="font-size:11px"></i></div><div class="wlabel">Skill</div></div>
+      <div class="wstep active" id="ws-3"><div class="wcircle">3</div><div class="wlabel">Session</div></div>
+      <div class="wstep" id="ws-4"><div class="wcircle">4</div><div class="wlabel">Focus</div></div>
+      <div class="wstep" id="ws-5"><div class="wcircle">5</div><div class="wlabel">Drills</div></div>
+      <div class="wstep" id="ws-6"><div class="wcircle">6</div><div class="wlabel">Plan</div></div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="wizard-body hidden" id="wstep-1">
+      <div class="wizard-heading">Player profile</div>
+      <div class="wizard-sub">Tell us about the player this plan is for</div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Player name</label><input type="text" value="James K." placeholder="Full name"></div>
+        <div class="fg"><label class="fl">Age group</label><select><option>U8</option><option>U10</option><option>U12</option><option>U14</option><option>U16</option><option selected>U18</option><option>Adult</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Assign to player profile (optional)</label><select><option value="">— Select saved player —</option><option>James K.</option><option>Aisha L.</option><option>Marcus T.</option></select></div>
+      <div class="wizard-nav">
+        <span></span>
+        <span style="font-size:12px;color:var(--text3)">Step 1 of 6</span>
+        <button class="btn btn-primary" onclick="wizardGo(2)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="wizard-body hidden" id="wstep-2">
+      <div class="wizard-heading">Skill level</div>
+      <div class="wizard-sub">This filters which drills are surfaced in Step 5</div>
+      <div class="skill-opts">
+        <div class="skill-opt" onclick="selectSkill(this)"><div class="skill-opt-name">Beginner</div><div class="skill-opt-desc">New to structured practice, building fundamentals</div></div>
+        <div class="skill-opt" onclick="selectSkill(this)"><div class="skill-opt-name">Intermediate</div><div class="skill-opt-desc">Comfortable with basics, working on consistency</div></div>
+        <div class="skill-opt sel" onclick="selectSkill(this)"><div class="skill-opt-name">Advanced</div><div class="skill-opt-desc">Solid fundamentals, refining technique under pressure</div></div>
+        <div class="skill-opt" onclick="selectSkill(this)"><div class="skill-opt-name">Elite</div><div class="skill-opt-desc">High-level player preparing for top competition</div></div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn" onclick="wizardGo(1)"><i class="ti ti-arrow-left"></i>Back</button>
+        <span style="font-size:12px;color:var(--text3)">Step 2 of 6</span>
+        <button class="btn btn-primary" onclick="wizardGo(3)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="wizard-body" id="wstep-3">
+      <div class="wizard-heading">Session setup</div>
+      <div class="wizard-sub">How many players and how long is today's session?</div>
+      <div class="fg">
+        <label class="fl">Number of players</label>
+        <div class="count-opts">
+          <div class="count-opt sel" onclick="selectCount(this)"><div class="count-icon">🏀</div><div class="count-label">Individual</div><div class="count-range">Just me</div></div>
+          <div class="count-opt" onclick="selectCount(this)"><div class="count-icon">👥</div><div class="count-label">Small group</div><div class="count-range">2–5 players</div></div>
+          <div class="count-opt" onclick="selectCount(this)"><div class="count-icon">🏟</div><div class="count-label">Team</div><div class="count-range">6–15 players</div></div>
+          <div class="count-opt" onclick="selectCount(this)"><div class="count-icon">🎽</div><div class="count-label">Large group</div><div class="count-range">16+ players</div></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Session duration (minutes)</label><input type="number" value="45" min="15" max="180"><div style="font-size:11px;color:var(--text3);margin-top:4px">Drills timed to fit with warm-up and cool-down</div></div>
+        <div class="fg"><label class="fl">Assign to player (optional)</label><select><option value="">— Select player —</option><option>James K.</option><option>Aisha L.</option><option>Marcus T.</option><option>Devon W.</option></select></div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn" onclick="wizardGo(2)"><i class="ti ti-arrow-left"></i>Back</button>
+        <span style="font-size:12px;color:var(--text3)">Step 3 of 6</span>
+        <button class="btn btn-primary" onclick="wizardGo(4)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="wizard-body hidden" id="wstep-4">
+      <div class="wizard-heading">Focus areas</div>
+      <div class="wizard-sub">Select categories and sub-skills — these drive which drills appear in Step 5</div>
+      <div class="fg">
+        <label class="fl">Categories</label>
+        <div class="cat-grid">
+          <div class="cat-opt sel" onclick="toggleCat(this,'sc-shooting')"><div class="cat-icon" style="background:var(--orange-lt)">🏀</div><div><div class="cat-opt-name">Shooting</div><div class="cat-opt-sub">Form, 3PT, mid-range, FT</div></div></div>
+          <div class="cat-opt" onclick="toggleCat(this,'sc-bh')"><div class="cat-icon" style="background:var(--blue-lt)">🤲</div><div><div class="cat-opt-name">Ball Handling</div><div class="cat-opt-sub">Dribbling, crossovers, speed</div></div></div>
+          <div class="cat-opt" onclick="toggleCat(this,'sc-def')"><div class="cat-icon" style="background:var(--red-lt)">🛡</div><div><div class="cat-opt-name">Defense</div><div class="cat-opt-sub">On-ball, help, rotations</div></div></div>
+          <div class="cat-opt" onclick="toggleCat(this,'sc-cond')"><div class="cat-icon" style="background:var(--green-lt)">⚡</div><div><div class="cat-opt-name">Conditioning</div><div class="cat-opt-sub">Speed, agility, endurance</div></div></div>
+          <div class="cat-opt" onclick="toggleCat(this,'sc-pass')"><div class="cat-icon" style="background:var(--purple-lt)">✋</div><div><div class="cat-opt-name">Passing</div><div class="cat-opt-sub">Fundamentals, reads, vision</div></div></div>
+          <div class="cat-opt" onclick="toggleCat(this,'sc-team')"><div class="cat-icon" style="background:var(--amber-lt)">🤝</div><div><div class="cat-opt-name">Team Concepts</div><div class="cat-opt-sub">Motion, spacing, sets</div></div></div>
+        </div>
+      </div>
+      <div id="sc-shooting" class="subcat-wrap">
+        <div style="font-size:10px;font-weight:700;color:var(--orange);width:100%;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Shooting sub-categories</div>
+        <span class="subcat-tag sel" onclick="this.classList.toggle('sel')">Form shooting</span>
+        <span class="subcat-tag sel" onclick="this.classList.toggle('sel')">3-Point</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Mid-range</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Free throws</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Finishing at rim</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Catch &amp; shoot</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Pull-up jumper</span>
+      </div>
+      <div id="sc-bh" class="subcat-wrap hidden">
+        <div style="font-size:10px;font-weight:700;color:var(--blue);width:100%;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Ball handling sub-categories</div>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Stationary dribbling</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Crossover</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Speed dribble</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Left hand</span>
+      </div>
+      <div id="sc-def" class="subcat-wrap hidden">
+        <div style="font-size:10px;font-weight:700;color:var(--red);width:100%;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Defense sub-categories</div>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">On-ball defense</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Help defense</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Closeouts</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Box-outs</span>
+      </div>
+      <div id="sc-cond" class="subcat-wrap hidden">
+        <div style="font-size:10px;font-weight:700;color:var(--green);width:100%;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Conditioning sub-categories</div>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Sprints</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Agility ladders</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Footwork</span>
+      </div>
+      <div id="sc-pass" class="subcat-wrap hidden">
+        <div style="font-size:10px;font-weight:700;color:var(--purple);width:100%;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Passing sub-categories</div>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Chest pass</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Skip pass</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Outlet pass</span>
+      </div>
+      <div id="sc-team" class="subcat-wrap hidden">
+        <div style="font-size:10px;font-weight:700;color:var(--amber);width:100%;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Team concepts sub-categories</div>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Motion offense</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Spacing</span>
+        <span class="subcat-tag" onclick="this.classList.toggle('sel')">Set plays</span>
+      </div>
+      <div class="fg" style="margin-top:14px">
+        <label class="fl">Areas for improvement</label>
+        <div id="imp-tags-wrap" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--cream);min-height:42px">
+          <span class="imp-tag" style="display:inline-flex;align-items:center;gap:4px;background:var(--navy);color:#fff;font-size:11px;padding:3px 9px;border-radius:20px">Left-hand finish <span onclick="this.parentElement.remove()" style="cursor:pointer;opacity:.6">×</span></span>
+          <span class="imp-tag" style="display:inline-flex;align-items:center;gap:4px;background:var(--navy);color:#fff;font-size:11px;padding:3px 9px;border-radius:20px">Footwork on catch <span onclick="this.parentElement.remove()" style="cursor:pointer;opacity:.6">×</span></span>
+          <input id="imp-input" type="text" placeholder="Type improvement area and press Enter…" style="border:none;background:transparent;outline:none;font-size:12px;flex:1;min-width:120px;padding:0" onkeydown="if(event.key==='Enter'&&this.value.trim()){addImpTag(this.value.trim());this.value=''}">
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Tags are matched to drill categories when generating your plan</div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn" onclick="wizardGo(3)"><i class="ti ti-arrow-left"></i>Back</button>
+        <span style="font-size:12px;color:var(--text3)">Step 4 of 6</span>
+        <button class="btn btn-primary" onclick="wizardGo(5)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="wizard-body hidden" id="wstep-5">
+      <div class="wizard-heading">Select your drills</div>
+      <div class="wizard-sub">Drills matched to your profile — the drill library is now unlocked. Favorite the ones you want in your plan.</div>
+      <div style="background:var(--orange-lt);border:1px solid rgba(240,106,0,.2);border-radius:7px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--orange-dk);display:flex;align-items:center;gap:7px"><i class="ti ti-lock-open" style="font-size:15px"></i>Drill library unlocked based on your answers — showing Advanced · Individual · Shooting results</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <div class="search-wrap"><i class="ti ti-search"></i><input type="text" placeholder="Search drills…"></div>
+        <select style="width:auto"><option>All levels</option><option>Beginner</option><option>Intermediate</option><option selected>Advanced</option></select>
+        <select style="width:auto"><option>All categories</option><option selected>Shooting</option></select>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--orange);margin-bottom:10px;display:flex;align-items:center;gap:5px"><i class="ti ti-star-filled"></i>Your favorites shown first</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="drill-card fav">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="drill-name">Corner 3-Point Series</div>
+            <button class="icon-btn" style="color:#F5A623;border-color:#F5A623" onclick="toggleFav(this)"><i class="ti ti-star-filled"></i></button>
+          </div>
+          <div class="drill-desc">Catch &amp; shoot from both corners and both wings. Partner feeds the ball, shooter rotates through 5 spots.</div>
+          <div class="drill-tags"><span class="badge b-orange">Shooting</span><span class="badge b-gray">3-Point</span><span class="badge b-blue">Intermediate</span></div>
+          <div class="drill-footer">
+            <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>15 min</div><div class="dmi"><i class="ti ti-users" style="font-size:12px"></i>Partner</div></div>
+            <div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:13px"></i>4.6 <span style="color:var(--text3)">(48)</span></div>
+          </div>
+        </div>
+        <div class="drill-card fav">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="drill-name">Mid-Range Pull-Up Ladder</div>
+            <button class="icon-btn" style="color:#F5A623;border-color:#F5A623" onclick="toggleFav(this)"><i class="ti ti-star-filled"></i></button>
+          </div>
+          <div class="drill-desc">Dribble to elbow and pull up — both sides, 3 rounds. Focus on balance and quick release.</div>
+          <div class="drill-tags"><span class="badge b-orange">Shooting</span><span class="badge b-gray">Mid-range</span><span class="badge b-blue">Intermediate</span></div>
+          <div class="drill-footer">
+            <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>12 min</div><div class="dmi"><i class="ti ti-user" style="font-size:12px"></i>Individual</div></div>
+            <div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:13px"></i>4.8 <span style="color:var(--text3)">(62)</span></div>
+          </div>
+        </div>
+        <div class="drill-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="drill-name">Elbow Form Shots</div>
+            <button class="icon-btn" onclick="toggleFav(this)"><i class="ti ti-star"></i></button>
+          </div>
+          <div class="drill-desc">Stationary shooting from the elbow — focus on BEEF technique and consistent follow-through height.</div>
+          <div class="drill-tags"><span class="badge b-orange">Shooting</span><span class="badge b-gray">Form</span><span class="badge b-green">Beginner</span></div>
+          <div class="drill-footer">
+            <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>10 min</div><div class="dmi"><i class="ti ti-user" style="font-size:12px"></i>Individual</div></div>
+            <div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:13px"></i>4.2 <span style="color:var(--text3)">(31)</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:10px;display:flex;align-items:center;gap:5px"><i class="ti ti-info-circle" style="font-size:13px"></i>Select at least 3 drills (favorite them) before continuing</div>
+      <div class="wizard-nav">
+        <button class="btn" onclick="wizardGo(4)"><i class="ti ti-arrow-left"></i>Back</button>
+        <span style="font-size:12px;color:var(--text3)">Step 5 of 6</span>
+        <button class="btn btn-primary" onclick="wizardGo(6)">Generate plan <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="wizard-body hidden" id="wstep-6">
+      <div style="text-align:center;margin-bottom:22px">
+        <div style="font-size:30px;margin-bottom:8px">🏀</div>
+        <div class="wizard-heading" style="margin-bottom:4px">Your plan is ready</div>
+        <div class="wizard-sub" style="margin-bottom:0">45 min · 4 drills · Advanced · Individual</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:6px 10px;background:var(--green-lt);border-radius:6px;color:#0E6B3C">Warm-up — 8 min</div>
+        <div class="drill-row-item"><div class="drill-row-num">1</div><div class="drill-row-name">Elbow Form Shots</div><span class="badge b-green">Warm-up</span><div class="drill-row-time">8m</div><div style="display:flex;gap:3px;margin-left:6px"><button class="icon-btn" style="padding:3px 5px" onclick="moveRow(this,-1)"><i class="ti ti-arrow-up" style="font-size:11px"></i></button><button class="icon-btn" style="padding:3px 5px" onclick="moveRow(this,1)"><i class="ti ti-arrow-down" style="font-size:11px"></i></button><button class="icon-btn btn-danger" style="padding:3px 5px" onclick="this.closest('.drill-row-item').remove()"><i class="ti ti-x" style="font-size:11px"></i></button></div></div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:6px 10px;background:var(--orange-lt);border-radius:6px;color:var(--orange-dk)">Main work — 27 min</div>
+        <div class="drill-row-item"><div class="drill-row-num">2</div><div class="drill-row-name">Mid-Range Pull-Up Ladder</div><span class="badge b-orange">Main</span><div class="drill-row-time">12m</div><div style="display:flex;gap:3px;margin-left:6px"><button class="icon-btn" style="padding:3px 5px" onclick="moveRow(this,-1)"><i class="ti ti-arrow-up" style="font-size:11px"></i></button><button class="icon-btn" style="padding:3px 5px" onclick="moveRow(this,1)"><i class="ti ti-arrow-down" style="font-size:11px"></i></button><button class="icon-btn btn-danger" style="padding:3px 5px" onclick="this.closest('.drill-row-item').remove()"><i class="ti ti-x" style="font-size:11px"></i></button></div></div>
+        <div class="drill-row-item"><div class="drill-row-num">3</div><div class="drill-row-name">Corner 3-Point Series</div><span class="badge b-orange">Main</span><div class="drill-row-time">15m</div><div style="display:flex;gap:3px;margin-left:6px"><button class="icon-btn" style="padding:3px 5px" onclick="moveRow(this,-1)"><i class="ti ti-arrow-up" style="font-size:11px"></i></button><button class="icon-btn" style="padding:3px 5px" onclick="moveRow(this,1)"><i class="ti ti-arrow-down" style="font-size:11px"></i></button><button class="icon-btn btn-danger" style="padding:3px 5px" onclick="this.closest('.drill-row-item').remove()"><i class="ti ti-x" style="font-size:11px"></i></button></div></div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:6px 10px;background:var(--blue-lt);border-radius:6px;color:#1840A0">Cool-down — 10 min</div>
+        <div class="drill-row-item" style="background:var(--blue-lt)"><div class="drill-row-num">4</div><div class="drill-row-name">Free Throw Routine</div><span class="badge b-blue">Cool-down</span><div class="drill-row-time">10m</div><button class="icon-btn btn-danger" style="padding:3px 5px;margin-left:auto" onclick="this.closest('.drill-row-item').remove()"><i class="ti ti-x" style="font-size:11px"></i></button></div>
+      </div>
+      <div class="fg"><label class="fl">Plan name</label><input type="text" value="Morning Shooting — James K."></div>
+      <div class="fg"><label class="fl">Notes (optional)</label><textarea placeholder="Any coaching notes for this plan…" style="min-height:56px"></textarea></div>
+      <div class="wizard-nav">
+        <button class="btn" onclick="wizardGo(5)"><i class="ti ti-arrow-left"></i>Back</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn"><i class="ti ti-file-type-pdf"></i>Export PDF</button>
+          <button class="btn btn-primary" onclick="go('plans');showToast('Plan saved successfully!')"><i class="ti ti-check"></i>Save plan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- DRILL LIBRARY -->
+<div class="page" id="page-drills">
+  <div class="page-hdr">
+    <div><div class="page-title">Drill Library</div><div class="page-sub">Browse, favorite, rate, and manage drills</div></div>
+    <button class="btn btn-primary" onclick="openModal('modal-add-drill')"><i class="ti ti-plus"></i>Add drill</button>
+  </div>
+  <div class="filter-bar">
+    <div class="search-wrap"><i class="ti ti-search"></i><input type="text" placeholder="Search drills…"></div>
+    <select style="width:auto"><option>All categories</option><option>Shooting</option><option>Ball Handling</option><option>Defense</option><option>Conditioning</option></select>
+    <select style="width:auto"><option>All levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option><option>Elite</option></select>
+    <select style="width:auto"><option>All formats</option><option>Individual</option><option>Partner</option><option>Small group</option><option>Team</option></select>
+    <select style="width:auto"><option>All ratings</option><option>4+ stars</option><option>3+ stars</option></select>
+  </div>
+  <div class="grid3">
+    <div class="drill-card fav" onclick="openModal('modal-drill-detail')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="drill-name">Corner 3-Point Series</div>
+        <button class="icon-btn" style="color:#F5A623;border-color:#F5A623" onclick="event.stopPropagation();toggleFav(this)"><i class="ti ti-star-filled"></i></button>
+      </div>
+      <div class="drill-desc">Catch &amp; shoot from both corners and wings with a partner feeding. Rotate through 5 spots, 5 attempts each.</div>
+      <div class="drill-tags"><span class="badge b-orange">Shooting</span><span class="badge b-gray">3-Point</span><span class="badge b-blue">Intermediate</span></div>
+      <div class="drill-footer">
+        <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>15 min</div><div class="dmi"><i class="ti ti-users" style="font-size:12px"></i>Partner</div></div>
+        <div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:13px"></i>4.6 <span style="color:var(--text3)">(48)</span></div>
+      </div>
+    </div>
+    <div class="drill-card" onclick="openModal('modal-drill-detail')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="drill-name">Elbow Form Shots</div>
+        <button class="icon-btn" onclick="event.stopPropagation();toggleFav(this)"><i class="ti ti-star"></i></button>
+      </div>
+      <div class="drill-desc">Stationary shooting from the elbow — BEEF technique, consistent release point and follow-through height.</div>
+      <div class="drill-tags"><span class="badge b-orange">Shooting</span><span class="badge b-gray">Form</span><span class="badge b-green">Beginner</span></div>
+      <div class="drill-footer">
+        <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>10 min</div><div class="dmi"><i class="ti ti-user" style="font-size:12px"></i>Individual</div></div>
+        <div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:13px"></i>4.2 <span style="color:var(--text3)">(31)</span></div>
+      </div>
+    </div>
+    <div class="drill-card fav" onclick="openModal('modal-drill-detail')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="drill-name">Mid-Range Pull-Up Ladder</div>
+        <button class="icon-btn" style="color:#F5A623;border-color:#F5A623" onclick="event.stopPropagation();toggleFav(this)"><i class="ti ti-star-filled"></i></button>
+      </div>
+      <div class="drill-desc">Dribble to elbow, pull up — alternate sides, 3 rounds of 10 reps. Work on balance and quick release.</div>
+      <div class="drill-tags"><span class="badge b-orange">Shooting</span><span class="badge b-gray">Mid-range</span><span class="badge b-blue">Intermediate</span></div>
+      <div class="drill-footer">
+        <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>12 min</div><div class="dmi"><i class="ti ti-user" style="font-size:12px"></i>Individual</div></div>
+        <div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:13px"></i>4.8 <span style="color:var(--text3)">(62)</span></div>
+      </div>
+    </div>
+    <div class="drill-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="drill-name">Box-Out &amp; Rebound Circuit</div>
+        <button class="icon-btn" onclick="toggleFav(this)"><i class="ti ti-star"></i></button>
+      </div>
+      <div class="drill-desc">3-player rotation: shooter, defender, rebounder. Box out on every shot. Builds contact tolerance and positioning.</div>
+      <div class="drill-tags"><span class="badge b-gray">Rebounding</span><span class="badge b-red">Defense</span><span class="badge b-orange">Advanced</span></div>
+      <div class="drill-footer">
+        <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>18 min</div><div class="dmi"><i class="ti ti-users" style="font-size:12px"></i>Small group</div></div>
+        <div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:13px"></i>3.9 <span style="color:var(--text3)">(14)</span></div>
+      </div>
+    </div>
+    <div class="drill-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="drill-name">Cone Dribble Gauntlet</div>
+        <button class="icon-btn" onclick="toggleFav(this)"><i class="ti ti-star"></i></button>
+      </div>
+      <div class="drill-desc">Weave through 8 cones alternating hands. Time each run, beat your best. Great for left-hand development.</div>
+      <div class="drill-tags"><span class="badge b-blue">Ball Handling</span><span class="badge b-gray">Speed</span><span class="badge b-green">Beginner</span></div>
+      <div class="drill-footer">
+        <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>8 min</div><div class="dmi"><i class="ti ti-user" style="font-size:12px"></i>Individual</div></div>
+        <div class="rating-mini" style="color:var(--text3);font-size:11px">Not yet rated</div>
+      </div>
+    </div>
+    <div class="drill-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="drill-name">Closeout Slide Drill</div>
+        <button class="icon-btn" onclick="toggleFav(this)"><i class="ti ti-star"></i></button>
+      </div>
+      <div class="drill-desc">Defender sprints from under the basket to closeout the shooter. Practice controlled hands-up technique, no fouling.</div>
+      <div class="drill-tags"><span class="badge b-red">Defense</span><span class="badge b-gray">On-ball</span><span class="badge b-blue">Intermediate</span></div>
+      <div class="drill-footer">
+        <div class="drill-meta"><div class="dmi"><i class="ti ti-clock" style="font-size:12px"></i>10 min</div><div class="dmi"><i class="ti ti-users" style="font-size:12px"></i>Partner</div></div>
+        <div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:13px"></i>4.1 <span style="color:var(--text3)">(8)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE PLANS -->
+<div class="page" id="page-plans">
+  <div class="page-hdr">
+    <div><div class="page-title">Practice Plans</div><div class="page-sub">Saved, assigned, and completed plans</div></div>
+    <button class="btn btn-primary" onclick="go('questionnaire')"><i class="ti ti-plus"></i>New plan</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active">All plans</button>
+    <button class="tab">Assigned to players</button>
+    <button class="tab">Completed</button>
+    <button class="tab">Drafts</button>
+  </div>
+  <div class="grid3">
+    <div class="plan-card">
+      <div class="plan-accent" style="background:var(--orange)"></div>
+      <div class="plan-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px"><div class="plan-name">Morning Shooting Workout</div><span class="badge b-green">Completed</span></div>
+        <div class="plan-meta">45 min · 4 drills · James K. · Advanced</div>
+        <div style="margin-top:10px">
+          <div class="drill-row-item"><div class="drill-row-num">1</div><div class="drill-row-name">Elbow Form Shots</div><div class="drill-row-time">8m</div></div>
+          <div class="drill-row-item"><div class="drill-row-num">2</div><div class="drill-row-name">Mid-Range Pull-Up</div><div class="drill-row-time">12m</div></div>
+          <div class="drill-row-item"><div class="drill-row-num">3</div><div class="drill-row-name">Corner 3-Point Series</div><div class="drill-row-time">15m</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border2)">
+          <div style="font-size:11px;color:var(--text3)">Completed Jun 28</div>
+          <div style="display:flex;gap:6px"><button class="icon-btn"><i class="ti ti-copy" style="font-size:13px"></i></button><button class="icon-btn"><i class="ti ti-file-type-pdf" style="font-size:13px"></i></button><button class="icon-btn"><i class="ti ti-share" style="font-size:13px"></i></button></div>
+        </div>
+      </div>
+    </div>
+    <div class="plan-card">
+      <div class="plan-accent" style="background:var(--blue)"></div>
+      <div class="plan-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px"><div class="plan-name">3PT Specialist Session</div><span class="badge b-blue">In progress</span></div>
+        <div class="plan-meta">55 min · 3 drills · Aisha L. · Advanced</div>
+        <div style="margin-top:10px">
+          <div class="drill-row-item"><div class="drill-row-num">1</div><div class="drill-row-name">Corner 3-Point Series</div><div class="drill-row-time">15m</div></div>
+          <div class="drill-row-item"><div class="drill-row-num">2</div><div class="drill-row-name">Catch &amp; Shoot 5 Spots</div><div class="drill-row-time">20m</div></div>
+        </div>
+        <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--text3)">Completion</span><span style="color:var(--blue);font-weight:600">67%</span></div><div class="progress-bar"><div class="progress-fill pf-blue" style="width:67%"></div></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border2)">
+          <div style="font-size:11px;color:var(--text3)">Assigned Jun 25</div>
+          <div style="display:flex;gap:6px"><button class="icon-btn"><i class="ti ti-pencil" style="font-size:13px"></i></button><button class="icon-btn"><i class="ti ti-copy" style="font-size:13px"></i></button></div>
+        </div>
+      </div>
+    </div>
+    <div class="plan-card">
+      <div class="plan-accent" style="background:var(--amber)"></div>
+      <div class="plan-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px"><div class="plan-name">Defense Fundamentals</div><span class="badge b-gray">Not started</span></div>
+        <div class="plan-meta">40 min · 3 drills · Marcus T. · Beginner</div>
+        <div style="margin-top:10px">
+          <div class="drill-row-item"><div class="drill-row-num">1</div><div class="drill-row-name">Closeout Slide Drill</div><div class="drill-row-time">10m</div></div>
+          <div class="drill-row-item"><div class="drill-row-num">2</div><div class="drill-row-name">Box-Out &amp; Rebound Circuit</div><div class="drill-row-time">18m</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border2)">
+          <div style="font-size:11px;color:var(--amber);font-weight:500">Assigned by coach</div>
+          <div style="display:flex;gap:6px"><button class="icon-btn"><i class="ti ti-share" style="font-size:13px"></i></button><button class="icon-btn"><i class="ti ti-pencil" style="font-size:13px"></i></button><button class="icon-btn btn-danger"><i class="ti ti-trash" style="font-size:13px"></i></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COACHING VIEW -->
+<div class="page" id="page-coaching">
+  <div class="page-hdr">
+    <div><div class="page-title">Coaching View</div><div class="page-sub">Drill performance, player insights, plan assignments, and coach notes</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm"><i class="ti ti-download"></i>Export report</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-assign-plan')"><i class="ti ti-calendar-plus"></i>Assign plan</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="coachTab('ct-drillperf',this)">Drill Performance</button>
+    <button class="tab" onclick="coachTab('ct-planstatus',this)">Plan Status</button>
+    <button class="tab" onclick="coachTab('ct-playerinsights',this)">Player Insights</button>
+    <button class="tab" onclick="coachTab('ct-coachnotes',this)">Coach Notes</button>
+  </div>
+
+  <!-- Drill Performance -->
+  <div id="ct-drillperf">
+    <div class="grid2" style="gap:18px;margin-bottom:20px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Top performing drills</div><span class="badge b-green">By avg rating</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--navy)">Mid-Range Pull-Up Ladder</div><div style="font-size:11px;color:var(--text3)">62 completions · Shooting</div></div><div style="display:flex;align-items:center;gap:4px;font-weight:700;color:var(--green)"><i class="ti ti-star-filled" style="color:#F5A623;font-size:14px"></i>4.8</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--navy)">Corner 3-Point Series</div><div style="font-size:11px;color:var(--text3)">48 completions · Shooting</div></div><div style="display:flex;align-items:center;gap:4px;font-weight:700;color:var(--green)"><i class="ti ti-star-filled" style="color:#F5A623;font-size:14px"></i>4.6</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--navy)">Elbow Form Shots</div><div style="font-size:11px;color:var(--text3)">31 completions · Shooting</div></div><div style="display:flex;align-items:center;gap:4px;font-weight:700;color:var(--green)"><i class="ti ti-star-filled" style="color:#F5A623;font-size:14px"></i>4.2</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--navy)">Closeout Slide Drill</div><div style="font-size:11px;color:var(--text3)">8 completions · Defense</div></div><div style="display:flex;align-items:center;gap:4px;font-weight:700;color:var(--amber)"><i class="ti ti-star-filled" style="color:#F5A623;font-size:14px"></i>4.1</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Completions by category</div></div>
+        <div class="chart-bars">
+          <div class="cbar-wrap"><div class="cbar" style="height:85%;background:var(--orange)"></div><div class="cbar-lbl">Shooting</div></div>
+          <div class="cbar-wrap"><div class="cbar" style="height:61%;background:var(--blue)"></div><div class="cbar-lbl">Ball Hdlg</div></div>
+          <div class="cbar-wrap"><div class="cbar" style="height:42%;background:var(--red)"></div><div class="cbar-lbl">Defense</div></div>
+          <div class="cbar-wrap"><div class="cbar" style="height:28%;background:var(--green)"></div><div class="cbar-lbl">Conditng</div></div>
+          <div class="cbar-wrap"><div class="cbar" style="height:20%;background:var(--purple)"></div><div class="cbar-lbl">Passing</div></div>
+          <div class="cbar-wrap"><div class="cbar" style="height:14%;background:var(--amber)"></div><div class="cbar-lbl">Team</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">All drill performance</div><button class="icon-btn"><i class="ti ti-filter"></i></button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Drill</th><th>Category</th><th>Completions</th><th>Avg make %</th><th>Avg score</th><th>Rating</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><span style="font-weight:500">Mid-Range Pull-Up Ladder</span></td><td><span class="badge b-orange">Shooting</span></td><td>62</td><td><span style="color:var(--green);font-weight:600">71%</span></td><td>8.2</td><td><div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:12px"></i>4.8</div></td><td><button class="icon-btn" title="Flag as priority for player"><i class="ti ti-flag" style="font-size:12px"></i></button></td></tr>
+            <tr><td><span style="font-weight:500">Corner 3-Point Series</span></td><td><span class="badge b-orange">Shooting</span></td><td>48</td><td><span style="color:var(--green);font-weight:600">63%</span></td><td>7.4</td><td><div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:12px"></i>4.6</div></td><td><button class="icon-btn"><i class="ti ti-flag" style="font-size:12px"></i></button></td></tr>
+            <tr><td><span style="font-weight:500">Box-Out &amp; Rebound Circuit</span></td><td><span class="badge b-red">Defense</span></td><td>14</td><td><span style="color:var(--amber);font-weight:600">54%</span></td><td>5.8</td><td><div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:12px"></i>3.9</div></td><td><button class="icon-btn"><i class="ti ti-flag" style="font-size:12px"></i></button></td></tr>
+            <tr><td><span style="font-weight:500">Closeout Slide Drill</span></td><td><span class="badge b-red">Defense</span></td><td>8</td><td><span style="color:var(--amber);font-weight:600">48%</span></td><td>5.1</td><td><div class="rating-mini"><i class="ti ti-star-filled" style="color:#F5A623;font-size:12px"></i>4.1</div></td><td><button class="icon-btn"><i class="ti ti-flag" style="font-size:12px"></i></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan Status -->
+  <div id="ct-planstatus" class="hidden">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Plan</th><th>Assigned to</th><th>Status</th><th>Completion</th><th>Assigned</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr><td><span style="font-weight:500">Morning Shooting Workout</span></td><td>James K.</td><td><span class="badge b-green">Completed</span></td><td>100%</td><td>Jun 20</td><td><div style="display:flex;gap:4px"><button class="icon-btn"><i class="ti ti-copy" style="font-size:12px"></i></button><button class="icon-btn"><i class="ti ti-file-type-pdf" style="font-size:12px"></i></button></div></td></tr>
+          <tr><td><span style="font-weight:500">3PT Specialist Session</span></td><td>Aisha L.</td><td><span class="badge b-blue">In progress</span></td><td><div style="display:flex;align-items:center;gap:6px"><div class="progress-bar" style="width:80px"><div class="progress-fill pf-blue" style="width:67%"></div></div><span style="font-size:11px">67%</span></div></td><td>Jun 25</td><td><button class="icon-btn"><i class="ti ti-pencil" style="font-size:12px"></i></button></td></tr>
+          <tr><td><span style="font-weight:500">Defense Fundamentals</span></td><td>Marcus T.</td><td><span class="badge b-gray">Not started</span></td><td>—</td><td>Jun 28</td><td><div style="display:flex;gap:4px"><button class="icon-btn"><i class="ti ti-send" style="font-size:12px"></i></button><button class="icon-btn btn-danger"><i class="ti ti-trash" style="font-size:12px"></i></button></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Player Insights -->
+  <div id="ct-playerinsights" class="hidden">
+    <div class="grid3">
+      <div class="player-card">
+        <div class="player-banner" style="background:#F06A0020;border-bottom:3px solid var(--orange)"><div class="player-avatar" style="background:var(--orange)">JK</div></div>
+        <div class="player-body">
+          <div style="display:flex;justify-content:space-between"><div class="player-name">James K.</div><span class="sdot dot-active" style="margin-top:6px"></span></div>
+          <div class="player-meta">PG · U18 · Advanced</div>
+          <div class="ps-stats">
+            <div class="ps-stat"><div class="ps-val" style="color:var(--green)">72%</div><div class="ps-lbl">Make %</div></div>
+            <div class="ps-stat"><div class="ps-val" style="color:var(--orange)">14</div><div class="ps-lbl">Sessions</div></div>
+            <div class="ps-stat"><div class="ps-val" style="color:var(--blue)">3</div><div class="ps-lbl">Plans</div></div>
+          </div>
+          <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--text3)">vs last week</span><span style="color:var(--green);font-weight:600">+4%</span></div><div class="progress-bar"><div class="progress-fill pf-green" style="width:72%"></div></div></div>
+          <button class="btn btn-sm btn-ghost" style="width:100%;margin-top:10px;justify-content:center" onclick="openModal('modal-assign-plan')"><i class="ti ti-calendar-plus"></i>Assign plan</button>
+        </div>
+      </div>
+      <div class="player-card">
+        <div class="player-banner" style="background:#2060D820;border-bottom:3px solid var(--blue)"><div class="player-avatar" style="background:var(--blue)">AL</div></div>
+        <div class="player-body">
+          <div style="display:flex;justify-content:space-between"><div class="player-name">Aisha L.</div><span class="sdot dot-active" style="margin-top:6px"></span></div>
+          <div class="player-meta">SG · U16 · Intermediate</div>
+          <div class="ps-stats">
+            <div class="ps-stat"><div class="ps-val" style="color:var(--green)">68%</div><div class="ps-lbl">Make %</div></div>
+            <div class="ps-stat"><div class="ps-val" style="color:var(--orange)">9</div><div class="ps-lbl">Sessions</div></div>
+            <div class="ps-stat"><div class="ps-val" style="color:var(--blue)">2</div><div class="ps-lbl">Plans</div></div>
+          </div>
+          <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--text3)">vs last week</span><span style="color:var(--green);font-weight:600">+1%</span></div><div class="progress-bar"><div class="progress-fill pf-blue" style="width:68%"></div></div></div>
+          <button class="btn btn-sm btn-ghost" style="width:100%;margin-top:10px;justify-content:center" onclick="openModal('modal-assign-plan')"><i class="ti ti-calendar-plus"></i>Assign plan</button>
+        </div>
+      </div>
+      <div class="player-card" style="border-color:rgba(214,59,59,.25)">
+        <div class="player-banner" style="background:#D63B3B20;border-bottom:3px solid var(--red)"><div class="player-avatar" style="background:var(--red)">MT</div></div>
+        <div class="player-body">
+          <div style="display:flex;justify-content:space-between"><div class="player-name">Marcus T.</div><span class="sdot dot-inactive" style="margin-top:6px"></span></div>
+          <div class="player-meta">SF · U14 · Beginner · Inactive 10d</div>
+          <div class="ps-stats">
+            <div class="ps-stat"><div class="ps-val" style="color:var(--amber)">51%</div><div class="ps-lbl">Make %</div></div>
+            <div class="ps-stat"><div class="ps-val" style="color:var(--orange)">3</div><div class="ps-lbl">Sessions</div></div>
+            <div class="ps-stat"><div class="ps-val" style="color:var(--blue)">1</div><div class="ps-lbl">Plans</div></div>
+          </div>
+          <button class="btn btn-sm btn-primary" style="width:100%;margin-top:12px;justify-content:center"><i class="ti ti-send"></i>Send reminder note</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coach Notes -->
+  <div id="ct-coachnotes" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text3)">Private notes — visible to coaches and admins only. Never shown to players.</div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-coach-note')"><i class="ti ti-plus"></i>Add note</button>
+    </div>
+    <div class="coach-note">
+      <div class="coach-note-lbl"><i class="ti ti-lock" style="font-size:12px"></i>Coach note · James K. · Corner 3-Point Series</div>
+      <div class="coach-note-text">James is rushing his footwork on the catch. Needs to set his feet before pulling the trigger. Suggest adding a verbal "ready" cue on the feed. Review at next individual session.</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px">Coach Johnson · Jun 28</div>
+    </div>
+    <div class="coach-note">
+      <div class="coach-note-lbl"><i class="ti ti-lock" style="font-size:12px"></i>Coach note · Aisha L. · General</div>
+      <div class="coach-note-text">Making great progress on 3PT form. Ready to move to off-dribble sets next cycle. Consider upgrading to Advanced-level drills in her next plan.</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px">Coach Johnson · Jun 26</div>
+    </div>
+    <div class="coach-note">
+      <div class="coach-note-lbl"><i class="ti ti-lock" style="font-size:12px"></i>Coach note · Marcus T. · General</div>
+      <div class="coach-note-text">Marcus has missed 3 scheduled sessions. Reach out to family. Adjust plan to shorter 20-min sessions to re-engage. Low-pressure drills only until he's back in rhythm.</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px">Coach Johnson · Jun 24</div>
+    </div>
+  </div>
+</div>
+
+<!-- RATINGS & FEEDBACK -->
+<div class="page" id="page-ratings">
+  <div class="page-hdr">
+    <div><div class="page-title">Ratings &amp; Feedback</div><div class="page-sub">Player ratings, comments, experience tag trends, and drill health</div></div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('modal-rate-drill')"><i class="ti ti-star"></i>Rate a drill</button>
+  </div>
+  <div class="grid2" style="gap:18px;margin-bottom:20px">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Corner 3-Point Series</div><div class="card-sub">48 ratings · Shooting · Intermediate</div></div>
+        <div style="text-align:right"><div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--navy)">4.6</div><div class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star" style="color:#F5A623;opacity:.4">★</span></div></div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="rating-bar-row"><div class="rbl">5</div><div class="rb-track"><div class="rb-fill" style="width:70%;background:var(--green);height:6px;border-radius:20px"></div></div><div class="rb-count">34</div></div>
+        <div class="rating-bar-row"><div class="rbl">4</div><div class="rb-track"><div class="rb-fill" style="width:19%;background:var(--green);height:6px;border-radius:20px"></div></div><div class="rb-count">9</div></div>
+        <div class="rating-bar-row"><div class="rbl">3</div><div class="rb-track"><div class="rb-fill" style="width:6%;background:var(--amber);height:6px;border-radius:20px"></div></div><div class="rb-count">3</div></div>
+        <div class="rating-bar-row"><div class="rbl">2</div><div class="rb-track"><div class="rb-fill" style="width:4%;background:var(--red);height:6px;border-radius:20px"></div></div><div class="rb-count">2</div></div>
+        <div class="rating-bar-row"><div class="rbl">1</div><div class="rb-track"><div class="rb-fill" style="width:0%;background:var(--red);height:6px;border-radius:20px"></div></div><div class="rb-count">0</div></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Top experience tags</div>
+      <div class="exp-tags">
+        <span class="exp-tag sel">Great drill</span>
+        <span class="exp-tag sel">Good for warm-up</span>
+        <span class="exp-tag">Needs video</span>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Rating trend</div>
+      <div style="display:flex;gap:24px">
+        <div><div style="font-size:11px;color:var(--text3)">30-day avg</div><div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green)">4.8 <i class="ti ti-trending-up" style="font-size:14px"></i></div></div>
+        <div><div style="font-size:11px;color:var(--text3)">All-time avg</div><div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;color:var(--navy)">4.6</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Player comments</div><select style="width:auto;font-size:11px;padding:5px 9px"><option>Most recent</option><option>Highest rated</option><option>Lowest rated</option></select></div>
+      <div class="review-card">
+        <div class="review-hdr"><div class="review-av" style="background:var(--orange)">JK</div><div><div class="review-author">James K. · U18</div><div class="review-date">Jun 28</div></div><div class="stars" style="margin-left:auto"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span></div></div>
+        <div class="review-text">Best drill for getting reps fast. The rotation keeps your legs warm and the catch footwork translates directly to game situations.</div>
+        <div class="review-tags"><span class="badge b-green">Great drill</span><span class="badge b-blue">Good for warm-up</span></div>
+      </div>
+      <div class="review-card">
+        <div class="review-hdr"><div class="review-av" style="background:var(--blue)">AL</div><div><div class="review-author">Aisha L. · U16</div><div class="review-date">Jun 26</div></div><div class="stars" style="margin-left:auto"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star">★</span></div></div>
+        <div class="review-text">Really good drill. Would love a video showing the exact rotation pattern — had to guess on footwork at first.</div>
+        <div class="review-tags"><span class="badge b-amber">Needs video</span></div>
+      </div>
+      <div class="review-card">
+        <div class="review-hdr"><div class="review-av" style="background:var(--green)">RC</div><div><div class="review-author">Riley C. · U18</div><div class="review-date">Jun 24</div></div><div class="stars" style="margin-left:auto"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span></div></div>
+        <div class="review-text">Game changer. Was at 44% on corner 3s — after two weeks of this drill I'm hitting 58%. The footwork pattern is everything.</div>
+        <div class="review-tags"><span class="badge b-green">Great drill</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Platform-wide experience tag insights</div><div class="card-sub">Across all drills and all players</div></div>
+    <div class="grid4">
+      <div style="text-align:center;padding:14px;background:var(--green-lt);border-radius:var(--r)"><div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green)">71%</div><div style="font-size:11px;color:#0E6B3C;margin-top:3px;font-weight:600">Great Drill</div></div>
+      <div style="text-align:center;padding:14px;background:var(--blue-lt);border-radius:var(--r)"><div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;color:var(--blue)">34%</div><div style="font-size:11px;color:#1840A0;margin-top:3px;font-weight:600">Good for warm-up</div></div>
+      <div style="text-align:center;padding:14px;background:var(--amber-lt);border-radius:var(--r)"><div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;color:var(--amber)">18%</div><div style="font-size:11px;color:var(--amber);margin-top:3px;font-weight:600">Needs video</div></div>
+      <div style="text-align:center;padding:14px;background:var(--red-lt);border-radius:var(--r)"><div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;color:var(--red)">9%</div><div style="font-size:11px;color:#A02828;margin-top:3px;font-weight:600">Unclear instructions</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN QUEUE -->
+<div class="page" id="page-admin">
+  <div class="page-hdr"><div><div class="page-title">Admin Queue</div><div class="page-sub">Flagged drills, low-rated content, comment moderation, and audit log</div></div></div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="adminTab('at-flagged',this)">Flagged <span class="badge b-red" style="margin-left:4px">2</span></button>
+    <button class="tab" onclick="adminTab('at-lowrated',this)">Low-rated <span class="badge b-amber" style="margin-left:4px">1</span></button>
+    <button class="tab" onclick="adminTab('at-comments',this)">Comment moderation</button>
+    <button class="tab" onclick="adminTab('at-audit',this)">Audit log</button>
+  </div>
+  <div id="at-flagged">
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Drills that received 3+ one-star ratings within 7 days or were manually reported. Auto-alerts fire to admins in real time.</div>
+    <div class="flagged-row">
+      <div style="width:4px;align-self:stretch;border-radius:2px;background:var(--red);flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--navy)">Free Throw Pressure Sets</div><div style="font-size:11px;color:var(--text3);margin-top:2px">4 one-star ratings in 5 days · Top tags: Unclear Instructions, Too Hard</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="openModal('modal-admin-action')"><i class="ti ti-pencil"></i>Edit drill</button>
+        <button class="btn btn-sm"><i class="ti ti-eye-off"></i>Unpublish</button>
+        <button class="btn btn-sm btn-ghost"><i class="ti ti-x"></i>Dismiss</button>
+      </div>
+    </div>
+    <div class="flagged-row" style="background:var(--amber-lt);border-color:rgba(192,122,0,.2)">
+      <div style="width:4px;align-self:stretch;border-radius:2px;background:var(--amber);flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--navy)">Full-Court Conditioning Sprint</div><div style="font-size:11px;color:var(--text3);margin-top:2px">3 one-star ratings in 7 days · Top tags: Too Hard, Needs More Reps</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm"><i class="ti ti-pencil"></i>Edit drill</button>
+        <button class="btn btn-sm"><i class="ti ti-eye-off"></i>Unpublish</button>
+        <button class="btn btn-sm btn-ghost"><i class="ti ti-x"></i>Dismiss</button>
+      </div>
+    </div>
+  </div>
+  <div id="at-lowrated" class="hidden">
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Drills with avg rating below 2.5 stars (min 10 ratings) — auto-surfaced for review. Admin must edit, unpublish, or dismiss.</div>
+    <div class="queue-row">
+      <div class="qpriority" style="background:var(--amber)"></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--navy)">Free Throw Pressure Sets</div><div style="font-size:11px;color:var(--text3)">Avg: 2.1 ★ · 12 ratings · 30-day avg: 1.9 ★ (declining)</div></div>
+      <div class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+      <button class="btn btn-sm btn-primary" onclick="openModal('modal-admin-action')">Review &amp; act</button>
+    </div>
+  </div>
+  <div id="at-comments" class="hidden">
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Comments reported by players or flagged by the content filter. All comments pass through profanity filter before storage.</div>
+    <div class="review-card" style="border:1px solid rgba(214,59,59,.25)">
+      <div class="review-hdr"><div class="review-av" style="background:var(--text3)">?</div><div><div class="review-author">Anonymous · U14</div><div class="review-date">Jun 27 · Reported by 2 players</div></div><div class="stars" style="margin-left:auto"><span class="star on">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div></div>
+      <div class="review-text" style="color:var(--red)">[Flagged content] — profanity detected. Content hidden pending admin review.</div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn btn-sm btn-danger"><i class="ti ti-trash"></i>Delete comment</button>
+        <button class="btn btn-sm btn-ghost"><i class="ti ti-check"></i>Mark safe &amp; restore</button>
+      </div>
+    </div>
+  </div>
+  <div id="at-audit" class="hidden">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Timestamp</th><th>Admin</th><th>Action</th><th>Target</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:'DM Mono',monospace;font-size:11px">Jun 28 09:14</td><td>Coach Johnson</td><td><span class="badge b-blue">Edited</span></td><td>Elbow Form Shots</td><td style="color:var(--text3);font-size:12px">Updated description and coaching cues</td></tr>
+          <tr><td style="font-family:'DM Mono',monospace;font-size:11px">Jun 27 14:32</td><td>Coach Johnson</td><td><span class="badge b-amber">Unpublished</span></td><td>Old Conditioning Drill v1</td><td style="color:var(--text3);font-size:12px">Replaced by updated version</td></tr>
+          <tr><td style="font-family:'DM Mono',monospace;font-size:11px">Jun 26 11:05</td><td>Coach Johnson</td><td><span class="badge b-red">Deleted comment</span></td><td>Free Throw Pressure Sets</td><td style="color:var(--text3);font-size:12px">Guideline violation — profanity</td></tr>
+          <tr><td style="font-family:'DM Mono',monospace;font-size:11px">Jun 25 16:48</td><td>Coach Johnson</td><td><span class="badge b-green">Published</span></td><td>Corner 3-Point Series v2</td><td style="color:var(--text3);font-size:12px">Added video link, updated rotation instructions</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="page" id="page-notifications">
+  <div class="page-hdr"><div><div class="page-title">Notifications</div><div class="page-sub">Coach alerts and player activity</div></div><button class="btn btn-ghost btn-sm">Mark all read</button></div>
+  <div class="pill-tabs">
+    <button class="pill-tab active">All</button>
+    <button class="pill-tab">Plan completions</button>
+    <button class="pill-tab">Sessions</button>
+    <button class="pill-tab">Flags &amp; alerts</button>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="notif-item notif-unread"><div class="notif-icon" style="background:var(--green-lt)"><i class="ti ti-circle-check" style="color:var(--green);font-size:18px"></i></div><div class="notif-text"><strong>James K.</strong> completed the Morning Shooting Workout plan<div class="notif-time">2 minutes ago</div></div><button class="btn btn-ghost btn-sm"><i class="ti ti-chevron-right"></i></button></div>
+    <div class="notif-item notif-unread"><div class="notif-icon" style="background:var(--orange-lt)"><i class="ti ti-clipboard-list" style="color:var(--orange);font-size:18px"></i></div><div class="notif-text"><strong>Riley C.</strong> completed the questionnaire — a new plan was generated<div class="notif-time">3 hours ago</div></div><button class="btn btn-ghost btn-sm"><i class="ti ti-chevron-right"></i></button></div>
+    <div class="notif-item notif-unread"><div class="notif-icon" style="background:var(--red-lt)"><i class="ti ti-alert-triangle" style="color:var(--red);font-size:18px"></i></div><div class="notif-text"><strong>Free Throw Pressure Sets</strong> received 3 one-star ratings this week — flagged for admin review<div class="notif-time">5 hours ago</div></div><button class="btn btn-sm btn-danger" onclick="go('admin')">Review</button></div>
+    <div class="notif-item"><div class="notif-icon" style="background:var(--blue-lt)"><i class="ti ti-ball-basketball" style="color:var(--blue);font-size:18px"></i></div><div class="notif-text"><strong>Aisha L.</strong> logged a session — Mid-Range Pull-Up Ladder, 72% makes<div class="notif-time">1 hour ago</div></div><button class="btn btn-ghost btn-sm"><i class="ti ti-chevron-right"></i></button></div>
+    <div class="notif-item"><div class="notif-icon" style="background:var(--amber-lt)"><i class="ti ti-clock" style="color:var(--amber);font-size:18px"></i></div><div class="notif-text"><strong>Marcus T.</strong> has been inactive for 10 days — no sessions logged<div class="notif-time">Today</div></div><button class="btn btn-sm btn-primary" onclick="openModal('modal-coach-note')"><i class="ti ti-send"></i>Send note</button></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Notification preferences</div></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13px;font-weight:500">Plan completions</div><div style="font-size:11px;color:var(--text3)">When a player completes an assigned plan</div></div><select style="width:auto;font-size:12px"><option>Real-time</option><option>Daily digest</option><option>Weekly</option></select></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13px;font-weight:500">Session logs</div><div style="font-size:11px;color:var(--text3)">When a player logs a new session</div></div><select style="width:auto;font-size:12px"><option>Daily digest</option><option>Real-time</option><option>Weekly</option></select></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13px;font-weight:500">Inactivity alerts</div><div style="font-size:11px;color:var(--text3)">Players inactive for 7+ days</div></div><select style="width:auto;font-size:12px"><option>Weekly</option><option>Real-time</option><option>Daily digest</option></select></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13px;font-weight:500">Flagged content</div><div style="font-size:11px;color:var(--text3)">Drill flags and low-rating alerts</div></div><select style="width:auto;font-size:12px"><option>Real-time</option><option>Daily digest</option></select></div>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-bar"><div class="save-dot"></div><span style="color:var(--text3)">All changes saved</span><div style="flex:1"></div><span style="color:var(--text3);font-size:11px">Last saved: Jun 28 at 10:42 AM</span></div>
+
+
+<!-- MODALS -->
+<!-- Rate a drill -->
+<div class="modal-overlay" id="modal-rate-drill">
+  <div class="modal">
+    <div class="modal-title">Rate a drill</div>
+    <div class="fg"><label class="fl">Drill</label><select><option>Corner 3-Point Series</option><option>Elbow Form Shots</option><option>Mid-Range Pull-Up Ladder</option><option>Box-Out &amp; Rebound Circuit</option></select></div>
+    <div class="fg">
+      <label class="fl">Your rating</label>
+      <div style="display:flex;gap:4px" id="star-input">
+        <button class="rating-star-btn on" onclick="setStars(1)">★</button>
+        <button class="rating-star-btn on" onclick="setStars(2)">★</button>
+        <button class="rating-star-btn on" onclick="setStars(3)">★</button>
+        <button class="rating-star-btn on" onclick="setStars(4)">★</button>
+        <button class="rating-star-btn on" onclick="setStars(5)">★</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Experience tags (optional)</label>
+      <div class="exp-tags">
+        <span class="exp-tag" onclick="this.classList.toggle('sel')">Too Easy</span>
+        <span class="exp-tag" onclick="this.classList.toggle('sel')">Too Hard</span>
+        <span class="exp-tag sel" onclick="this.classList.toggle('sel')">Great Drill</span>
+        <span class="exp-tag" onclick="this.classList.toggle('sel')">Good for Warm-Up</span>
+        <span class="exp-tag" onclick="this.classList.toggle('sel')">Needs More Reps</span>
+        <span class="exp-tag" onclick="this.classList.toggle('sel')">Needs Video</span>
+        <span class="exp-tag" onclick="this.classList.toggle('sel')">Unclear Instructions</span>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Comment <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px"> — optional, max 280 characters</span></label><textarea placeholder="What worked well? What would you change?"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-rate-drill')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-rate-drill');showToast('Rating submitted!')"><i class="ti ti-check"></i>Submit rating</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drill detail -->
+<div class="modal-overlay" id="modal-drill-detail">
+  <div class="modal" style="max-width:640px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px">Corner 3-Point Series</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="badge b-orange">Shooting</span><span class="badge b-gray">3-Point</span><span class="badge b-blue">Intermediate</span><span class="badge b-gray">Partner</span></div>
+      </div>
+      <button class="icon-btn" onclick="closeModal('modal-drill-detail')"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:14px">Catch &amp; shoot from both corners and both wings with a partner feeding the ball. Shooter rotates through 5 spots — 5 attempts per spot per round. Focus on footwork on the catch, quick release, and consistent follow-through.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;font-size:12px;color:var(--text3)">
+      <span style="display:flex;align-items:center;gap:4px"><i class="ti ti-clock" style="font-size:13px"></i>15 min</span>
+      <span style="display:flex;align-items:center;gap:4px"><i class="ti ti-repeat" style="font-size:13px"></i>3 rounds × 5 spots</span>
+      <span style="display:flex;align-items:center;gap:4px"><i class="ti ti-tools" style="font-size:13px"></i>Basketball</span>
+      <span style="display:flex;align-items:center;gap:4px"><i class="ti ti-user-check" style="font-size:13px"></i>HoopIQ Library</span>
+    </div>
+    <div style="background:var(--cream);border-radius:var(--r);padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Coaching cues</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">• Set your feet before the ball arrives — "ready stance" on every catch<br>• Hold the follow-through until the ball hits the rim<br>• Keep your shooting shoulder aligned to the basket<br>• Communicate with your partner before each rotation</div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px">
+      <div><div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--navy)">4.6</div><div class="stars"><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star" style="opacity:.4;color:#F5A623">★</span></div><div style="font-size:11px;color:var(--text3);margin-top:3px">48 ratings</div></div>
+      <div style="flex:1">
+        <div class="rating-bar-row"><div class="rbl">5</div><div class="rb-track"><div class="rb-fill" style="width:70%;background:var(--green);height:6px;border-radius:20px"></div></div><div class="rb-count">34</div></div>
+        <div class="rating-bar-row"><div class="rbl">4</div><div class="rb-track"><div class="rb-fill" style="width:19%;background:var(--green);height:6px;border-radius:20px"></div></div><div class="rb-count">9</div></div>
+        <div class="rating-bar-row"><div class="rbl">3</div><div class="rb-track"><div class="rb-fill" style="width:6%;background:var(--amber);height:6px;border-radius:20px"></div></div><div class="rb-count">3</div></div>
+        <div class="rating-bar-row"><div class="rbl">2</div><div class="rb-track"><div class="rb-fill" style="width:4%;background:var(--red);height:6px;border-radius:20px"></div></div><div class="rb-count">2</div></div>
+        <div class="rating-bar-row"><div class="rbl">1</div><div class="rb-track"><div class="rb-fill" style="width:0%;background:var(--red);height:6px;border-radius:20px"></div></div><div class="rb-count">0</div></div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Top experience tags</div>
+    <div class="exp-tags" style="margin-bottom:14px"><span class="exp-tag sel">Great drill</span><span class="exp-tag sel">Good for warm-up</span><span class="exp-tag">Needs video</span></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-drill-detail')">Close</button>
+      <button class="btn" onclick="closeModal('modal-drill-detail');openModal('modal-rate-drill')"><i class="ti ti-star"></i>Rate this drill</button>
+      <button class="btn btn-primary"><i class="ti ti-plus"></i>Add to plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add drill -->
+<div class="modal-overlay" id="modal-add-drill">
+  <div class="modal">
+    <div class="modal-title">Add drill</div>
+    <div class="fg"><label class="fl">Drill name</label><input type="text" placeholder="e.g. Elbow Pull-Up Jumper"></div>
+    <div class="fg"><label class="fl">Description</label><textarea placeholder="Describe the drill clearly — what does the player do, how many reps, what's the goal?"></textarea></div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Category</label><select><option>Shooting</option><option>Ball Handling</option><option>Defense</option><option>Conditioning</option><option>Passing</option><option>Rebounding</option><option>Team Concepts</option></select></div>
+      <div class="fg"><label class="fl">Sub-category</label><select><option>3-Point</option><option>Mid-range</option><option>Free throw</option><option>Form shooting</option><option>Finishing at rim</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Skill level</label><select><option>Beginner</option><option>Intermediate</option><option>Advanced</option><option>Elite</option></select></div>
+      <div class="fg"><label class="fl">Players needed</label><select><option>Individual</option><option>Partner</option><option>Small group (2–5)</option><option>Team (6–15)</option><option>Large group (16+)</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Duration (minutes)</label><input type="number" value="10" min="5" max="90"></div>
+      <div class="fg"><label class="fl">Equipment</label><input type="text" placeholder="e.g. Basketball, Cones, Chair"></div>
+    </div>
+    <div class="fg"><label class="fl">Video URL (optional)</label><input type="text" placeholder="YouTube or Instagram demo link"></div>
+    <div class="fg"><label class="fl">Coaching cues</label><textarea placeholder="Key points for players to remember during this drill…" style="min-height:60px"></textarea></div>
+    <div class="fg">
+      <label class="fl">Publish status</label>
+      <select><option>Published — visible in drill library</option><option>Draft — visible to admins only</option></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-add-drill')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-drill');showToast('Drill saved!')"><i class="ti ti-check"></i>Save drill</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign plan -->
+<div class="modal-overlay" id="modal-assign-plan">
+  <div class="modal">
+    <div class="modal-title">Assign plan to players</div>
+    <div class="fg"><label class="fl">Plan</label>
+      <select><option>Morning Shooting Workout</option><option>3PT Specialist Session</option><option>Defense Fundamentals</option></select>
+    </div>
+    <div class="fg">
+      <label class="fl">Assign to</label>
+      <div style="display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;background:var(--cream)">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--orange)">James K. — PG · Advanced</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" style="accent-color:var(--orange)">Aisha L. — SG · Intermediate</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" style="accent-color:var(--orange)">Marcus T. — SF · Beginner</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" style="accent-color:var(--orange)">Devon W. — PF · Elite</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" style="accent-color:var(--orange)">Riley C. — C · Advanced</label>
+      </div>
+    </div>
+    <div style="background:var(--amber-lt);border:1px solid rgba(192,122,0,.2);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--amber);margin-bottom:14px"><i class="ti ti-info-circle"></i> Plans marked "Assigned by coach" in each player's profile. Players are notified in-app.</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-assign-plan')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-assign-plan');showToast('Plan assigned!')"><i class="ti ti-send"></i>Assign plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Coach note -->
+<div class="modal-overlay" id="modal-coach-note">
+  <div class="modal">
+    <div class="modal-title">Add coaching note</div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Player</label><select><option>James K.</option><option>Aisha L.</option><option>Marcus T.</option><option>Devon W.</option><option>Riley C.</option></select></div>
+      <div class="fg"><label class="fl">Drill (optional)</label><select><option>— General note —</option><option>Corner 3-Point Series</option><option>Elbow Form Shots</option><option>Mid-Range Pull-Up Ladder</option></select></div>
+    </div>
+    <div class="fg"><label class="fl">Note <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px"> — private, coaches &amp; admins only</span></label><textarea placeholder="What did you observe? What should the player focus on next session?"></textarea></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:5px"><i class="ti ti-lock" style="font-size:13px"></i>This note is never visible to the player</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-coach-note')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-coach-note');showToast('Note saved privately.')"><i class="ti ti-lock"></i>Save private note</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin action -->
+<div class="modal-overlay" id="modal-admin-action">
+  <div class="modal">
+    <div class="modal-title">Review flagged drill</div>
+    <div style="background:var(--red-lt);border:1px solid rgba(214,59,59,.2);border-radius:var(--r);padding:12px 14px;margin-bottom:18px">
+      <div style="font-size:13px;font-weight:600;color:var(--red)">Free Throw Pressure Sets</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">4 one-star ratings in 5 days · Tags: Unclear Instructions, Too Hard</div>
+    </div>
+    <div class="fg"><label class="fl">Action</label>
+      <select id="admin-action-sel" onchange="toggleResetRatings(this.value)">
+        <option value="edit">Edit drill content</option>
+        <option value="unpublish">Unpublish drill</option>
+        <option value="dismiss">Dismiss flag — no action needed</option>
+      </select>
+    </div>
+    <div class="fg" id="reset-ratings-row">
+      <label class="fl">Reset existing ratings after edit?</label>
+      <select><option>No — keep existing ratings</option><option>Yes — reset all ratings (content materially changed)</option></select>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Resetting ratings is irreversible and will be logged in the audit trail</div>
+    </div>
+    <div class="fg"><label class="fl">Admin note (logged to audit trail)</label><textarea placeholder="Reason for this action…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-admin-action')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-admin-action');showToast('Admin action logged.')"><i class="ti ti-check"></i>Log action</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" style="position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap"></div>
+
+</div><!-- /main -->
+
+<script>
+// Navigation
+const PAGE_TITLES = {dashboard:'Dashboard',questionnaire:'Questionnaire',drills:'Drill Library',plans:'Practice Plans',coaching:'Coaching View',ratings:'Ratings & Feedback',admin:'Admin Queue',notifications:'Notifications'};
+function go(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(b => {
+    const oc = b.getAttribute('onclick') || '';
+    if (oc.includes("'" + id + "'")) b.classList.add('active');
+  });
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[id] || id;
+  window.scrollTo(0, 0);
+}
+
+// Modals
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// Toast
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(20px)';
+  }, 2500);
+}
+
+// Wizard navigation
+function wizardGo(step) {
+  for (let s = 1; s <= 6; s++) {
+    const body = document.getElementById('wstep-' + s);
+    if (body) body.classList.toggle('hidden', s !== step);
+    const ws = document.getElementById('ws-' + s);
+    if (!ws) continue;
+    ws.classList.remove('active', 'done');
+    if (s < step) ws.classList.add('done');
+    else if (s === step) ws.classList.add('active');
+    const circle = ws.querySelector('.wcircle');
+    if (circle) {
+      if (s < step) circle.innerHTML = '<i class="ti ti-check" style="font-size:11px"></i>';
+      else circle.textContent = s;
+    }
+  }
+}
+
+// Category toggle with subcategory expand
+function toggleCat(el, subcatId) {
+  el.classList.toggle('sel');
+  const sub = document.getElementById(subcatId);
+  if (sub) sub.classList.toggle('hidden', !el.classList.contains('sel'));
+}
+
+// Skill level single select
+function selectSkill(el) {
+  document.querySelectorAll('.skill-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// Count option single select
+function selectCount(el) {
+  el.closest('.count-opts').querySelectorAll('.count-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// Improvement tag input
+function addImpTag(val) {
+  const wrap = document.getElementById('imp-tags-wrap');
+  const inp = document.getElementById('imp-input');
+  const span = document.createElement('span');
+  span.className = 'imp-tag';
+  span.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:var(--navy);color:#fff;font-size:11px;padding:3px 9px;border-radius:20px';
+  span.innerHTML = val + ' <span onclick="this.parentElement.remove()" style="cursor:pointer;opacity:.6">×</span>';
+  wrap.insertBefore(span, inp);
+}
+
+// Favorite toggle
+function toggleFav(btn) {
+  const card = btn.closest('.drill-card');
+  const isFav = card.classList.contains('fav');
+  card.classList.toggle('fav', !isFav);
+  btn.innerHTML = isFav ? '<i class="ti ti-star"></i>' : '<i class="ti ti-star-filled"></i>';
+  btn.style.color = isFav ? '' : '#F5A623';
+  btn.style.borderColor = isFav ? '' : '#F5A623';
+  showToast(isFav ? 'Removed from favorites' : 'Added to favorites');
+}
+
+// Star rating input
+function setStars(n) {
+  document.querySelectorAll('#star-input .rating-star-btn').forEach((btn, i) => {
+    btn.classList.toggle('on', i < n);
+  });
+}
+
+// Coach tabs
+function coachTab(id, btn) {
+  ['ct-drillperf','ct-planstatus','ct-playerinsights','ct-coachnotes'].forEach(t => {
+    const el = document.getElementById(t);
+    if (el) el.classList.toggle('hidden', t !== id);
+  });
+  document.querySelectorAll('#page-coaching .tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// Admin tabs
+function adminTab(id, btn) {
+  ['at-flagged','at-lowrated','at-comments','at-audit'].forEach(t => {
+    const el = document.getElementById(t);
+    if (el) el.classList.toggle('hidden', t !== id);
+  });
+  document.querySelectorAll('#page-admin .tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// Move drill row up/down in plan
+function moveRow(btn, dir) {
+  const row = btn.closest('.drill-row-item');
+  if (!row) return;
+  const parent = row.parentElement;
+  if (dir === -1 && row.previousElementSibling && row.previousElementSibling.classList.contains('drill-row-item')) {
+    parent.insertBefore(row, row.previousElementSibling);
+  } else if (dir === 1 && row.nextElementSibling && row.nextElementSibling.classList.contains('drill-row-item')) {
+    parent.insertBefore(row.nextElementSibling, row);
+  }
+}
+
+// Admin action — show/hide reset ratings
+function toggleResetRatings(val) {
+  const row = document.getElementById('reset-ratings-row');
+  if (row) row.classList.toggle('hidden', val !== 'edit');
+}
+
+// Pill tabs (notifications)
+document.querySelectorAll('.pill-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    this.closest('.pill-tabs').querySelectorAll('.pill-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// Tab bar generic
+document.querySelectorAll('.tab-bar .tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    const bar = this.closest('.tab-bar');
+    const page = bar.closest('.page');
+    // only handle generic tab bars not handled by specific functions
+    if (!this.getAttribute('onclick')) {
+      bar.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    }
+  });
+});
+
+// Keyboard: Escape closes modals
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+</script>
+</body>
+</html>
